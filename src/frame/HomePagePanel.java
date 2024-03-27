@@ -100,11 +100,19 @@ public class HomePagePanel extends PagePanel {
         // в зависимости от прав пользователя будут создаваться соответствующие элементы
         if (response.getBody()[2][1].equals(IRoleConstants.USER)) {
             // вошёл простой пользователь
-            super.setCaption("Добро пожаловать на страницу " +
-                    "персонального аккаунта.<br><b>" + userName + "</b><br>" +
-                    "Лицевой счёт <u>" + response.getBody()[3][1] + 
-                    "</u><br>Сегодня <b><u>" + LocalDate.now() +
-                    "</u></b>");
+            super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
+                    "align=\"center\" cols=\"1\" width=\"100%\">" +
+                    "<tr><td align=\"justify\">" +
+                    "Добро пожаловать на страницу " +
+                    "персонального аккаунта." +
+                    "</td></tr>" +
+                    "<tr><td align=\"left\"><b>" + userName + "</b>. Лицевой счёт <u>" + 
+                    response.getBody()[3][1] + "</u>" +
+                    "</td></tr>" +
+                    "<tr><td align=\"right\">" +
+                    "Сегодня <b><u>" + LocalDate.now() +
+                    "</u></b>" +
+                    "</td></tr></table>");
             super.setRemoveAction("");// скрываем кнопку удаления аккаунта
             super.addComponent(getUserBox());
             responseData = response.getBody()[4][1];
@@ -112,10 +120,15 @@ public class HomePagePanel extends PagePanel {
             accountNumber = response.getBody()[3][1];
         } else {
             // вошёл администратор
-            super.setCaption("Вы вошли на страницу " +
-                    "с правами администратора.<br><b>Администратор <u>" +
-                    userName + "</u><br>Сегодня <b><u>" + LocalDate.now() +
-                    "</u></b>");
+            super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
+                    "align=\"center\" cols=\"1\" width=\"100%\">" +
+                    "<tr><td align=\"center\">" +
+                    "Вы вошли на страницу с правами администратора." + 
+                    "</td></tr>" +
+                    "<tr><td align=\"left\">Администратор <b><u>" +
+                    userName + "</u></b></td></tr>" +
+                    "<tr><td align=\"right\">Сегодня<b><u> " + LocalDate.now() +
+                    "</u></b></td></tr></table>");
             super.addComponent(getAdminBox());
             super.setRemoveCaption("Удалить аккаунт");
         }

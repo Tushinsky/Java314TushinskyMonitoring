@@ -23,7 +23,7 @@ public class StartPanel extends PagePanel {
 
     private void initComponents() {
 
-        super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"2\" " + 
+        super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
                 "align=\"center\" cols=\"1\" width=\"100%\">" +
                 "<tr><td align=\"justify\">" +
                 "Вы на домашней странице сервиса передачи показаний счетчиков ЖКХ. Здесь вы " +
@@ -31,9 +31,7 @@ public class StartPanel extends PagePanel {
                 "за текущий месяц. Или " +
                 "<b><u>зарегистрироваться</u></b> для получения доступа к личному кабинету." +
                 "</td></tr>" +
-                "<tr><td>" +
-                "Выберите:" +
-                "</td></tr>" +
+                "<tr><td align=\"center\">Выберите:</td></tr>" +
                 "</table>");
         super.addComponent(Box.createVerticalBox().add(Box.createVerticalStrut(100)));
         super.setOkCaption("Вход в л/к");

@@ -5,6 +5,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import javax.swing.border.EtchedBorder;
 
 public class PagePanel extends JPanel {
     private final JPanel mainPanel;// главная панель для расположения компонентов
@@ -97,8 +98,8 @@ public class PagePanel extends JPanel {
 //                mainPanel.updateUI();
 //                System.out.println("page:" + mainPanel.getParent().getSize());
 //                System.out.println("main:" + mainPanel.getSize());
-                lblCaption.setPreferredSize(new Dimension((int)mainPanel
-                        .getSize().getWidth(), (int)lblCaption.getPreferredSize().getHeight()));
+//                lblCaption.setPreferredSize(new Dimension((int)mainPanel
+//                        .getSize().getWidth(), (int)lblCaption.getPreferredSize().getHeight()));
 //                box.setSize(mainPanel.getSize());
 //                
 //                System.out.println("box:" + box.getParent().getSize());
@@ -108,7 +109,11 @@ public class PagePanel extends JPanel {
             
         });
         lblCaption = new JLabel("Caption");
-//        lblCaption.setBorder(new EtchedBorder(2, Color.yellow, Color.black));
+//        Box horBox = Box.createHorizontalBox();
+//        horBox.add(Box.createHorizontalStrut(10));
+//        horBox.add(lblCaption);
+//        horBox.add(Box.createHorizontalStrut(10));
+        lblCaption.setBorder(new EtchedBorder(Color.yellow, Color.black));
         // добавляем обработчики
         okButton.addActionListener((e) -> this.setName(okAction));
         removeButton.addActionListener((e) -> this.setName(removeAction));
@@ -128,6 +133,12 @@ public class PagePanel extends JPanel {
 
             removeButton.setVisible(false);
         }
+//        JPanel westPanel = new JPanel();
+//        westPanel.setPreferredSize(new Dimension(20, mainPanel.getHeight()));
+//        JPanel eastPanel = new JPanel();
+//        eastPanel.setPreferredSize(new Dimension(20, mainPanel.getHeight()));
+//        mainPanel.add(westPanel, BorderLayout.WEST);
+//        mainPanel.add(eastPanel, BorderLayout.EAST);
         // контейнер располагаем в нижней части панели
         mainPanel.add(box, BorderLayout.SOUTH);
         componentCount = mainPanel.getComponentCount();

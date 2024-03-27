@@ -56,7 +56,7 @@ public class LoginPanel extends PagePanel {
     public void setOkAction(String okAction) {
         super.setOkAction(okAction);
         if (okAction.equals(ImappingConstants.LOG_IN)) {
-            super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"2\" " + 
+            super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
                     "align=\"center\" cols=\"1\" width=\"100%\">" +
                     "<tr><td align=\"justify\">" +
                     "Вы находитесь на странице авторизации. " +
@@ -66,7 +66,7 @@ public class LoginPanel extends PagePanel {
             // скрывавем метку и поле для ввода имени пользователя
             super.addComponent(getLoginBox());
         } else {
-            super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"2\" " + 
+            super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
                     "align=\"center\" cols=\"1\" width=\"100%\">" +
                     "<tr><td align=\"justify\">" +
                     "Вы находитесь на странице регистрации. " +

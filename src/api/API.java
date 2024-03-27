@@ -108,14 +108,11 @@ public class API implements Iapi{
         response.getBody()[0][1] = getReadings(user);// получаем данные по показаниям
         return response;
     }
-    public User getCurrentUser() {
-        return currentUser;
-    }
 
     private String getAllUsers() {
         // преобразуем его в строку для передачи в ответе
         StringBuilder builder = new StringBuilder();
-        dao.getUsers().stream().filter((u) -> u.getRole().equals(IRoleConstants.USER))
+        dao.getAllUsers().stream().filter((u) -> u.getRole().equals(IRoleConstants.USER))
                 .forEach((user) -> {
             builder.append(user.getUsername()).append(" | ").append(user.getAcc()
                     .getAccountNumber()).append(";");
