@@ -28,10 +28,9 @@ public interface IDao {
     /**
      * Ищет пользователя по имени (логину)
      * @param login имя (логин) пользователя
-     * @param password пароль пользователя
      * @return user - пользователь, если найден
      */
-    User findUserByUsername(String login, String password);
+    User findUserByUsername(String login);
 
     /**
      * Добавляет нового пользователя

@@ -58,7 +58,7 @@ public class API implements Iapi{
         String password = request.getValueByKey("password");
         boolean success = dao.authorize(login, password);
         if (success) {
-            currentUser = dao.findUserByUsername(login, password);
+            currentUser = dao.findUserByUsername(login);
             System.out.println("currentuser:" + currentUser);
             return dataResponse();
         } else return new Response(false);
@@ -71,7 +71,7 @@ public class API implements Iapi{
         String password = request.getValueByKey("password");
         boolean success = dao.addNewUser(username, login, password);
         if (success) {
-            currentUser = dao.findUserByUsername(login, password);
+            currentUser = dao.findUserByUsername(login);
             System.out.println("user:" + currentUser);
             return dataResponse();
         } else return new Response(false);

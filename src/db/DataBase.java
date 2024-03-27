@@ -31,12 +31,12 @@ public class DataBase implements IDao {
         dbInit();
     }
 
+    /**
+     * Инициализация списка пользователей
+     */
     private void dbInit() {
         // считываем таблицу зарегистрированных пользователей и заполняем массив
-        csvOperate.setFileName("readingsDB/Users.csv");
-        csvOperate.setHeader(true);// в первой строке находятся заголовки столбцов
-        csvOperate.readData();// читаем данные
-        Object[][] database = csvOperate.getData();// получаем массив
+        Object[][] database = getDataTable("readingsDB/Users.csv");// получаем массив
         // перебираем, получаем пользователей
         for(Object[] data : database) {
             users.add(new User(Integer.parseInt(data[0].toString()), 
@@ -46,17 +46,19 @@ public class DataBase implements IDao {
         users.forEach(u -> u.setAcc(accountInit(u.getId())));
     }
 
-//    private User userInit(String username, String password, String accountNumber) {
-//        Account acc = accountInit(accountNumber);
-//        return new User(username, password, acc);
-//    }
-
+    /**
+     * Инициализация данных по пользоветельским аккаунтам
+     * @param iduser код пользователя для получения данных по аккаунтв
+     * @return аккаунт пользователя с данными
+     */
     private Account accountInit(int iduser) {
         Object[][] database;// получаем массив
         database = getDataTable("readingsDB/Account.csv");
         Account acc = null;
         for(Object[] data : database) {
-            int id = Integer.parseInt(data[1].toString());// получаем код пользователя из второго столбца
+            // получаем код пользователя из второго столбца
+            int id = Integer.parseInt(data[1].toString());
+            
             if(id == iduser) {
                 // создаём аккаунт по коду пользователя
                 acc = new Account(Integer.parseInt(data[0].toString()), 
@@ -109,13 +111,7 @@ public class DataBase implements IDao {
 
     @Override
     public User findUserByAccountNumber(String accountNumber) {
-        System.out.println(accountNumber);
         for (User user : users) {
-//            System.out.println("user name=" + user.getUsername());
-            if (user == null) {
-//                System.out.println("user null");
-                return null;
-            }
             if (user.getRole().equals(IRoleConstants.USER)) {
                 if (user.getAcc().getAccountNumber().equals(accountNumber)) {
                     System.out.println("user name = " + user.getUsername());
@@ -127,12 +123,9 @@ public class DataBase implements IDao {
     }
 
     @Override
-    public User findUserByUsername(String login, String password) {
+    public User findUserByUsername(String login) {
         for (User user : users) {
-            if (user == null) {
-                return null;
-            }
-            if (user.getLogin().equals(login) && user.getPassword().equals(password)) {
+            if (user.getLogin().equals(login)) {
 //                System.out.println(Arrays.toString(user.getAcc().getReadings()));
                 return user;
             }
