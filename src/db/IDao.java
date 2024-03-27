@@ -52,7 +52,7 @@ public interface IDao {
      * Возвращает массив всех зарегистрированных пользоватвелей
      * @return массив пользователей
      */
-    ArrayList<User> getUsers();
+    ArrayList<User> getAllUsers();
     
     /**
      * Добавляет новые показания по заданному аккаунту

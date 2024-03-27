@@ -250,7 +250,7 @@ public class DataBase implements IDao {
      * @return массив всех зарегистрированных пользователей
      */
     @Override
-    public ArrayList<User> getUsers() {
+    public ArrayList<User> getAllUsers() {
         return users;
     }
     

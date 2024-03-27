@@ -15,12 +15,8 @@ import static mapping.ImappingConstants.*;
 public class StartAppWindow extends JFrame {
     private JPanel mainPanel;// главная панель, на которой будут располагаться все компоненты
     private CardLayout cardLayout;// менеджер карточной компоновки для главной панели
-    private String password;
-    private String username;
-
     private LoginPanel loginPanel;
     private final API api = new API();
-    private final boolean isAuth = false;
     private HomePagePanel homePagePanel;
     private StartPanel startPanel;
     
@@ -63,7 +59,7 @@ public class StartAppWindow extends JFrame {
         mainPanel.setBorder(new BevelBorder(2));
         mainPanel.setBackground(Color.CYAN);
         mainPanel.setOpaque(true);
-        startPanel = startPanel();// создаём стартовую панель
+        startPanel = getStartPanel();// создаём стартовую панель
         createLoginPanel();// создаём панель для ввода логина и пароля пользователя
 //            LoginPanel registerPanel = registerPanel();// создаём панель для регистрации пользователя
         createHomePagePanel();// создаём домашнюю страницу пользователя
@@ -96,7 +92,11 @@ public class StartAppWindow extends JFrame {
         cardLayout.show(mainPanel, namePanel);
     }
 
-    private StartPanel startPanel() {
+    /**
+     * Создаёт и возвращает стартовую панель приложения
+     * @return 
+     */
+    private StartPanel getStartPanel() {
         startPanel = new StartPanel();// создаём стартовую панель
         // добавляем к стартовой панели слушатель изменения свойства Name
         startPanel.addPropertyChangeListener(evt -> {
@@ -114,6 +114,9 @@ public class StartAppWindow extends JFrame {
         return startPanel;
     }
 
+    /**
+     * Создаёт панель ввода пароля
+     */
     private void createLoginPanel() {
         loginPanel = new LoginPanel();
         loginPanel.setOkAction(LOG_IN);
@@ -138,24 +141,15 @@ public class StartAppWindow extends JFrame {
         });
     }
 
-    private void getUserData(Request request) {
-//        System.out.print("Введите логин: ");
-        request.getBody()[0][0] = "username";// ключ
-        request.getBody()[0][1] = username;// значение - имя пользователя
-//        request.getBody()[0][1] = scanner.nextLine();// значение - имя пользователя
-//        System.out.print("Введите пароль: ");
-        request.getBody()[1][0] = "password";// ключ
-        request.getBody()[1][1] = password;// значение - пароль пользователя
-//        request.getBody()[1][1] = scanner.nextLine();// значение - пароль пользователя
-
-    }
-
+    /**
+     * Выполняет запрос на вход в домашнюю страницу
+     * @param request запрос с параметрами на вход
+     */
     private void signIn(Request request) {
         // отправляем запрос на вход
         Response response = api.response(request);
         if (response.isAuth()) {
             homePagePanel.setResponse(response);
-//            homePagePanel.setUser(api.getCurrentUser());
             showPanel(HOME_PAGE);
         } else {
             showPanel(LOG_OUT);
@@ -163,22 +157,12 @@ public class StartAppWindow extends JFrame {
 
     }
 
-    private void signRegAuth(Request request) {
-        Response response = api.response(request);
-        if (response.isAuth()) {
-//            System.out.println("User " + api.getCurrentUser().getUsername());
-            homePagePanel.setResponse(response);
-//            System.out.println("Регистрация прошла успешно.\nДобро пожаловать на страницу персонального аккаунта");
-//            homePagePanel.setUser(api.getCurrentUser());
-            showPanel(HOME_PAGE);
-        } else {
-            showPanel(LOG_OUT);
-        }
-
-    }
-
+    /**
+     * Создаёт панель Домашняя страница
+     */
     private void createHomePagePanel() {
         homePagePanel = new HomePagePanel();
+        // добавляем слушатель изменений свойства NAME
         homePagePanel.addPropertyChangeListener("name", evt -> {
             if (evt.getNewValue() == null) return;
             switch(evt.getNewValue().toString()) {
@@ -199,6 +183,10 @@ public class StartAppWindow extends JFrame {
         });
     }
 
+    /**
+     * Передаёт данные на домашнюю страницу
+     * @param request запрос на получение данных
+     */
     private void setResponseToHomePanel(Request request) {
         // отправляем запрос на добавление
         Response response = api.response(request);
