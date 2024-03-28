@@ -10,4 +10,5 @@ public interface IRequestResponseConstants {
     String ROLE = "role";
     String READINGS = "readings";
     String USERS = "users";
+    String LOGIN = "login";
 }

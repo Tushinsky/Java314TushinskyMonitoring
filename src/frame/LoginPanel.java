@@ -1,5 +1,6 @@
 package frame;
 
+import in.IRequestResponseConstants;
 import mapping.ImappingConstants;
 import in.Request;
 
@@ -19,20 +20,32 @@ public class LoginPanel extends PagePanel {
     private JTextField txtUserName;
     private final JLabel lblUserName = new JLabel("Имя пользователя");
     private String okAction;
+    private int count = 0;// счётчик попыток ввода
     
     public Request getRequest() {
         if(okAction.equals(ImappingConstants.LOG_IN)){
-            request.getBody()[0][0] = "login";// ключ
+            request.getBody()[0][0] = IRequestResponseConstants.LOGIN;// ключ
             request.getBody()[0][1] = txtLogin.getText();// значение - логин пользователя
-            request.getBody()[1][0] = "password";// ключ
+            request.getBody()[1][0] = IRequestResponseConstants.PASSWORD;// ключ
             request.getBody()[1][1] = String.valueOf(passwordField.getPassword());// значение - пароль пользователя
         } else {
-            request.getBody()[0][0] = "username";// ключ
+            request.getBody()[0][0] = IRequestResponseConstants.USER_NAME;// ключ
             request.getBody()[0][1] = txtUserName.getText();// значение - логин пользователя
-            request.getBody()[1][0] = "login";// ключ
+            request.getBody()[1][0] = IRequestResponseConstants.LOGIN;// ключ
             request.getBody()[1][1] = txtLogin.getText();// значение - логин пользователя
-            request.getBody()[2][0] = "password";// ключ
+            request.getBody()[2][0] = IRequestResponseConstants.PASSWORD;// ключ
             request.getBody()[2][1] = String.valueOf(passwordField.getPassword());// значение - пароль пользователя
+        }
+        count++;// увеличиваем счётчик попыток
+        if(count > 3) {
+            // если количество попыток больше 3
+           count = 0;// сбрасываем счётчик
+            
+            // очищаем поля ввода
+            txtLogin.setText("");
+            passwordField.setText("");
+            
+            return null;// возвращаем null в запросе
         }
         return request;
     }
@@ -189,4 +202,6 @@ public class LoginPanel extends PagePanel {
         box.add(Box.createVerticalStrut(40));
         return box;
     }
+
+    
 }

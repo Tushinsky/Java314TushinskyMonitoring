@@ -43,10 +43,10 @@ public interface IDao {
     
     /**
      * Удаляет аккаунт пользователя
-     * @param user пользователь, чей аккаунт подлежит удалению
+     * @param account номер удаляемого аккаунта
      * @return true в случае успеха, иначе возвращает false
      */
-    boolean removeAccount(User user);
+    boolean removeAccount(String account);
     
     /**
      * Возвращает массив всех зарегистрированных пользоватвелей
