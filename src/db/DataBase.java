@@ -6,8 +6,10 @@ import entities.IRoleConstants;
 import entities.User;
 import entities.Reading;
 import entities.WaterReading;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -25,7 +27,9 @@ public class DataBase implements IDao {
     private final ArrayList<User> users = new ArrayList<>();
 //    private boolean aBoolean = false;// флаг добавления нового пользователя
     private final CSVOperate csvOperate;
-    
+    private final String accountFileName = "readingsDB/Account.csv";
+    private final String readingFileName = "readingsDB/Readings.csv";
+    private final String userFileName = "readingsDB/Users.csv";
     public DataBase() {
         csvOperate = new CSVOperate();
         dbInit();
@@ -36,7 +40,7 @@ public class DataBase implements IDao {
      */
     private void dbInit() {
         // считываем таблицу зарегистрированных пользователей и заполняем массив
-        Object[][] database = getDataTable("readingsDB/Users.csv");// получаем массив
+        Object[][] database = getDataTable(userFileName);// получаем массив
         // перебираем, получаем пользователей
         for(Object[] data : database) {
             users.add(new User(Integer.parseInt(data[0].toString()), 
@@ -53,7 +57,7 @@ public class DataBase implements IDao {
      */
     private Account accountInit(int iduser) {
         Object[][] database;// получаем массив
-        database = getDataTable("readingsDB/Account.csv");
+        database = getDataTable(accountFileName);
         Account acc = null;
         for(Object[] data : database) {
             // получаем код пользователя из второго столбца
@@ -68,7 +72,7 @@ public class DataBase implements IDao {
         }
         if(acc != null) {
             // получаем данные по аккаунту
-            database = getDataTable("readingsDB/Readings.csv");// получаем массив
+            database = getDataTable(readingFileName);// получаем массив
             int index = 0;
             for(Object[] data : database) {
                 // получаем код аккаунта пользователя из второго столбца
@@ -154,7 +158,7 @@ public class DataBase implements IDao {
             String accountNumber = String.valueOf(number);
             
             // открываем файл с данными пользователей для добавления новой записи
-            writer = new FileWriter("readingsDB/Users.csv", true);
+            writer = new FileWriter(userFileName, true);
             // строка для добавления в файл
             String separator = System.getProperty("line.separator");
             String string = id + ";2;" + username + ";" + login + ";" + 
@@ -164,7 +168,7 @@ public class DataBase implements IDao {
             writer.close();// закрываем файл
 
             // открываем файл аккаунтов для добавления
-            writer = new FileWriter("readingsDB/Account.csv", true);
+            writer = new FileWriter(accountFileName, true);
             // записываем данные в файл
             writer.write(idAccount + ";" + id + ";" + accountNumber + separator);
             writer.close();// закрываем файл
@@ -190,18 +194,22 @@ public class DataBase implements IDao {
     }
 
     @Override
-    public boolean removeAccount(User user) {
+    public boolean removeAccount(String account) {
         boolean remove = false;
-        int index = 0;
-        for (int i = 0; i < users.size(); i++) {
-            if (users.get(i) == user) {
-                // если пользователь найден
-                users.remove(user);// удаляем найденного пользователя
-                index = i;// запоминаем индекс удаляемого элемента
-                remove = true;
-                break;
-            }
+        User user = findUserByAccountNumber(account);// нашли пользователя
+        try {
+            /*
+            удаление всех данных этого пользователя: показания, номер аккаунта,
+            запись из таблицы пользователей
+            */
+            // создаём объект для произвольгого доступа к файлу показаний
+            RandomAccessFile raf = new RandomAccessFile(readingFileName, "rwd");
+            
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(DataBase.class.getName()).log(Level.SEVERE, null, ex);
         }
+        remove = users.remove(user);// удаляем найденного пользователя
+        
         return remove;
     }
 

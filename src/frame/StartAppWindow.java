@@ -59,7 +59,7 @@ public class StartAppWindow extends JFrame {
         mainPanel.setBorder(new BevelBorder(2));
         mainPanel.setBackground(Color.CYAN);
         mainPanel.setOpaque(true);
-        startPanel = getStartPanel();// создаём стартовую панель
+        createStartPanel();// создаём стартовую панель
         createLoginPanel();// создаём панель для ввода логина и пароля пользователя
 //            LoginPanel registerPanel = registerPanel();// создаём панель для регистрации пользователя
         createHomePagePanel();// создаём домашнюю страницу пользователя
@@ -96,7 +96,7 @@ public class StartAppWindow extends JFrame {
      * Создаёт и возвращает стартовую панель приложения
      * @return 
      */
-    private StartPanel getStartPanel() {
+    private void createStartPanel() {
         startPanel = new StartPanel();// создаём стартовую панель
         // добавляем к стартовой панели слушатель изменения свойства Name
         startPanel.addPropertyChangeListener(evt -> {
@@ -105,13 +105,12 @@ public class StartAppWindow extends JFrame {
             if (evt.getNewValue().equals(LOG_IN) || evt.getNewValue().equals(REGISTER)) {
                 loginPanel.setOkAction(evt.getNewValue().toString());
                 showPanel(LOG_IN);
-
+                startPanel.setOkEnabled(true);// разблокируем кнопку входа
             } else if (evt.getNewValue().equals(EXIT)){
                 System.exit(0);
             }
             startPanel.setName(null);
         });
-        return startPanel;
     }
 
     /**
@@ -146,15 +145,27 @@ public class StartAppWindow extends JFrame {
      * @param request запрос с параметрами на вход
      */
     private void signIn(Request request) {
-        // отправляем запрос на вход
-        Response response = api.response(request);
-        if (response.isAuth()) {
-            homePagePanel.setResponse(response);
-            showPanel(HOME_PAGE);
+        if(request == null) {
+            JOptionPane.showMessageDialog(this, 
+                    "Превышел лимит попыток для входа. Доступ закрыт.\n" +
+                            "Обратитесь к администратору!", "Аутентификация", 
+                            JOptionPane.WARNING_MESSAGE);
+            showPanel(LOG_OUT);// показываем начальную страницу
+            startPanel.setOkEnabled(false);// блокируем кнопку ввода
         } else {
-            showPanel(LOG_OUT);
+            // отправляем запрос на вход
+            Response response = api.response(request);
+            if (response.isAuth()) {
+                // если запрос на вход подтверждён, переходим на домашнюю страницу
+                homePagePanel.setResponse(response);
+                showPanel(HOME_PAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, 
+                    "Проверьте правильность ввода логина или пароля!", "Аутентификация", 
+                            JOptionPane.WARNING_MESSAGE);
+                
+            }
         }
-
     }
 
     /**

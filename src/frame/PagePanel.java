@@ -180,4 +180,12 @@ public class PagePanel extends JPanel {
     public void setRemoveCaption(String caption) {
         removeButton.setText(caption);
     }
+    
+    public void setOkEnabled(boolean enabled) {
+        okButton.setEnabled(enabled);
+    }
+    
+    public void setRemoveEnabled(boolean enabled) {
+        removeButton.setEnabled(enabled);
+    }
 }
