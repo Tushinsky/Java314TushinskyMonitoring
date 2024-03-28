@@ -102,10 +102,8 @@ public class HomePagePanel extends PagePanel {
         if (response.getBody()[2][1].equals(IRoleConstants.USER)) {
             // вошёл простой пользователь
             super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
-                    "align=\"center\" cols=\"1\" width=\"100%\">" +
-                    "<tr><td align=\"justify\">" +
-                    "Добро пожаловать на страницу " +
-                    "персонального аккаунта." +
+                    "align=\"center\" cols=\"1\" width=\"100%\" bgcolor=\"#008080\">" +
+                    "<tr><td align=\"justify\">" + "Добро пожаловать на страницу персонального аккаунта." +
                     "</td></tr>" +
                     "<tr><td align=\"left\"><b>" + userName + "</b>. Лицевой счёт <u>" + 
                     response.getBody()[3][1] + "</u>" +
@@ -122,14 +120,13 @@ public class HomePagePanel extends PagePanel {
         } else {
             // вошёл администратор
             super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
-                    "align=\"center\" cols=\"1\" width=\"100%\">" +
+                    "align=\"center\" cols=\"1\" width=\"100%\" bgcolor=\"#008080\">" +
                     "<tr><td align=\"center\">" +
                     "Вы вошли на страницу с правами администратора." + 
                     "</td></tr>" +
                     "<tr><td align=\"left\">Администратор <b><u>" +
                     userName + "</u></b></td></tr>" +
-                    "<tr><td align=\"right\">Сегодня<b><u> " + LocalDate.now() +
-                    "</u></b></td></tr></table>");
+                    "<tr><td align=\"right\">Сегодня <b><u>" + LocalDate.now() + "</u></b></td></tr></table>");
             super.addComponent(getAdminBox());
             super.setRemoveCaption("Удалить аккаунт");
         }

@@ -24,7 +24,7 @@ public class StartPanel extends PagePanel {
     private void initComponents() {
 
         super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
-                "align=\"center\" cols=\"1\" width=\"100%\">" +
+                "align=\"center\" cols=\"1\" width=\"100%\" bgcolor=\"#00FF00\">" +
                 "<tr><td align=\"justify\">" +
                 "Вы на домашней странице сервиса передачи показаний счетчиков ЖКХ. Здесь вы " +
                 "можете <b><u>войти</u></b> в личный кабинет для передачи показаний " +

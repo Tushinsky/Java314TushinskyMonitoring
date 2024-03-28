@@ -51,11 +51,11 @@ public class DataBase implements IDao {
     }
 
     /**
-     * Инициализация данных по пользоветельским аккаунтам
-     * @param iduser код пользователя для получения данных по аккаунтв
+     * Инициализация данных по пользовательским аккаунтам
+     * @param idUser код пользователя для получения данных по аккаунту
      * @return аккаунт пользователя с данными
      */
-    private Account accountInit(int iduser) {
+    private Account accountInit(int idUser) {
         Object[][] database;// получаем массив
         database = getDataTable(accountFileName);
         Account acc = null;
@@ -63,12 +63,14 @@ public class DataBase implements IDao {
             // получаем код пользователя из второго столбца
             int id = Integer.parseInt(data[1].toString());
             
-            if(id == iduser) {
-                // создаём аккаунт по коду пользователя
-                acc = new Account(Integer.parseInt(data[0].toString()), 
-                        Integer.parseInt(data[1].toString()), data[2].toString());
-                break;
+            if(id != idUser) {
+                continue;
             }
+            // создаём аккаунт по коду пользователя
+            acc = new Account(Integer.parseInt(data[0].toString()),
+                    Integer.parseInt(data[1].toString()), data[2].toString());
+            break;
+
         }
         if(acc != null) {
             // получаем данные по аккаунту
@@ -77,16 +79,18 @@ public class DataBase implements IDao {
             for(Object[] data : database) {
                 // получаем код аккаунта пользователя из второго столбца
                 int idAcc = Integer.parseInt(data[1].toString());
-                if(idAcc == acc.getId()) {
-                    // заполняем аккаунт пользователя данными
-                    LocalDate date = LocalDate.parse(data[4].toString());
-                    int count = Integer.parseInt(data[2].toString());
-                    boolean hot = !data[3].toString().equals("0");
-                    WaterReading reading = new WaterReading(date, count, hot);
-//                    System.out.println("reading:" + reading);
-                    acc.getReadings()[index] = reading;
-                    index++;
+                if(idAcc != acc.getId()) {
+                    continue;
                 }
+                // заполняем аккаунт пользователя данными
+                LocalDate date = LocalDate.parse(data[4].toString());
+                int count = Integer.parseInt(data[2].toString());
+                boolean hot = !data[3].toString().equals("0");
+                WaterReading reading = new WaterReading(date, count, hot);
+//                    System.out.println("reading:" + reading);
+                acc.getReadings()[index] = reading;
+                index++;
+
             }
         }
         return acc;
@@ -150,11 +154,11 @@ public class DataBase implements IDao {
             если пользователей с такими данными не найдено в списке, тогда
             добавляем нового пользователя в файл пользователей и в список
             */
-            // получаем инедтификатор последнего пользователя в списке и увеличиваем на 1
+            // получаем идентификатор последнего пользователя в списке и увеличиваем на 1
             User user = users.get(users.size() - 1);// получаем последнего пользователя
             int id = user.getId() + 1;// код нового пользователя
             int idAccount = user.getAcc().getId() + 1;// код нового аккаунта
-            int number = Integer.parseInt(user.getAcc().getAccountNumber()) + 1;// номер аккааунта уввеличиваем на 1
+            int number = Integer.parseInt(user.getAcc().getAccountNumber()) + 1;// номер аккаунта увеличиваем на 1
             String accountNumber = String.valueOf(number);
             
             // открываем файл с данными пользователей для добавления новой записи
@@ -202,7 +206,7 @@ public class DataBase implements IDao {
             удаление всех данных этого пользователя: показания, номер аккаунта,
             запись из таблицы пользователей
             */
-            // создаём объект для произвольгого доступа к файлу показаний
+            // создаём объект для произвольного доступа к файлу показаний
             RandomAccessFile raf = new RandomAccessFile(readingFileName, "rwd");
             
         } catch (FileNotFoundException ex) {
