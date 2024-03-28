@@ -70,7 +70,7 @@ public class LoginPanel extends PagePanel {
         super.setOkAction(okAction);
         if (okAction.equals(ImappingConstants.LOG_IN)) {
             super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
-                    "align=\"center\" cols=\"1\" width=\"100%\">" +
+                    "align=\"center\" cols=\"1\" width=\"100%\" height=\"100%\" bgcolor=\"#00FF00\">" +
                     "<tr><td align=\"justify\">" +
                     "Вы находитесь на странице авторизации. " +
                     "Введите Ваш <b><u>логин</u></b> и <b><u>пароль</u></b>" +
@@ -80,7 +80,7 @@ public class LoginPanel extends PagePanel {
             super.addComponent(getLoginBox());
         } else {
             super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
-                    "align=\"center\" cols=\"1\" width=\"100%\">" +
+                    "align=\"center\" cols=\"1\" width=\"100%\" height=\"100%\" bgcolor=\"#00FF00\">" +
                     "<tr><td align=\"justify\">" +
                     "Вы находитесь на странице регистрации. " +
                     "Задайте Ваши <b><u>имя</u></b>, <b><u>логин</u></b> и " +
