@@ -57,9 +57,10 @@ public class HomePagePanel extends PagePanel {
             initComponents();// инициализация компонентов пользовательского интерфейса
         } else {
             // если передаются другие данные (новые показания, на удаление аккаунта)
-            if (response.getBody()[0][0].equals(NEW_READING)) {
-                // добавление новых показаний
-                if (response.isAuth()) {
+            switch (response.getBody()[0][0]) {
+                case NEW_READING:
+                    // добавление новых показаний
+//                if (response.isAuth()) {
                     // если ответ положительный, и новые показания приняты, добавляем их в список показаний
                     if (response.isAuth()) {
                         updateResponseData();
@@ -69,26 +70,30 @@ public class HomePagePanel extends PagePanel {
                                 "Warning", JOptionPane.WARNING_MESSAGE);
                     }
 
-                }
-            } else if (response.getBody()[0][0].equals(REMOVE_ACCOUNT)) {
-                if (!response.isAuth()) {
-                    // удаление аккаунта пользователя
-                    JOptionPane.showMessageDialog(null,
-                            "При удалении аккаунта произошли ошибки. Обратитесь к разработчику",
-                            "Warning", JOptionPane.WARNING_MESSAGE);
-                } else {
-                    // проверяем кто дал запрос на удаление аккаунта: администратор или рядовой пользователь
-                    if (response.getBody()[2][1].equals(IRoleConstants.USER)) {
-                        // запрос сделал пользователь, выходим со страницы
-                        this.setName(LOG_OUT);
+//                }
+                    break;
+                case REMOVE_ACCOUNT:
+                    if (!response.isAuth()) {
+                        // удаление аккаунта пользователя
+                        JOptionPane.showMessageDialog(null,
+                                "При удалении аккаунта произошли ошибки. Обратитесь к разработчику",
+                                "Warning", JOptionPane.WARNING_MESSAGE);
                     } else {
-                        // запрос сделал администратор, обновляем список пользователей
-                        System.out.println("Удаление аккаунта успешно");
-                    }
-                }
-            } else if (response.getBody()[0][0].equals(GET_READING)) {
-//                System.out.println("we are here");
-                updateResponseData();
+                        // проверяем кто дал запрос на удаление аккаунта: администратор или рядовой пользователь
+                        if (response.getBody()[2][1].equals(IRoleConstants.USER)) {
+                            // запрос сделал пользователь, выходим со страницы
+                            this.setName(LOG_OUT);
+                        } else {
+                            // запрос сделал администратор, обновляем список пользователей
+                            System.out.println("Удаление аккаунта успешно");
+                        }
+                    }   break;
+                case GET_READING:
+                    //                System.out.println("we are here");
+                    updateResponseData();
+                    break;
+                default:
+                    break;
             }
         }
     }
@@ -168,7 +173,7 @@ public class HomePagePanel extends PagePanel {
     private Box getAdminBox() {
         Box adminBox = Box.createVerticalBox();
         JLabel lblUsers = new JLabel("Пользователи");
-        final JList<String> userList = userList();// список зарегистрированных пользователей
+        final JList<String> userList = getUserList();// список зарегистрированных пользователей
         JButton removeReadingButton = new JButton("Удалить показания");
 
         Box box1 = Box.createVerticalBox();
@@ -233,7 +238,7 @@ public class HomePagePanel extends PagePanel {
         return model;
     }
 
-    private JList<String> userList() {
+    private JList<String> getUserList() {
         JList<String> userList = new JList<>();// список зарегистрированных пользователей
         String[] users = response.getBody()[3][1].split(";");// получаем массив пользователей
         DefaultListModel<String> model = new DefaultListModel<>();
@@ -243,10 +248,8 @@ public class HomePagePanel extends PagePanel {
         userList.setModel(model);
         userList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);// выделение одной строки
         userList.addListSelectionListener(e -> {
-            String value = userList.getSelectedValue();
-            int pos = value.indexOf(" | ");
-//            userName = value.substring(0, pos);
-            accountNumber = value.substring(pos + 3);
+            String[] value = userList.getSelectedValue().split(" | ");
+            accountNumber = value[1];
 //            System.out.println("username - " + userName + "; account=" + accountNumber);
             this.setName(GET_READING);
         });
