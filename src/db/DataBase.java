@@ -30,9 +30,11 @@ public class DataBase implements IDao {
     private final String accountFileName = "readingsDB/Account.csv";
     private final String readingFileName = "readingsDB/Readings.csv";
     private final String userFileName = "readingsDB/Users.csv";
+    private User currentUser;//текущий пользователь, подключившейся к базе данных
+    
     public DataBase() {
         csvOperate = new CSVOperate();
-        dbInit();
+//        dbInit();
     }
 
     /**
@@ -105,15 +107,31 @@ public class DataBase implements IDao {
 
     @Override
     public boolean authorize(String login, String password) {
-        for (User user : users) {
-            if (user == null) {
-                return false;
+        // считываем таблицу зарегистрированных пользователей и заполняем массив
+        Object[][] database = getDataTable(userFileName);// получаем массив
+        // перебираем, получаем пользователей
+        for(Object[] data : database) {
+            // логин пользователя находится в 4-м столбце таблицы
+            if(!data[3].toString().equals(login)) {
+                continue;
             }
-            if (user.getLogin().equals(login) && user.getPassword().equals(password)) {
-                
-                return true;
-            }
+            // если логин найден в базе данных, создаём пользователя
+            currentUser = new User(Integer.parseInt(data[0].toString()), 
+                    Integer.parseInt(data[1].toString()), data[2].toString(), 
+                    data[3].toString(), data[4].toString());
+            // получаем информацию по аккаунту
+            currentUser.setAcc(accountInit(currentUser.getId()));
+            return true;
         }
+//        for (User user : users) {
+//            if (user == null) {
+//                return false;
+//            }
+//            if (user.getLogin().equals(login) && user.getPassword().equals(password)) {
+//                
+//                return true;
+//            }
+//        }
         return false;
     }
 
@@ -208,7 +226,7 @@ public class DataBase implements IDao {
             */
             // создаём объект для произвольного доступа к файлу показаний
             RandomAccessFile raf = new RandomAccessFile(readingFileName, "rwd");
-            
+             
         } catch (FileNotFoundException ex) {
             Logger.getLogger(DataBase.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -263,6 +281,15 @@ public class DataBase implements IDao {
      */
     @Override
     public ArrayList<User> getAllUsers() {
+        // считываем таблицу зарегистрированных пользователей и заполняем массив
+        Object[][] database = getDataTable(userFileName);// получаем массив
+        // перебираем, получаем пользователей
+        for(Object[] data : database) {
+            users.add(new User(Integer.parseInt(data[0].toString()), 
+                    Integer.parseInt(data[1].toString()), (String)data[2], 
+                    (String)data[3], (String)data[4]));
+        }
+        users.forEach(u -> u.setAcc(accountInit(u.getId())));
         return users;
     }
     
@@ -272,5 +299,10 @@ public class DataBase implements IDao {
         csvOperate.readData();// читаем данные
         return csvOperate.getData();// получаем массив
         
+    }
+
+    @Override
+    public User getCurrentUser() {
+        return currentUser;
     }
 }

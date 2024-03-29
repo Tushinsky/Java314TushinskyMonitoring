@@ -61,4 +61,10 @@ public interface IDao {
      * @return true в случае успеха, иначе возвращает false
      */
     boolean addNewReading(String accountNumber, WaterReading waterReading);
+    
+    /**
+     * Возвращает текущего пользователя, который подключился
+     * @return currentUser - текущий пользователь
+     */
+    User getCurrentUser();
 }

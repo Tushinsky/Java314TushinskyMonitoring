@@ -56,11 +56,13 @@ public class API implements Iapi{
 
     private Response login(Request request) {
         System.out.println(request);
+        // получаем из тела запроса логин и пароль пользователя, который подключается
         String login = request.getValueByKey(IRequestResponseConstants.LOGIN);
         String password = request.getValueByKey(IRequestResponseConstants.PASSWORD);
+        // проверяем, что такой пользователь есть в нашей базе
         boolean success = dao.authorize(login, password);
         if (success) {
-            currentUser = dao.findUserByUsername(login);
+            currentUser = dao.getCurrentUser();
             System.out.println("currentuser:" + currentUser);
             return dataResponse();
         } else return new Response(false);
@@ -120,6 +122,11 @@ public class API implements Iapi{
     private String getAllUsers() {
         // преобразуем его в строку для передачи в ответе
         StringBuilder builder = new StringBuilder();
+        /*
+        получаем список всех зарегистрированнх пользователей, фильтруем их
+        по правам доступа, собираем в строку имя и номер аккаунта,
+        разделяя их символом "|"
+        */
         dao.getAllUsers().stream().filter((u) -> u.getRole().equals(IRoleConstants.USER))
                 .forEach((user) -> {
             builder.append(user.getUsername()).append(" | ").append(user.getAcc()

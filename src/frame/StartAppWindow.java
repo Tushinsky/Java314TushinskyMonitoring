@@ -147,7 +147,7 @@ public class StartAppWindow extends JFrame {
     private void signIn(Request request) {
         if(request == null) {
             JOptionPane.showMessageDialog(this, 
-                    "Превышел лимит попыток для входа. Доступ закрыт.\n" +
+                    "Превышен лимит попыток для входа. Доступ закрыт.\n" +
                             "Обратитесь к администратору!", "Аутентификация", 
                             JOptionPane.WARNING_MESSAGE);
             showPanel(LOG_OUT);// показываем начальную страницу
