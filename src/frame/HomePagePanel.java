@@ -3,10 +3,15 @@ package frame;
 import in.Request;
 import api.Response;
 import entities.IRoleConstants;
+import entities.Reading;
+import entities.User;
+import entities.WaterReading;
 import in.IRequestResponseConstants;
 
 import javax.swing.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import javax.swing.event.ListSelectionEvent;
 
 import static mapping.ImappingConstants.*;
 
@@ -18,7 +23,7 @@ public class HomePagePanel extends PagePanel {
     private String userName;
     private String userRole;
     private final JCheckBox chkHotBox = new JCheckBox("горячая");// отмечает показания по горячей или холодной воде
-    private String responseData;
+    private ArrayList<Reading> responseData;
     private String mapping = "";
     /**
      * Creates a new <code>JPanel</code> with a double buffer
@@ -111,7 +116,7 @@ public class HomePagePanel extends PagePanel {
                     "<tr><td align=\"justify\">" + "Добро пожаловать на страницу персонального аккаунта." +
                     "</td></tr>" +
                     "<tr><td align=\"left\"><b>" + userName + "</b>. Лицевой счёт <u>" + 
-                    response.getBody()[3][1] + "</u>" +
+                    response.getFromBody(0).getAcc().getAccountNumber() + "</u>" +
                     "</td></tr>" +
                     "<tr><td align=\"right\">" +
                     "Сегодня <b><u>" + LocalDate.now() +
@@ -119,7 +124,7 @@ public class HomePagePanel extends PagePanel {
                     "</td></tr></table>");
             super.setRemoveAction("");// скрываем кнопку удаления аккаунта
             super.addComponent(getUserBox());
-            responseData = response.getBody()[4][1];
+            responseData = response.getFromBody(0).getAcc().getReadings();
             readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));// список показаний
             accountNumber = response.getBody()[3][1];
         } else {
@@ -221,37 +226,40 @@ public class HomePagePanel extends PagePanel {
         return box;
     }
 
-    private DefaultListModel<String> readingListModel(String data, boolean isHot) {
+    private DefaultListModel<String> readingListModel(ArrayList<Reading> data, boolean isHot) {
         DefaultListModel<String> model = new DefaultListModel<>();
         System.out.println("data= " + data);
         if(data != null) {
-            String[] readings = data.split(";");// получаем показания по данному л/с
-            for (String reading : readings) {
-                System.out.println(reading);
-                if (reading.endsWith(String.valueOf(isHot))) {
-                    int pos = reading.lastIndexOf(" | ");
-                    // если хотим видеть показания по горячей воде или холодной
-                    model.addElement(reading.substring(0, pos));
-                }
-            }
+            data.stream().filter((r) -> {
+                WaterReading wr = (WaterReading) r;
+                return wr.isHot() == isHot;
+            }).forEach((Reading r) -> model.addElement(r.getDate() + 
+                    " | " + r.getMeasuring()));
+            
         }
         return model;
     }
 
     private JList<String> getUserList() {
         JList<String> userList = new JList<>();// список зарегистрированных пользователей
-        String[] users = response.getBody()[3][1].split(";");// получаем массив пользователей
         DefaultListModel<String> model = new DefaultListModel<>();
-        for (String user : users) {
-            model.addElement(user);
+        int index = 0;
+        User user;
+        // заполняем модель списка
+        while((user = response.getFromBody(index)) != null) {
+//            System.out.println("user:" + user.getUsername() + "; readings:" + 
+//                    user.getAcc().getReadings());
+            model.addElement(user.getUsername());// имя пользователя
+            index++;// увеличиваем счётчик цикла
         }
         userList.setModel(model);
         userList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);// выделение одной строки
-        userList.addListSelectionListener(e -> {
-            String[] value = userList.getSelectedValue().split(" | ");
-            accountNumber = value[1];
-//            System.out.println("username - " + userName + "; account=" + accountNumber);
-            this.setName(GET_READING);
+        userList.addListSelectionListener((ListSelectionEvent e) -> {
+            // получаем пользователя по индексу выделенного элемента списка
+            User u = response.getFromBody(userList.getSelectedIndex());
+            // заполняем список показаний
+            readingList.setModel(readingListModel(u.getAcc().getReadings(), 
+                    chkHotBox.isSelected()));// список показаний
         });
         return userList;
     }
@@ -293,7 +301,7 @@ public class HomePagePanel extends PagePanel {
     }
 
     private void updateResponseData() {
-        responseData = response.getBody()[0][1];
+        responseData = response.getFromBody(0).getAcc().getReadings();
         readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));
 
     }

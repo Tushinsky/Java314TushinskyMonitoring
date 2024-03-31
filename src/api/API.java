@@ -11,6 +11,7 @@ import entities.WaterReading;
 import in.IRequestResponseConstants;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 
 /**
  * Класс, реализующий функционал сервера
@@ -42,13 +43,7 @@ public class API implements Iapi{
             case ImappingConstants.NEW_READING:
                 return addNewReading(request);// добавление новых показаний
             case ImappingConstants.GET_READING:
-                User user = dao.findUserByAccountNumber(request
-                        .getValueByKey(IRequestResponseConstants.ACCOUNT));
-                System.out.println(user.getUsername() + " " + user.getRole());
-                Response response = new Response(true);
-                response.getBody()[0][0] = mapping;
-                response.getBody()[0][1] = getReadings(user);
-                return response;
+                return getReadings(request);
             default:
                 return new Response(request.isAuth());
         }
@@ -115,52 +110,55 @@ public class API implements Iapi{
         User user = dao.findUserByAccountNumber(account);// ищем пользователя по аккаунту
         Response response = new Response(success);
         response.getBody()[0][0] = ImappingConstants.NEW_READING;
-        response.getBody()[0][1] = getReadings(user);// получаем данные по показаниям
+        response.getBody()[0][1] = getCurrentUserReadings(user);// получаем данные по показаниям
         return response;
     }
 
-    private String getAllUsers() {
-        // преобразуем его в строку для передачи в ответе
-        StringBuilder builder = new StringBuilder();
+    private void getAllUsers(Response response) {
         /*
         получаем список всех зарегистрированнх пользователей, фильтруем их
-        по правам доступа, собираем в строку имя и номер аккаунта,
-        разделяя их символом "|"
+        по правам доступа
         */
-        dao.getAllUsers().stream().filter((u) -> u.getRole().equals(IRoleConstants.USER))
-                .forEach((user) -> {
-            builder.append(user.getUsername()).append(" | ").append(user.getAcc()
-                    .getAccountNumber()).append(";");
-            System.out.println("user:" + user.getUsername());
-//            builder.append(user.getUsername()).append(";");
-        });
-        builder.deleteCharAt(builder.lastIndexOf(";"));// удаляем последний символ;
-
-        return builder.toString();
+        dao.getAllUsers().forEach((user) -> response.addToBody(user));
     }
 
-    private String getReadings(User user) {
-        StringBuilder builder = new StringBuilder();
-        Reading[] readings = user.getAcc().getReadings();// получаем массив показаний текущего пользователя
-        if(readings.length > 0) {
-            // преобразуем в строку
-            for(Reading r : readings) {
-                if (r != null) {
-                    WaterReading wr = (WaterReading) r;
-                    builder.append(wr.getDate()).append(" | ").append(wr.getMeasuring())
-                            .append(" | ").append(wr.isHot()).append(";");
-                } else {
-                    break;
-                }
-            }
-            if(builder.length() >0) {
-                builder.deleteCharAt(builder.lastIndexOf(";"));// удаляем последний символ;
-                return builder.toString();
-            } else {
-                return null;
-            }
+    /**
+     * Возвращает показания по текущему пользователю
+     * @param user пользователь для получения данных
+     * @return строка, содержащая форматированные данные по показаниям
+     */
+    private String getCurrentUserReadings(User user) {
+        
+        // получаем массив показаний текущего пользователя
+        ArrayList<Reading> readings = user.getAcc().getReadings();
+        StringBuilder builder = new StringBuilder();// построитель строк
+        
+        if(readings.isEmpty()) {
+            // если показаний нет
+            return null;
         }
-        return null;
+        // преобразуем в строку
+        readings.stream().map((r) -> (WaterReading) r).forEachOrdered((wr) -> {
+            builder.append(wr.getDate()).append(" | ").append(wr.getMeasuring())
+                    .append(" | ").append(wr.isHot()).append(";");
+        });
+        builder.deleteCharAt(builder.lastIndexOf(";"));// удаляем последний символ;
+        return builder.toString();
+            
+        
+    }
+    
+    
+    private Response getReadings(Request request) {
+        String account = request.getValueByKey(IRequestResponseConstants.ACCOUNT);
+        // проверяем, что такой пользователь есть в нашей базе
+        User user = dao.findUserByAccountNumber(account);
+        if (user != null) {
+            Response response = new Response(true);
+            response.getBody()[0][0] = ImappingConstants.GET_READING;
+            response.getBody()[0][1] = getCurrentUserReadings(user);// данные по показаниям
+            return response;
+        } else return new Response(false);
     }
 
     private Response dataResponse() {
@@ -174,17 +172,17 @@ public class API implements Iapi{
         // в зависимости от прав пользователя формируем тело ответа
         if (currentUser.getRole().equals(IRoleConstants.USER)) {
             // подключился обычный пользователь
-            response.getBody()[3][0] = IRequestResponseConstants.ACCOUNT;
-            response.getBody()[3][1] = currentUser.getAcc().getAccountNumber();
-            response.getBody()[4][0] = IRequestResponseConstants.READINGS;
-            response.getBody()[4][1] = getReadings(currentUser);
+            response.addToBody(currentUser);
+//            response.getBody()[3][0] = IRequestResponseConstants.ACCOUNT;
+//            response.getBody()[3][1] = currentUser.getAcc().getAccountNumber();
+//            response.getBody()[4][0] = IRequestResponseConstants.READINGS;
+//            response.getBody()[4][1] = getCurrentUserReadings(currentUser);// данные по показаниям
         } else {
             /*
              Подключился администратор. Для него мы должны передать
              данные по зарегистрированным пользователям вместо аккаунта и показаний
              */
-            response.getBody()[3][0] = IRequestResponseConstants.USERS;
-            response.getBody()[3][1] = getAllUsers();
+            getAllUsers(response);
         }
         return response;
     }

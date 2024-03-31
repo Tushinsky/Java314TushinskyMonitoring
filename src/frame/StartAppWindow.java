@@ -3,6 +3,7 @@ package frame;
 import in.Request;
 import api.API;
 import api.Response;
+import entities.IRoleConstants;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,6 +20,8 @@ public class StartAppWindow extends JFrame {
     private final API api = new API();
     private HomePagePanel homePagePanel;
     private StartPanel startPanel;
+    private RegisterPanel registerPanel;
+    private AdminPagePanel adminPagePanel;
     
     /**
      * Constructs a new frame that is initially invisible.
@@ -60,9 +63,9 @@ public class StartAppWindow extends JFrame {
         mainPanel.setBackground(Color.CYAN);
         mainPanel.setOpaque(true);
         createStartPanel();// создаём стартовую панель
-        createLoginPanel();// создаём панель для ввода логина и пароля пользователя
-//            LoginPanel registerPanel = registerPanel();// создаём панель для регистрации пользователя
-        createHomePagePanel();// создаём домашнюю страницу пользователя
+//        createLoginPanel();// создаём панель для ввода логина и пароля пользователя
+////            LoginPanel registerPanel = registerPanel();// создаём панель для регистрации пользователя
+//        createHomePagePanel();// создаём домашнюю страницу пользователя
         
 //            mainPanel.add(registerPanel, REGISTER);
 
@@ -78,8 +81,8 @@ public class StartAppWindow extends JFrame {
 //        homePagePanel.setSize(homePagePanel.getPreferredSize());
         
         mainPanel.add(startPanel,LOG_OUT);
-        mainPanel.add(loginPanel, LOG_IN);
-        mainPanel.add(homePagePanel, HOME_PAGE);
+//        mainPanel.add(loginPanel, LOG_IN);
+//        mainPanel.add(homePagePanel, HOME_PAGE);
         super.setType(Type.NORMAL);
         
     }
@@ -102,10 +105,15 @@ public class StartAppWindow extends JFrame {
         startPanel.addPropertyChangeListener(evt -> {
 //                System.out.println("start_name=" + evt.getPropertyName());
             if (evt.getNewValue() == null) return;
-            if (evt.getNewValue().equals(LOG_IN) || evt.getNewValue().equals(REGISTER)) {
-                loginPanel.setOkAction(evt.getNewValue().toString());
+            if (evt.getNewValue().equals(LOG_IN)) {
+                // показываем страницу ввода пароля и логина
+                createLoginPanel();
                 showPanel(LOG_IN);
                 startPanel.setOkEnabled(true);// разблокируем кнопку входа
+            } else if(evt.getNewValue().equals(REGISTER)) {
+                // показываем страницу регистрацию
+                createRegisterPanel();
+                showPanel(REGISTER);
             } else if (evt.getNewValue().equals(EXIT)){
                 System.exit(0);
             }
@@ -126,46 +134,88 @@ public class StartAppWindow extends JFrame {
             if (value == null) return;
             switch (value.toString()) {
                 case LOG_IN:
-                case REGISTER:
-                    signIn(loginPanel.getRequest());
+                    // получаем тело запроса
+                    Request request = loginPanel.getRequest();
+                    // проверяем запрос
+                    if(request != null) {
+                        if(signIn(request)) {
+                            
+                            cardLayout.removeLayoutComponent(loginPanel);// удаляем панель из менеджера
+                        } else {
+                            JOptionPane.showMessageDialog(this, 
+                                "Проверьте правильность ввода логина или пароля!", "Аутентификация", 
+                                        JOptionPane.WARNING_MESSAGE);
+                        }
+                    } else {
+                        // извещаем пользователя
+                        JOptionPane.showMessageDialog(this, 
+                                "Превышен лимит попыток для входа. Доступ закрыт.\n" +
+                                        "Обратитесь к администратору!", "Аутентификация", 
+                                        JOptionPane.WARNING_MESSAGE);
+                        cardLayout.removeLayoutComponent(loginPanel);// удаляем панель из менеджера
+                        showPanel(LOG_OUT);// показываем начальную страницу
+                        startPanel.setOkEnabled(false);// блокируем кнопку ввода
+                    }
                     break;
                 case LOG_OUT:
-                    showPanel(value.toString());
+                    showPanel(LOG_OUT);
                     break;
                 default:
                     break;
             }
             loginPanel.setName(null);
+//            loginPanel = null;
 
         });
+        mainPanel.add(loginPanel, LOG_IN);
+    }
+    
+    private void createRegisterPanel() {
+        registerPanel = new RegisterPanel();
+        // добавляем к панели регистрации слушатель изменения свойства Name
+        registerPanel.addPropertyChangeListener(evt -> {
+            Object value = evt.getNewValue();
+//                System.out.println("login_name=" + evt.getNewValue().toString());
+            if (value == null) return;
+            switch (value.toString()) {
+                case REGISTER:
+                    signIn(registerPanel.getRequest());
+                    break;
+                case LOG_OUT:
+                    
+                    showPanel(LOG_OUT);
+                    break;
+                default:
+                    break;
+            }
+            cardLayout.removeLayoutComponent(registerPanel);// удаляем панель из менеджера
+            registerPanel.setName(null);
+        });
+        mainPanel.add(registerPanel, REGISTER);
     }
 
     /**
      * Выполняет запрос на вход в домашнюю страницу
      * @param request запрос с параметрами на вход
      */
-    private void signIn(Request request) {
-        if(request == null) {
-            JOptionPane.showMessageDialog(this, 
-                    "Превышен лимит попыток для входа. Доступ закрыт.\n" +
-                            "Обратитесь к администратору!", "Аутентификация", 
-                            JOptionPane.WARNING_MESSAGE);
-            showPanel(LOG_OUT);// показываем начальную страницу
-            startPanel.setOkEnabled(false);// блокируем кнопку ввода
-        } else {
-            // отправляем запрос на вход
-            Response response = api.response(request);
-            if (response.isAuth()) {
-                // если запрос на вход подтверждён, переходим на домашнюю страницу
+    private boolean signIn(Request request) {
+        // отправляем запрос на вход
+        Response response = api.response(request);
+        boolean retValue = response.isAuth();// получаем результат ответа
+        if (retValue) {
+            // если запрос на вход подтверждён, переходим на домашнюю страницу
+            if(response.getBody()[2][1].equals(IRoleConstants.USER)) {
+                createHomePagePanel();// создаём панель домашней страницы пользователя
                 homePagePanel.setResponse(response);
-                showPanel(HOME_PAGE);
             } else {
-                JOptionPane.showMessageDialog(this, 
-                    "Проверьте правильность ввода логина или пароля!", "Аутентификация", 
-                            JOptionPane.WARNING_MESSAGE);
-                
+                // создаём панель домашней страницы администратора
+                createAdminPagePanel();
+                adminPagePanel.setResponse(response);
             }
+            
+            showPanel(HOME_PAGE);
         }
+        return retValue;
     }
 
     /**
@@ -179,30 +229,44 @@ public class StartAppWindow extends JFrame {
             switch(evt.getNewValue().toString()) {
                 case LOG_OUT:
                     // выход на стартовую панель
-                    showPanel(evt.getNewValue().toString());
+                    cardLayout.removeLayoutComponent(homePagePanel);
+                    showPanel(LOG_OUT);
                     break;
                 case NEW_READING:
-                case REMOVE_ACCOUNT:
-                case REMOVE_READING:
                 case GET_READING:
-                    setResponseToHomePanel(homePagePanel.getRequest());
+                    Response response = api.response(homePagePanel.getRequest());
+                    homePagePanel.setResponse(response);
                     break;
                 default:
                     return;
             }
             homePagePanel.setName(null);
         });
+        mainPanel.add(homePagePanel, HOME_PAGE);
     }
-
-    /**
-     * Передаёт данные на домашнюю страницу
-     * @param request запрос на получение данных
-     */
-    private void setResponseToHomePanel(Request request) {
-        // отправляем запрос на добавление
-        Response response = api.response(request);
-        homePagePanel.setResponse(response);
-
+    
+    private void createAdminPagePanel() {
+        adminPagePanel = new AdminPagePanel();
+        // добавляем слушатель изменений свойства NAME
+        adminPagePanel.addPropertyChangeListener("name", evt -> {
+            if (evt.getNewValue() == null) return;
+            switch(evt.getNewValue().toString()) {
+                case LOG_OUT:
+                    // выход на стартовую панель
+                    cardLayout.removeLayoutComponent(adminPagePanel);
+                    showPanel(LOG_OUT);
+                    break;
+                case NEW_READING:
+                case GET_READING:
+                    Response response = api.response(adminPagePanel.getRequest());
+                    adminPagePanel.setResponse(response);
+                    break;
+                default:
+                    return;
+            }
+            adminPagePanel.setName(null);
+        });
+        mainPanel.add(adminPagePanel, HOME_PAGE);
     }
 
 }

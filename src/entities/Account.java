@@ -1,21 +1,19 @@
 package entities;
 
 
-import java.util.Arrays;
+import java.util.ArrayList;
 
 public class Account {
     private final int id;// идентификационный код
-    private final int id_user;// код пользователя аккаунта
     private final String accountNumber; //лицевой счет
-    private final Reading[] readings = new Reading[500];
+    private final ArrayList<Reading> readings = new ArrayList<>();
 
-    public Account(int id, int id_user, String accountNumber) {
+    public Account(int id, String accountNumber) {
         this.id = id;
-        this.id_user = id_user;
         this.accountNumber = accountNumber;
     }
 
-    public Reading[] getReadings() {
+    public ArrayList getReadings() {
         return readings;
     }
 
@@ -23,7 +21,7 @@ public class Account {
     public String toString() {
         return "Account{" +
                 "accountNumber='" + accountNumber + '\'' +
-                ", readings=" + Arrays.toString(readings) +
+                ", readings=" + readings +
                 '}';
     }
 
@@ -35,4 +33,7 @@ public class Account {
         return id;
     }
     
+    public void addReading(Reading reading) {
+        readings.add(reading);
+    }
 }
