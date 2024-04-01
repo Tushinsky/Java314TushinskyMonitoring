@@ -40,10 +40,6 @@ public class HomePagePanel extends PagePanel {
         switch (this.getName()) {
             case NEW_READING:
                 return addNewReading();
-            case REMOVE_ACCOUNT:
-                return removeAccount();
-            case REMOVE_READING:
-                return removeReadings();
             case GET_READING:
                 return getReading();
             default:
@@ -59,85 +55,43 @@ public class HomePagePanel extends PagePanel {
             // если передаётся имя пользователя, вызывается инициализация компонентов
             initComponents();// инициализация компонентов пользовательского интерфейса
         } else {
-            // если передаются другие данные (новые показания, на удаление аккаунта)
-            switch (response.getBody()[0][0]) {
-                case NEW_READING:
-                    // добавление новых показаний
-//                if (response.isAuth()) {
-                    // если ответ положительный, и новые показания приняты, добавляем их в список показаний
-                    if (response.isAuth()) {
-                        updateResponseData();
-                    } else {
-                        JOptionPane.showMessageDialog(null,
-                                "Внесение показаний допускается только одни раз в текущем месяце",
-                                "Warning", JOptionPane.WARNING_MESSAGE);
-                    }
+            // если ответ положительный, и новые показания приняты, добавляем их в список показаний
+            if (response.isAuth()) {
+                // создаём класс показаний
+                updateResponseData();// обновляем данные в списке
+            } else {
+                JOptionPane.showMessageDialog(null,
+                        "Внесение показаний допускается только одни раз в текущем месяце",
+                        "Warning", JOptionPane.WARNING_MESSAGE);
+            }
 
 //                }
-                    break;
-                case REMOVE_ACCOUNT:
-                    if (!response.isAuth()) {
-                        // удаление аккаунта пользователя
-                        JOptionPane.showMessageDialog(null,
-                                "При удалении аккаунта произошли ошибки. Обратитесь к разработчику",
-                                "Warning", JOptionPane.WARNING_MESSAGE);
-                    } else {
-                        // проверяем кто дал запрос на удаление аккаунта: администратор или рядовой пользователь
-                        if (response.getBody()[2][1].equals(IRoleConstants.USER)) {
-                            // запрос сделал пользователь, выходим со страницы
-                            this.setName(LOG_OUT);
-                        } else {
-                            // запрос сделал администратор, обновляем список пользователей
-                            System.out.println("Удаление аккаунта успешно");
-                        }
-                    }   break;
-                case GET_READING:
-                    //                System.out.println("we are here");
-                    updateResponseData();
-                    break;
-                default:
-                    break;
-            }
+
         }
     }
 
     private void initComponents() {
+        // вошёл простой пользователь
         txtReading = new JTextField(10);// поле для ввода показаний
-        chkHotBox.setSelected(false);// вывод показаний по холодной воде
+        super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
+                "align=\"center\" cols=\"1\" width=\"100%\" bgcolor=\"#008080\">" +
+                "<tr><td align=\"justify\">" + "Добро пожаловать на страницу персонального аккаунта." +
+                "</td></tr>" +
+                "<tr><td align=\"left\"><b>" + userName + "</b>. Лицевой счёт <u>" + 
+                response.getFromBody(0).getAcc().getAccountNumber() + "</u>" +
+                "</td></tr>" +
+                "<tr><td align=\"right\">" +
+                "Сегодня <b><u>" + LocalDate.now() +
+                "</u></b>" +
+                "</td></tr></table>");
+        super.setRemoveAction("");// скрываем кнопку удаления аккаунта
+        super.addComponent(getUserBox());
         userName = response.getBody()[0][1];
         userRole = response.getBody()[2][1];
-        // в зависимости от прав пользователя будут создаваться соответствующие элементы
-        if (response.getBody()[2][1].equals(IRoleConstants.USER)) {
-            // вошёл простой пользователь
-            super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
-                    "align=\"center\" cols=\"1\" width=\"100%\" bgcolor=\"#008080\">" +
-                    "<tr><td align=\"justify\">" + "Добро пожаловать на страницу персонального аккаунта." +
-                    "</td></tr>" +
-                    "<tr><td align=\"left\"><b>" + userName + "</b>. Лицевой счёт <u>" + 
-                    response.getFromBody(0).getAcc().getAccountNumber() + "</u>" +
-                    "</td></tr>" +
-                    "<tr><td align=\"right\">" +
-                    "Сегодня <b><u>" + LocalDate.now() +
-                    "</u></b>" +
-                    "</td></tr></table>");
-            super.setRemoveAction("");// скрываем кнопку удаления аккаунта
-            super.addComponent(getUserBox());
-            responseData = response.getFromBody(0).getAcc().getReadings();
-            readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));// список показаний
-            accountNumber = response.getBody()[3][1];
-        } else {
-            // вошёл администратор
-            super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
-                    "align=\"center\" cols=\"1\" width=\"100%\" bgcolor=\"#008080\">" +
-                    "<tr><td align=\"center\">" +
-                    "Вы вошли на страницу с правами администратора." + 
-                    "</td></tr>" +
-                    "<tr><td align=\"left\">Администратор <b><u>" +
-                    userName + "</u></b></td></tr>" +
-                    "<tr><td align=\"right\">Сегодня <b><u>" + LocalDate.now() + "</u></b></td></tr></table>");
-            super.addComponent(getAdminBox());
-            super.setRemoveCaption("Удалить аккаунт");
-        }
+        responseData = response.getFromBody(0).getAcc().getReadings();
+        readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));// список показаний
+        accountNumber = response.getBody()[3][1];
+        
         super.setOkAction(NEW_READING);
         super.setRemoveAction(REMOVE_ACCOUNT);
         super.setExitAction(LOG_OUT);
@@ -145,9 +99,14 @@ public class HomePagePanel extends PagePanel {
 
         // добавляем слушатель на флажок
         chkHotBox.addActionListener((e -> {
-            readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));// список показаний
+            try {
+                readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));// список показаний
+            } catch(Exception ex) {
+                System.out.println("error:" + ex.getMessage());
+            }
         }));
-
+        chkHotBox.setSelected(false);// вывод показаний по холодной воде
+        
     }
 
     /**
@@ -287,10 +246,6 @@ public class HomePagePanel extends PagePanel {
         return request;
     }
 
-    private Request removeReadings() {
-        return null;
-    }
-
     private Request getReading() {
         Request request = new Request(GET_READING, false);// создаём запрос на добавление показаний
         request.getBody()[0][0] = ImappingConstants.ACCOUNT;
@@ -302,10 +257,6 @@ public class HomePagePanel extends PagePanel {
         responseData = response.getFromBody(0).getAcc().getReadings();
         readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));
 
-    }
-
-    public String getMapping() {
-        return mapping;
     }
 
 }

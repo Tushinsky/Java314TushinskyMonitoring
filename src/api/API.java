@@ -103,12 +103,14 @@ public class API implements Iapi{
                 .getValueByKey(ImappingConstants.IS_HOT).equals("1");
 
         // добавляем новые показания в аккаунт пользователя
+        WaterReading wr = new WaterReading(localDate, measuring, isHot);
         boolean success = dao
-                .addNewReading(account, new WaterReading(localDate, measuring, isHot));
+                .addNewReading(account, wr);
         User user = dao.findUserByAccountNumber(account);// ищем пользователя по аккаунту
         Response response = new Response(success);
         response.getBody()[0][0] = ImappingConstants.NEW_READING;
-        response.getBody()[0][1] = getCurrentUserReadings(user);// получаем данные по показаниям
+        response.getBody()[0][1] = "";// получаем данные по показаниям
+        response.addToBody(user);
         return response;
     }
 
