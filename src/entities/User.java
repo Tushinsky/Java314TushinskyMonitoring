@@ -88,5 +88,16 @@ public class User {
         return Objects.equals(this.password, other.password);
     }
 
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 53 * hash + this.id;
+        hash = 53 * hash + Objects.hashCode(this.login);
+        hash = 53 * hash + Objects.hashCode(this.username);
+        hash = 53 * hash + Objects.hashCode(this.password);
+        hash = 53 * hash + Objects.hashCode(this.acc);
+        return hash;
+    }
+
     
 }
