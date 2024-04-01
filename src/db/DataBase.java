@@ -132,6 +132,15 @@ public class DataBase implements IDao {
             currentUser.setAcc(acc);
             return true;
         }
+//        for (User user : users) {
+//            if (user == null) {
+//                return false;
+//            }
+//            if (user.getLogin().equals(login) && user.getPassword().equals(password)) {
+//                
+//                return true;
+//            }
+//        }
         return false;
     }
 
@@ -349,6 +358,4 @@ public class DataBase implements IDao {
     public User getCurrentUser() {
         return currentUser;
     }
-    
-    
 }

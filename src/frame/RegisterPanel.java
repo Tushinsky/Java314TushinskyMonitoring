@@ -5,9 +5,7 @@
  */
 package frame;
 
-import in.IRequestResponseConstants;
 import in.Request;
-import java.beans.PropertyChangeListener;
 import javax.swing.Box;
 import javax.swing.JLabel;
 import javax.swing.JPasswordField;
@@ -33,12 +31,13 @@ public class RegisterPanel extends PagePanel {
     }
     
     
+    @Override
     public Request getRequest() {
-        request.getBody()[0][0] = IRequestResponseConstants.USER_NAME;// ключ
+        request.getBody()[0][0] = ImappingConstants.USER_NAME;// ключ
         request.getBody()[0][1] = txtUserName.getText();// значение - логин пользователя
-        request.getBody()[1][0] = IRequestResponseConstants.LOGIN;// ключ
+        request.getBody()[1][0] = ImappingConstants.LOG_IN;// ключ
         request.getBody()[1][1] = txtLogin.getText();// значение - логин пользователя
-        request.getBody()[2][0] = IRequestResponseConstants.PASSWORD;// ключ
+        request.getBody()[2][0] = ImappingConstants.PASSWORD;// ключ
         request.getBody()[2][1] = String.valueOf(passwordField.getPassword());// значение - пароль пользователя
         return request;
     }

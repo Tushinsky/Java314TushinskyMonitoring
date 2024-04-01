@@ -1,6 +1,8 @@
 
 package frame;
 
+import api.Response;
+import in.Request;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
@@ -187,5 +189,21 @@ public class PagePanel extends JPanel {
     
     public void setRemoveEnabled(boolean enabled) {
         removeButton.setEnabled(enabled);
+    }
+    
+    /**
+     * Возвращает тело запроса к базе данных
+     * @return запрос на выборку данных
+     */
+    public Request getRequest() {
+        return new Request(okAction, true);
+    }
+    
+    /**
+     * Задаёт данные, полученные в результате запроса к базе
+     * @param response ответ из базы данных
+     */
+    public void setResponse(Response response) {
+        
     }
 }

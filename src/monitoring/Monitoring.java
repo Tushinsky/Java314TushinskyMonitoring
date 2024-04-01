@@ -5,7 +5,8 @@
  */
 package monitoring;
 
-import in.Front;
+import frame.StartAppWindow;
+import javax.swing.SwingUtilities;
 
 /**
  *
@@ -18,8 +19,10 @@ public class Monitoring {
      */
     public static void main(String[] args) {
         // TODO code application logic here
-        Front front = new Front();
-        front.start();
+        StartAppWindow startAppWindow = new StartAppWindow();
+        startAppWindow.setLocationRelativeTo(null);
+        SwingUtilities.updateComponentTreeUI(startAppWindow);
+        startAppWindow.setVisible(true);
 
     }
     
