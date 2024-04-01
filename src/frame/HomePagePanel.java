@@ -6,7 +6,7 @@ import entities.IRoleConstants;
 import entities.Reading;
 import entities.User;
 import entities.WaterReading;
-import in.IRequestResponseConstants;
+import mapping.ImappingConstants;
 
 import javax.swing.*;
 import java.time.LocalDate;
@@ -35,6 +35,7 @@ public class HomePagePanel extends PagePanel {
 
     }
 
+    @Override
     public Request getRequest() {
         switch (this.getName()) {
             case NEW_READING:
@@ -51,13 +52,10 @@ public class HomePagePanel extends PagePanel {
         return null;
     }
 
-    /**
-     * Задаёт данные, полученные в результате запроса к базе
-     * @param response ответ из базы данных
-     */
+    @Override
     public void setResponse(Response response) {
         this.response = response;
-        if (response.getBody()[0][0].equals(IRequestResponseConstants.USER_NAME)) {
+        if (response.getBody()[0][0].equals(ImappingConstants.USER_NAME)) {
             // если передаётся имя пользователя, вызывается инициализация компонентов
             initComponents();// инициализация компонентов пользовательского интерфейса
         } else {
@@ -266,24 +264,24 @@ public class HomePagePanel extends PagePanel {
 
     private Request addNewReading() {
         Request request = new Request(NEW_READING, false);// создаём запрос на добавление показаний
-        request.getBody()[0][0] = IRequestResponseConstants.ACCOUNT;
+        request.getBody()[0][0] = ImappingConstants.ACCOUNT;
         request.getBody()[0][1] = accountNumber;
-        request.getBody()[1][0] = IRequestResponseConstants.MEASURING;
+        request.getBody()[1][0] = ImappingConstants.MEASURING;
         request.getBody()[1][1] = txtReading.getText();
-        request.getBody()[2][0] = IRequestResponseConstants.LOCAL_DATE;
+        request.getBody()[2][0] = ImappingConstants.LOCAL_DATE;
         request.getBody()[2][1] = LocalDate.now().toString();
-        request.getBody()[3][0] = IRequestResponseConstants.IS_HOT;
+        request.getBody()[3][0] = ImappingConstants.IS_HOT;
         request.getBody()[3][1] = chkHotBox.isSelected() ? "1" : "0";
         return request;
     }
 
     private Request removeAccount() {
         Request request = new Request(REMOVE_ACCOUNT, false);// создаём запрос на добавление показаний
-        request.getBody()[0][0] = IRequestResponseConstants.USER_NAME;
+        request.getBody()[0][0] = ImappingConstants.USER_NAME;
         request.getBody()[0][1] = userName;
-        request.getBody()[1][0] = IRequestResponseConstants.ROLE;
+        request.getBody()[1][0] = ImappingConstants.ROLE;
         request.getBody()[1][1] = userRole;
-        request.getBody()[2][0] = IRequestResponseConstants.ACCOUNT;
+        request.getBody()[2][0] = ImappingConstants.ACCOUNT;
         request.getBody()[2][1] = accountNumber;
 
         return request;
@@ -295,7 +293,7 @@ public class HomePagePanel extends PagePanel {
 
     private Request getReading() {
         Request request = new Request(GET_READING, false);// создаём запрос на добавление показаний
-        request.getBody()[0][0] = IRequestResponseConstants.ACCOUNT;
+        request.getBody()[0][0] = ImappingConstants.ACCOUNT;
         request.getBody()[0][1] = accountNumber;
         return request;
     }

@@ -1,6 +1,5 @@
 package api;
 
-import mapping.ImappingConstants;
 import in.Request;
 import db.DataBase;
 import db.IDao;
@@ -8,8 +7,7 @@ import entities.IRoleConstants;
 import entities.User;
 import entities.Reading;
 import entities.WaterReading;
-import in.IRequestResponseConstants;
-
+import mapping.ImappingConstants;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
@@ -52,8 +50,8 @@ public class API implements Iapi{
     private Response login(Request request) {
         System.out.println(request);
         // получаем из тела запроса логин и пароль пользователя, который подключается
-        String login = request.getValueByKey(IRequestResponseConstants.LOGIN);
-        String password = request.getValueByKey(IRequestResponseConstants.PASSWORD);
+        String login = request.getValueByKey(ImappingConstants.LOG_IN);
+        String password = request.getValueByKey(ImappingConstants.PASSWORD);
         // проверяем, что такой пользователь есть в нашей базе
         boolean success = dao.authorize(login, password);
         if (success) {
@@ -65,9 +63,9 @@ public class API implements Iapi{
 
     private Response newUser(Request request) {
         System.out.println(request);
-        String username = request.getValueByKey(IRequestResponseConstants.USER_NAME);
-        String login = request.getValueByKey(IRequestResponseConstants.LOGIN);
-        String password = request.getValueByKey(IRequestResponseConstants.PASSWORD);
+        String username = request.getValueByKey(ImappingConstants.USER_NAME);
+        String login = request.getValueByKey(ImappingConstants.LOG_IN);
+        String password = request.getValueByKey(ImappingConstants.PASSWORD);
         boolean success = dao.addNewUser(username, login, password);
         if (success) {
             currentUser = dao.findUserByUsername(login);
@@ -78,31 +76,31 @@ public class API implements Iapi{
     }
 
     private Response removeAccount(Request request) {
-        String account = request.getValueByKey(IRequestResponseConstants.ACCOUNT);
+        String account = request.getValueByKey(ImappingConstants.ACCOUNT);
 //        User user = dao.findUserByAccountNumber(account);// ищем пользователя по аккаунту
         boolean success = dao.removeAccount(account);// удаляем его аккаунт
         Response response = new Response(success);
         response.getBody()[0][0] = ImappingConstants.REMOVE_ACCOUNT;
         response.getBody()[0][1] = account;// получаем данные по показаниям
-        response.getBody()[1][0] = IRequestResponseConstants.USER_NAME;
+        response.getBody()[1][0] = ImappingConstants.USER_NAME;
         response.getBody()[1][1] = request
-                .getValueByKey(IRequestResponseConstants.USER_NAME);// получаем данные по показаниям
-        response.getBody()[2][0] = IRequestResponseConstants.ROLE;
+                .getValueByKey(ImappingConstants.USER_NAME);// получаем данные по показаниям
+        response.getBody()[2][0] = ImappingConstants.ROLE;
         response.getBody()[2][1] = request
-                .getValueByKey(IRequestResponseConstants.ROLE);// получаем данные по показаниям
+                .getValueByKey(ImappingConstants.ROLE);// получаем данные по показаниям
 
         return response;
     }
 
     private Response addNewReading(Request request) {
         System.out.println(request);
-        String account = request.getValueByKey(IRequestResponseConstants.ACCOUNT);
+        String account = request.getValueByKey(ImappingConstants.ACCOUNT);
         LocalDate localDate = LocalDate.parse(request
-                .getValueByKey(IRequestResponseConstants.LOCAL_DATE));
+                .getValueByKey(ImappingConstants.LOCAL_DATE));
         int measuring = Integer.parseInt(request
-                .getValueByKey(IRequestResponseConstants.MEASURING));
+                .getValueByKey(ImappingConstants.MEASURING));
         boolean isHot = request
-                .getValueByKey(IRequestResponseConstants.IS_HOT).equals("1");
+                .getValueByKey(ImappingConstants.IS_HOT).equals("1");
 
         // добавляем новые показания в аккаунт пользователя
         boolean success = dao
@@ -150,7 +148,7 @@ public class API implements Iapi{
     
     
     private Response getReadings(Request request) {
-        String account = request.getValueByKey(IRequestResponseConstants.ACCOUNT);
+        String account = request.getValueByKey(ImappingConstants.ACCOUNT);
         // проверяем, что такой пользователь есть в нашей базе
         User user = dao.findUserByAccountNumber(account);
         if (user != null) {
@@ -163,19 +161,19 @@ public class API implements Iapi{
 
     private Response dataResponse() {
         Response response = new Response(true);
-        response.getBody()[0][0] = IRequestResponseConstants.USER_NAME;
+        response.getBody()[0][0] = ImappingConstants.USER_NAME;
         response.getBody()[0][1] = currentUser.getUsername();
-        response.getBody()[1][0] = IRequestResponseConstants.PASSWORD;
+        response.getBody()[1][0] = ImappingConstants.PASSWORD;
         response.getBody()[1][1] = currentUser.getPassword();
-        response.getBody()[2][0] = IRequestResponseConstants.ROLE;
+        response.getBody()[2][0] = ImappingConstants.ROLE;
         response.getBody()[2][1] = currentUser.getRole();
         // в зависимости от прав пользователя формируем тело ответа
         if (currentUser.getRole().equals(IRoleConstants.USER)) {
             // подключился обычный пользователь
             response.addToBody(currentUser);
-//            response.getBody()[3][0] = IRequestResponseConstants.ACCOUNT;
+//            response.getBody()[3][0] = ImappingConstants.ACCOUNT;
 //            response.getBody()[3][1] = currentUser.getAcc().getAccountNumber();
-//            response.getBody()[4][0] = IRequestResponseConstants.READINGS;
+//            response.getBody()[4][0] = ImappingConstants.READINGS;
 //            response.getBody()[4][1] = getCurrentUserReadings(currentUser);// данные по показаниям
         } else {
             /*

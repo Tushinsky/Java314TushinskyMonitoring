@@ -10,7 +10,7 @@ import entities.IRoleConstants;
 import entities.Reading;
 import entities.User;
 import entities.WaterReading;
-import in.IRequestResponseConstants;
+import mapping.ImappingConstants;
 import in.Request;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -50,6 +50,7 @@ public class AdminPagePanel extends PagePanel{
         super();
     }
     
+    @Override
     public Request getRequest() {
         switch (this.getName()) {
             case REMOVE_ACCOUNT:
@@ -64,13 +65,10 @@ public class AdminPagePanel extends PagePanel{
         return null;
     }
 
-    /**
-     * Задаёт данные, полученные в результате запроса к базе
-     * @param response ответ из базы данных
-     */
+    @Override
     public void setResponse(Response response) {
         this.response = response;
-        if (response.getBody()[0][0].equals(IRequestResponseConstants.USER_NAME)) {
+        if (response.getBody()[0][0].equals(ImappingConstants.USER_NAME)) {
             // если передаётся имя пользователя, вызывается инициализация компонентов
             initComponents();// инициализация компонентов пользовательского интерфейса
         } else {
@@ -224,11 +222,11 @@ public class AdminPagePanel extends PagePanel{
 
     private Request removeAccount() {
         Request request = new Request(REMOVE_ACCOUNT, false);// создаём запрос на добавление показаний
-        request.getBody()[0][0] = IRequestResponseConstants.USER_NAME;
+        request.getBody()[0][0] = ImappingConstants.USER_NAME;
         request.getBody()[0][1] = userName;
-        request.getBody()[1][0] = IRequestResponseConstants.ROLE;
+        request.getBody()[1][0] = ImappingConstants.ROLE;
         request.getBody()[1][1] = userRole;
-        request.getBody()[2][0] = IRequestResponseConstants.ACCOUNT;
+        request.getBody()[2][0] = ImappingConstants.ACCOUNT;
         request.getBody()[2][1] = accountNumber;
 
         return request;
@@ -240,7 +238,7 @@ public class AdminPagePanel extends PagePanel{
 
     private Request getReading() {
         Request request = new Request(GET_READING, false);// создаём запрос на добавление показаний
-        request.getBody()[0][0] = IRequestResponseConstants.ACCOUNT;
+        request.getBody()[0][0] = ImappingConstants.ACCOUNT;
         request.getBody()[0][1] = accountNumber;
         return request;
     }

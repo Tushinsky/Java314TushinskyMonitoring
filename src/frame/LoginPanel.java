@@ -1,6 +1,5 @@
 package frame;
 
-import in.IRequestResponseConstants;
 import mapping.ImappingConstants;
 import in.Request;
 
@@ -22,18 +21,19 @@ public class LoginPanel extends PagePanel {
     private String okAction;
     private int count = 0;// счётчик попыток ввода
     
+    @Override
     public Request getRequest() {
         if(okAction.equals(ImappingConstants.LOG_IN)){
-            request.getBody()[0][0] = IRequestResponseConstants.LOGIN;// ключ
+            request.getBody()[0][0] = ImappingConstants.LOG_IN;// ключ
             request.getBody()[0][1] = txtLogin.getText();// значение - логин пользователя
-            request.getBody()[1][0] = IRequestResponseConstants.PASSWORD;// ключ
+            request.getBody()[1][0] = ImappingConstants.PASSWORD;// ключ
             request.getBody()[1][1] = String.valueOf(passwordField.getPassword());// значение - пароль пользователя
         } else {
-            request.getBody()[0][0] = IRequestResponseConstants.USER_NAME;// ключ
+            request.getBody()[0][0] = ImappingConstants.USER_NAME;// ключ
             request.getBody()[0][1] = txtUserName.getText();// значение - логин пользователя
-            request.getBody()[1][0] = IRequestResponseConstants.LOGIN;// ключ
+            request.getBody()[1][0] = ImappingConstants.LOG_IN;// ключ
             request.getBody()[1][1] = txtLogin.getText();// значение - логин пользователя
-            request.getBody()[2][0] = IRequestResponseConstants.PASSWORD;// ключ
+            request.getBody()[2][0] = ImappingConstants.PASSWORD;// ключ
             request.getBody()[2][1] = String.valueOf(passwordField.getPassword());// значение - пароль пользователя
         }
         count++;// увеличиваем счётчик попыток
