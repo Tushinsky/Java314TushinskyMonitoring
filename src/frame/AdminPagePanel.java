@@ -44,8 +44,8 @@ public class AdminPagePanel extends PagePanel{
     private String userRole;
     private final JCheckBox chkHotBox = new JCheckBox("горячая");// отмечает показания по горячей или холодной воде
     private ArrayList<Reading> responseData;
-    private String mapping = "";
-
+    private final JList<String> userList = new JList<>();// список зарегистрированных пользователей
+        
     public AdminPagePanel() {
         super();
     }
@@ -91,7 +91,6 @@ public class AdminPagePanel extends PagePanel{
                         }
                     }   break;
                 case GET_READING:
-                    //                System.out.println("we are here");
                     updateResponseData();
                     break;
                 default:
@@ -100,6 +99,9 @@ public class AdminPagePanel extends PagePanel{
         }
     }
 
+    /**
+     * Инициализация компонентов пользовательского интерфейса
+     */
     private void initComponents() {
         txtReading = new JTextField(10);// поле для ввода показаний
         chkHotBox.setSelected(false);// вывод показаний по холодной воде
@@ -123,28 +125,36 @@ public class AdminPagePanel extends PagePanel{
 
         // добавляем слушатель на флажок
         chkHotBox.addActionListener((e -> {
-            readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));// список показаний
+            updateResponseData();// список показаний
         }));
-
+        userList.setSelectedIndex(0);
     }
 
     /**
-     * Возвращает данные для администратора сайта
+     * Создаёт элементы пользовательского интерфайса для администратора.
+     * Заполняет их данными
      */
     private Box getAdminBox() {
-        Box adminBox = Box.createVerticalBox();
+        createUserList();// создаём и заполняем список пользователей
+        Box adminBox = Box.createVerticalBox();// контейнер для размещения
         JLabel lblUsers = new JLabel("Пользователи");
-        final JList<String> userList = getUserList();// список зарегистрированных пользователей
         JButton removeReadingButton = new JButton("Удалить показания");
 
+        // создаём контейнер для размещения списка пользователей
         Box box1 = Box.createVerticalBox();
         box1.add(lblUsers);
         box1.add(Box.createVerticalStrut(5));
+        // список ложим в панель прокрутки и размещаем в контейнере
         box1.add(new JScrollPane(userList));
         box1.add(Box.createVerticalStrut(10));
 
-        Box box2 = createReadingBox();
+        Box box2 = createReadingBox();// создаём контейнер для списка показаний
 
+        /*
+        Создаём контейнер для размещения поля ввода новы показаний, флажка
+        для задания признака холодной или горячей воды, кнопки для удаления
+        выбранных показаний
+        */
         Box box3 = Box.createHorizontalBox();
         box3.add(Box.createHorizontalStrut(10));
         box3.add(new JLabel("Новые показания"));
@@ -156,6 +166,7 @@ public class AdminPagePanel extends PagePanel{
         box3.add(removeReadingButton);
         box3.add(Box.createHorizontalGlue());
 
+        // размещаем все созданные элементы
         Box box4 = Box.createHorizontalBox();
         box4.add(box1);
         box4.add(Box.createHorizontalStrut(10));
@@ -169,6 +180,11 @@ public class AdminPagePanel extends PagePanel{
         return adminBox;
     }
 
+    /**
+     * Создаёт и возвращает контейнер для размещения списка показаний выбранного
+     * пользователя.
+     * @return box - контейнер для размещения списка показаний
+     */
     private Box createReadingBox() {
         Box box = Box.createVerticalBox();
         Box horBox = Box.createHorizontalBox();
@@ -182,6 +198,12 @@ public class AdminPagePanel extends PagePanel{
         return box;
     }
 
+    /**
+     * Возвращает модель для заполнения списка данными
+     * @param data список данных
+     * @param isHot флаг для фильтра данных
+     * @return полученную модель для заполнения списка
+     */
     private DefaultListModel<String> readingListModel(ArrayList<Reading> data, boolean isHot) {
         DefaultListModel<String> model = new DefaultListModel<>();
         System.out.println("data= " + data);
@@ -196,15 +218,15 @@ public class AdminPagePanel extends PagePanel{
         return model;
     }
 
-    private JList<String> getUserList() {
-        JList<String> userList = new JList<>();// список зарегистрированных пользователей
+    /**
+     * Создание и заполнение списка пользователей данными
+     */
+    private void createUserList() {
         DefaultListModel<String> model = new DefaultListModel<>();
         int index = 0;
         User user;
         // заполняем модель списка
         while((user = response.getFromBody(index)) != null) {
-//            System.out.println("user:" + user.getUsername() + "; readings:" + 
-//                    user.getAcc().getReadings());
             model.addElement(user.getUsername());// имя пользователя
             index++;// увеличиваем счётчик цикла
         }
@@ -217,9 +239,12 @@ public class AdminPagePanel extends PagePanel{
             readingList.setModel(readingListModel(u.getAcc().getReadings(), 
                     chkHotBox.isSelected()));// список показаний
         });
-        return userList;
     }
 
+    /**
+     * Возвращает запрос на удаление пользовательского аккаунта
+     * @return request - запрос на удаление аккаунта
+     */
     private Request removeAccount() {
         Request request = new Request(REMOVE_ACCOUNT, false);// создаём запрос на добавление показаний
         request.getBody()[0][0] = ImappingConstants.USER_NAME;
@@ -232,10 +257,18 @@ public class AdminPagePanel extends PagePanel{
         return request;
     }
 
+    /**
+     * Возвращает запрос на удаление показаний из аккаунта выбранного пользователя
+     * @return request - запрос на удаление показаний
+     */
     private Request removeReadings() {
         return null;
     }
 
+    /**
+     * Возвращает запрос на получение показаний выделенного пользователя
+     * @return request - запрос на получение показаний
+     */
     private Request getReading() {
         Request request = new Request(GET_READING, false);// создаём запрос на добавление показаний
         request.getBody()[0][0] = ImappingConstants.ACCOUNT;
@@ -243,13 +276,13 @@ public class AdminPagePanel extends PagePanel{
         return request;
     }
 
+    /**
+     * Обновление данных из полученного ответа, заполнение списка
+     */
     private void updateResponseData() {
-        responseData = response.getFromBody(0).getAcc().getReadings();
+        int index = userList.getSelectedIndex();
+        responseData = response.getFromBody(index).getAcc().getReadings();
         readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));
 
-    }
-
-    public String getMapping() {
-        return mapping;
     }
 }

@@ -2,7 +2,6 @@ package frame;
 
 import in.Request;
 import api.Response;
-import entities.IRoleConstants;
 import entities.Reading;
 import entities.User;
 import entities.WaterReading;
@@ -73,12 +72,14 @@ public class HomePagePanel extends PagePanel {
     private void initComponents() {
         // вошёл простой пользователь
         txtReading = new JTextField(10);// поле для ввода показаний
+        userName = response.getBody()[0][1];
+        accountNumber = response.getFromBody(0).getAcc().getAccountNumber();
         super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
                 "align=\"center\" cols=\"1\" width=\"100%\" bgcolor=\"#008080\">" +
                 "<tr><td align=\"justify\">" + "Добро пожаловать на страницу персонального аккаунта." +
                 "</td></tr>" +
                 "<tr><td align=\"left\"><b>" + userName + "</b>. Лицевой счёт <u>" + 
-                response.getFromBody(0).getAcc().getAccountNumber() + "</u>" +
+                accountNumber + "</u>" +
                 "</td></tr>" +
                 "<tr><td align=\"right\">" +
                 "Сегодня <b><u>" + LocalDate.now() +
@@ -86,11 +87,9 @@ public class HomePagePanel extends PagePanel {
                 "</td></tr></table>");
         super.setRemoveAction("");// скрываем кнопку удаления аккаунта
         super.addComponent(getUserBox());
-        userName = response.getBody()[0][1];
         userRole = response.getBody()[2][1];
         responseData = response.getFromBody(0).getAcc().getReadings();
         readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));// список показаний
-        accountNumber = response.getBody()[3][1];
         
         super.setOkAction(NEW_READING);
         super.setRemoveAction(REMOVE_ACCOUNT);

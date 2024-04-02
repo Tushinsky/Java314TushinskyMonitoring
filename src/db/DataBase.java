@@ -11,6 +11,8 @@ import java.io.RandomAccessFile;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,20 +59,12 @@ public class DataBase implements IDao {
      * @return аккаунт пользователя с данными
      */
     private Account accountInit(int idUser) {
-        Object[][] database;// получаем массив
-        database = getDataTable(accountFileName);
+        Object[] data;// получаем массив
+        data = getIDRecord(accountFileName, 1, String.valueOf(idUser));
         Account acc = null;
-        for(Object[] data : database) {
-            // получаем код пользователя из второго столбца
-            int id = Integer.parseInt(data[1].toString());
-            
-            if(id != idUser) {
-                continue;
-            }
+        if(data != null) {
             // создаём аккаунт по коду пользователя
             acc = new Account(Integer.parseInt(data[0].toString()), data[2].toString());
-            break;
-
         }
         return acc;
     }
@@ -84,22 +78,21 @@ public class DataBase implements IDao {
             return;
         }
         // получаем данные по аккаунту
-        Object[][] database = getDataTable(readingFileName);// получаем массив
-        for(Object[] data : database) {
-            // получаем код аккаунта пользователя из второго столбца
-            int idAcc = Integer.parseInt(data[1].toString());
-            if(idAcc != acc.getId()) {
-                continue;
+        Object[][] database = getDataTable(readingFileName);
+        // перебираем в цикле
+        for(Object[] db : database) {
+            if(Objects.equals(db[1], String.valueOf(acc.getId()))) {
+                // заполняем аккаунт пользователя данными
+                LocalDate date = LocalDate.parse(db[4].toString());
+                int count = Integer.parseInt(db[2].toString());
+                boolean hot = !db[3].toString().equals("0");
+                WaterReading reading = new WaterReading(date, count, hot);
+        //                    System.out.println("reading:" + reading);
+                acc.addReading(reading);
             }
-            // заполняем аккаунт пользователя данными
-            LocalDate date = LocalDate.parse(data[4].toString());
-            int count = Integer.parseInt(data[2].toString());
-            boolean hot = !data[3].toString().equals("0");
-            WaterReading reading = new WaterReading(date, count, hot);
-//                    System.out.println("reading:" + reading);
-            acc.addReading(reading);
-            
         }
+            
+        
     }
 
     @Override
@@ -112,57 +105,44 @@ public class DataBase implements IDao {
     @Override
     public boolean authorize(String login, String password) {
         // считываем таблицу зарегистрированных пользователей и заполняем массив
-        Object[][] database = getDataTable(userFileName);// получаем массив
-        // перебираем, получаем пользователей
-        for(Object[] data : database) {
-            // логин пользователя находится в 4-м столбце таблицы
-            if(!data[3].toString().equals(login)) {
-                continue;
-            }
-            // если логин найден в базе данных, создаём пользователя
-            currentUser = new User(Integer.parseInt(data[0].toString()), 
-                    Integer.parseInt(data[1].toString()), data[2].toString(), 
-                    data[3].toString(), data[4].toString());
-            // получаем информацию по аккаунту
-            Account acc = accountInit(currentUser.getId());
-            readingsInit(acc);
-            currentUser.setAcc(acc);
-            return true;
+        Object[] data = getIDRecord(userFileName, 3, login);// получаем массив
+        // проверяем
+        if(data == null) {
+            return false;
         }
-        return false;
+        // если логин найден в базе данных, создаём пользователя
+        currentUser = new User(Integer.parseInt(data[0].toString()), 
+                Integer.parseInt(data[1].toString()), data[2].toString(), 
+                data[3].toString(), data[4].toString());
+        // получаем информацию по аккаунту
+        Account acc = accountInit(currentUser.getId());
+        readingsInit(acc);
+        currentUser.setAcc(acc);
+        return true;
     }
 
     @Override
     public User findUserByAccountNumber(String accountNumber) {
-        int idAccount = getIDRecord(accountFileName, 2, accountNumber);
+        Object[] data;
+        data = getIDRecord(accountFileName, 2, accountNumber);
+        int idAccount = Integer.parseInt(data[0].toString());
         if(idAccount == 0) {
             // если пользователь не найден
             return null;
         }
-        int idUser = getIDRecord(accountFileName, 1, accountNumber);
-        // считываем таблицу зарегистрированных пользователей и заполняем массив
-        Object[][] database;
-        Account acc = accountInit(idUser);
-        readingsInit(acc);// заполняем аккаунт данными
         // читаем таблицу пользователей
         User user;
-        database = getDataTable(userFileName);// получаем массив
+        data = getIDRecord(userFileName, 0, data[1].toString());// получаем массив
+        int idUser = Integer.parseInt(data[0].toString());
         // перебираем, получаем данные по показаниям
-        for(Object[] data : database) {
-            // код пользователя находится в 1-м столбце таблицы
-            if(Integer.parseInt(data[0].toString()) == idUser) {
-                // если код найден в базе данных, получаем код пользователя
-                
-                user = new User(idUser, Integer.parseInt(data[1].toString()), 
-                        data[1].toString(), userFileName, userFileName);
-                user.setAcc(acc);
-                System.out.println("user:" + user);
-                return user;// выход из цикла
-            }
-            
-        }
-        
-        return null;
+        Account acc = accountInit(idUser);
+        readingsInit(acc);// заполняем аккаунт данными
+        user = new User(idUser, Integer.parseInt(data[1].toString()), 
+                data[2].toString(), data[3].toString(), data[4].toString());
+        user.setAcc(acc);
+        System.out.println("user:" + user);
+        return user;// выход из циклаfor(Object[] database : dataBase) {
+
     }
 
     @Override
@@ -246,7 +226,11 @@ public class DataBase implements IDao {
     @Override
     public boolean addNewReading(String accountNumber, WaterReading waterReading) {
         // ищем код по номеру аккаунта
-        int idAccount = getIDRecord(accountFileName, 2, accountNumber);
+        Object[] data = getIDRecord(accountFileName, 2, accountNumber);
+        int idAccount = Integer.parseInt(data[0].toString());
+        if(idAccount == 0) {
+            return false;
+        }
         Object[][] database;
         // читаем таблицу показаний
         database = getDataTable(readingFileName);// получаем массив
@@ -324,20 +308,22 @@ public class DataBase implements IDao {
         return false;
     }
     
-    private int getIDRecord(String filename, int col, String template) {
+    private Object[] getIDRecord(String filename, int col, String template) {
         Object[][] database;
         database = getDataTable(filename);// получаем массив
         
         // перебираем, получаем код аккаунта
         for(Object[] data : database) {
+            System.out.println("data:" + Arrays.toString(data));
+            System.out.println("col:" + data[col].toString() + ", number=" + template);
             // номер аккаунта пользователя находится в 3-м столбце таблицы
             if(!data[col].toString().equals(template)) {
                 continue;
             }
             // если номер акканта найден в базе данных, получаем код
-            return Integer.parseInt(data[0].toString());
+            return data;
             
         }
-        return 0;
+        return null;
     }
 }
