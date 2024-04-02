@@ -68,7 +68,7 @@ public class API implements Iapi{
         String password = request.getValueByKey(ImappingConstants.PASSWORD);
         boolean success = dao.addNewUser(username, login, password);
         if (success) {
-            currentUser = dao.findUserByUsername(login);
+            currentUser = dao.getCurrentUser();
             System.out.println("user:" + currentUser);
             return dataResponse();
         } else return new Response(false);

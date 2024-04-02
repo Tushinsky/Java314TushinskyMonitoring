@@ -141,19 +141,21 @@ public class DataBase implements IDao {
                 data[2].toString(), data[3].toString(), data[4].toString());
         user.setAcc(acc);
         System.out.println("user:" + user);
-        return user;// выход из циклаfor(Object[] database : dataBase) {
+        return user;// возвращаем пользователя
 
     }
 
     @Override
     public User findUserByUsername(String login) {
-        for (User user : users) {
-            if (user.getLogin().equals(login)) {
-//                System.out.println(Arrays.toString(user.getAcc().getReadings()));
-                return user;
-            }
-        }
-        return null;
+        // получаем данные из базы по логину
+        Object[] data = getIDRecord(userFileName, 3, login);
+        if(data == null) return null;
+        // создаём пользователя
+        User user = new User(Integer.parseInt(data[0].toString()), 
+                Integer.parseInt(data[1].toString()), data[2].toString(), 
+                login, data[4].toString());
+        return user;// возвращаем его
+        
     }
 
     @Override
@@ -187,7 +189,7 @@ public class DataBase implements IDao {
             User u = new User(id, 2, username, login, password);
             u.setAcc(accountInit(u.getId()));
             Users.add(u);// добавляем его в список
-
+            currentUser = u;
             return true;
         }
         return false;
