@@ -19,7 +19,7 @@ public class WaterReading extends Reading{
     public String toString() {
         return "WaterReading{" +
                 super.toString() +
-                "type='" + type + '\'' +
+                ", type='" + type + '\'' +
                 ", isHot=" + isHot +
                 '}';
     }
