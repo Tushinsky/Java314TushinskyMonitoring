@@ -5,8 +5,6 @@ import api.Response;
 import in.Request;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import javax.swing.border.EtchedBorder;
 
 public class PagePanel extends JPanel {
@@ -20,6 +18,8 @@ public class PagePanel extends JPanel {
     private String removeAction = "";
     private Box box;
     private int componentCount;
+    private final JPanel centralPanel;// панель для размещения дополнительных элементов
+    private final JPanel buttonPanel;// панель для размещения кнопок
     /**
      * Создаёт шаблон панели для размещения элементов пользовательского интерфейса
      * с рамочным менеджером компоновки. В верхней части панели располагается метка
@@ -28,7 +28,9 @@ public class PagePanel extends JPanel {
      * в центр панели.
      */
     public PagePanel() {
-        mainPanel = new JPanel(new BorderLayout());// создаём главную панель
+        mainPanel = new JPanel();// создаём главную панель
+        centralPanel = new JPanel();
+        buttonPanel = new JPanel();
         super.add(mainPanel);
         initComponents();
     }
@@ -44,7 +46,9 @@ public class PagePanel extends JPanel {
         this.okAction = okAction;
         this.exitAction = exitAction;
         this.removeAction = removeAction;
-        mainPanel = new JPanel(new BorderLayout());// создаём главную панель
+        centralPanel = new JPanel();
+        buttonPanel = new JPanel();
+        mainPanel = new JPanel();// создаём главную панель
 //        mainPanel.setBorder(new EtchedBorder(2, Color.BLUE, Color.GREEN));
 //        mainPanel.setBackground(Color.ORANGE);
         initComponents();
@@ -92,37 +96,8 @@ public class PagePanel extends JPanel {
      * Инициализация компонентов пользовательского интерфейса
      */
     private void initComponents() {
-        super.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent ce) {
-                super.componentResized(ce); //To change body of generated methods, choose Tools | Templates.
-//                mainPanel.setSize(mainPanel.getParent().getSize());
-//                mainPanel.updateUI();
-//                System.out.println("page:" + mainPanel.getParent().getSize());
-//                System.out.println("main:" + mainPanel.getSize());
-//                lblCaption.setPreferredSize(new Dimension((int)mainPanel
-//                        .getSize().getWidth(), (int)lblCaption.getPreferredSize().getHeight()));
-//                box.setSize(mainPanel.getSize());
-//                
-//                System.out.println("box:" + box.getParent().getSize());
-//                System.out.println("box:" + box.getSize());
-                
-            }
-            
-        });
         lblCaption = new JLabel("Caption");
-//        Box horBox = Box.createHorizontalBox();
-//        horBox.add(Box.createHorizontalStrut(10));
-//        horBox.add(lblCaption);
-//        horBox.add(Box.createHorizontalStrut(10));
         lblCaption.setBorder(new EtchedBorder(Color.yellow, Color.black));
-        // добавляем обработчики
-        okButton.addActionListener((e) -> this.setName(okAction));
-        removeButton.addActionListener((e) -> this.setName(removeAction));
-        exitButton.addActionListener((e) -> this.setName(exitAction));
-        // метка располагается в верхней части панели
-        mainPanel.add(lblCaption, BorderLayout.NORTH);
-        
         box = Box.createHorizontalBox();// контейнер для кнопок
         box.add(Box.createHorizontalGlue());
         box.add(okButton);
@@ -131,18 +106,80 @@ public class PagePanel extends JPanel {
         box.add(Box.createHorizontalStrut(100));
         box.add(exitButton);
         box.add(Box.createHorizontalGlue());
+        
+        /*
+        ------Менеджеры размещения-------
+        */
+//        // для центральной панели
+//        GroupLayout centalGroupLayout = new GroupLayout(centralPanel);
+//        centralPanel.setLayout(centalGroupLayout);
+//        centalGroupLayout.setHorizontalGroup(centalGroupLayout
+//                .createParallelGroup(GroupLayout.Alignment.LEADING).
+//                addGap(0, 0, Short.MAX_VALUE));
+//        centalGroupLayout.setVerticalGroup(centalGroupLayout.
+//                createParallelGroup(GroupLayout.Alignment.LEADING).
+//                addGap(0, 250, Short.MAX_VALUE));
+//        
+        // для панели кнопок
+        GroupLayout buttonGroupLayout = new GroupLayout(buttonPanel);
+        buttonPanel.setLayout(buttonGroupLayout);
+        buttonGroupLayout.setHorizontalGroup(buttonGroupLayout
+                .createParallelGroup(GroupLayout.Alignment.LEADING).
+                addGroup(buttonGroupLayout.createSequentialGroup()
+                        .addContainerGap().addGroup(buttonGroupLayout.
+                        createParallelGroup(GroupLayout.Alignment.LEADING)
+                                .addComponent(box, GroupLayout.DEFAULT_SIZE, 
+                                        500, Short.MAX_VALUE))
+                        .addContainerGap()));
+        buttonGroupLayout.setVerticalGroup(buttonGroupLayout
+                .createParallelGroup(GroupLayout.Alignment.LEADING).
+                addGroup(buttonGroupLayout.createSequentialGroup()
+                        .addContainerGap().addGroup(buttonGroupLayout.
+                        createParallelGroup(GroupLayout.Alignment.LEADING)
+                                .addComponent(box, GroupLayout.DEFAULT_SIZE, 
+                                        80, Short.MAX_VALUE))
+                        .addContainerGap()));
+        
+        // для основной панели
+        GroupLayout mainGroupLayout = new GroupLayout(mainPanel);
+        mainPanel.setLayout(mainGroupLayout);
+        mainGroupLayout.setHorizontalGroup(mainGroupLayout
+                .createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addGroup(mainGroupLayout.createSequentialGroup()
+                        .addContainerGap().addGroup(mainGroupLayout
+                                .createParallelGroup(GroupLayout.Alignment.LEADING)
+                                .addComponent(lblCaption, 
+                                        GroupLayout.DEFAULT_SIZE, 500, Short.MAX_VALUE)
+                        .addComponent(centralPanel, GroupLayout.DEFAULT_SIZE, 
+                                GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(buttonPanel, GroupLayout.DEFAULT_SIZE, 
+                                GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap()));
+        mainGroupLayout.setVerticalGroup(mainGroupLayout.
+                createParallelGroup(GroupLayout.Alignment.LEADING)
+                .addGroup(mainGroupLayout.createSequentialGroup()
+                .addContainerGap().addComponent(lblCaption, 
+                        GroupLayout.PREFERRED_SIZE, 100, 
+                        GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(centralPanel, GroupLayout.PREFERRED_SIZE, 
+                        GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(buttonPanel, GroupLayout.PREFERRED_SIZE, 
+                        GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
+        //------------------
+        
+        // добавляем обработчики
+        okButton.addActionListener((e) -> this.setName(okAction));
+        removeButton.addActionListener((e) -> this.setName(removeAction));
+        exitButton.addActionListener((e) -> this.setName(exitAction));
+        
         if (removeAction.equals("")) {
 
             removeButton.setVisible(false);
         }
-//        JPanel westPanel = new JPanel();
-//        westPanel.setPreferredSize(new Dimension(20, mainPanel.getHeight()));
-//        JPanel eastPanel = new JPanel();
-//        eastPanel.setPreferredSize(new Dimension(20, mainPanel.getHeight()));
-//        mainPanel.add(westPanel, BorderLayout.WEST);
-//        mainPanel.add(eastPanel, BorderLayout.EAST);
-        // контейнер располагаем в нижней части панели
-        mainPanel.add(box, BorderLayout.SOUTH);
+        
         componentCount = mainPanel.getComponentCount();
     }
 
