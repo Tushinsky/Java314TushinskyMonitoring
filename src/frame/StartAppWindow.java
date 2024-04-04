@@ -96,8 +96,7 @@ public class StartAppWindow extends JFrame {
     }
 
     /**
-     * Создаёт и возвращает стартовую панель приложения
-     * @return 
+     * Создаёт стартовую панель приложения
      */
     private void createStartPanel() {
         startPanel = new StartPanel();// создаём стартовую панель
@@ -169,6 +168,9 @@ public class StartAppWindow extends JFrame {
         mainPanel.add(loginPanel, LOG_IN);
     }
     
+    /**
+     * Создаёт панель регистрации нового пользователя
+     */
     private void createRegisterPanel() {
         registerPanel = new RegisterPanel();
         // добавляем к панели регистрации слушатель изменения свойства Name
@@ -244,6 +246,9 @@ public class StartAppWindow extends JFrame {
         mainPanel.add(homePagePanel, HOME_PAGE);
     }
     
+    /**
+     * Создаёт панель страницы для администратора
+     */
     private void createAdminPagePanel() {
         adminPagePanel = new AdminPagePanel();
         // добавляем слушатель изменений свойства NAME

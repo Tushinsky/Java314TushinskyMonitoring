@@ -23,14 +23,14 @@ public class HomePagePanel extends PagePanel {
     private String userRole;
     private final JCheckBox chkHotBox = new JCheckBox("горячая");// отмечает показания по горячей или холодной воде
     private ArrayList<Reading> responseData;
-    private String mapping = "";
+    
     /**
      * Creates a new <code>JPanel</code> with a double buffer
      * and a flow layout.
      */
     public HomePagePanel() {
         super();
-
+        initComponents();
 
     }
 
@@ -52,7 +52,21 @@ public class HomePagePanel extends PagePanel {
         this.response = response;
         if (response.getBody()[0][0].equals(ImappingConstants.USER_NAME)) {
             // если передаётся имя пользователя, вызывается инициализация компонентов
-            initComponents();// инициализация компонентов пользовательского интерфейса
+            userName = response.getFromBody(0).getUsername();
+            accountNumber = response.getFromBody(0).getAcc().getAccountNumber();
+            super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
+                    "width=\"100%\" style=\"font-size:medium;\" bgcolor=\"#AAFF00\">" +
+                    "<tr><td align=\"justify\">" + 
+                    "Добро пожаловать на страницу персонального аккаунта." +
+                    " Пользователь: <b>" + 
+                    userName + "</b>  Лицевой счёт: <b>" + accountNumber +
+                    "</b></td></tr>" +
+                    "<tr><td align=\"left\">Сегодня: <b><u>" + LocalDate.now() + "</u></b>" +
+                    "</td></tr></table>");
+            userRole = response.getBody()[2][1];
+            responseData = response.getFromBody(0).getAcc().getReadings();
+            readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));// список показаний
+
         } else {
             // если ответ положительный, и новые показания приняты, добавляем их в список показаний
             if (response.isAuth()) {
@@ -72,24 +86,17 @@ public class HomePagePanel extends PagePanel {
     private void initComponents() {
         // вошёл простой пользователь
         txtReading = new JTextField(10);// поле для ввода показаний
-        userName = response.getBody()[0][1];
-        accountNumber = response.getFromBody(0).getAcc().getAccountNumber();
         super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
-                "align=\"center\" cols=\"1\" width=\"100%\" bgcolor=\"#008080\">" +
-                "<tr><td align=\"justify\">" + "Добро пожаловать на страницу персонального аккаунта." +
+                "align=\"center\" width=\"100%\" bgcolor=\"#AAFF80\">" +
+                "<tr><td align=\"center\">" + 
+                "Добро пожаловать на страницу персонального аккаунта." +
                 "</td></tr>" +
-                "<tr><td align=\"left\"><b>" + userName + "</b>. Лицевой счёт <u>" + 
-                accountNumber + "</u>" +
-                "</td></tr>" +
-                "<tr><td align=\"right\">" +
-                "Сегодня <b><u>" + LocalDate.now() +
-                "</u></b>" +
+                "<tr><td align=\"left\">Пользователь: <b>Пользователь</b>  Лицевой счёт: <b>" +
+                "Номер лицевого счёта</b></td></tr>" +
+                "<tr><td align=\"left\">Сегодня: <b><u>" + LocalDate.now() + "</u></b>" +
                 "</td></tr></table>");
         super.setRemoveAction("");// скрываем кнопку удаления аккаунта
         super.addComponent(getUserBox());
-        userRole = response.getBody()[2][1];
-        responseData = response.getFromBody(0).getAcc().getReadings();
-        readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));// список показаний
         
         super.setOkAction(NEW_READING);
         super.setRemoveAction(REMOVE_ACCOUNT);
@@ -99,7 +106,8 @@ public class HomePagePanel extends PagePanel {
         // добавляем слушатель на флажок
         chkHotBox.addActionListener((e -> {
             try {
-                readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));// список показаний
+                readingList.setModel(readingListModel(responseData, 
+                        chkHotBox.isSelected()));// список показаний
             } catch(Exception ex) {
                 System.out.println("error:" + ex.getMessage());
             }

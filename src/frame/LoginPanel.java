@@ -82,7 +82,8 @@ public class LoginPanel extends PagePanel {
         txtUserName = new JTextField(20);
         super.setOkAction(ImappingConstants.LOG_IN);
         super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
-                    "align=\"center\" cols=\"1\" width=\"100%\" height=\"100%\" bgcolor=\"#00FF00\">" +
+                    "align=\"center\" cols=\"1\" style=\"font-size:medium;\" " +
+                    "width=\"100%\" bgcolor=\"#AAEE00\">" +
                     "<tr><td align=\"justify\">" +
                     "Вы находитесь на странице авторизации. " +
                     "Введите Ваш <b><u>логин</u></b> и <b><u>пароль</u></b>" +
@@ -121,46 +122,6 @@ public class LoginPanel extends PagePanel {
         
         box.add(box3);
         box.add(Box.createVerticalStrut(10));
-        return box;
-    }
-    
-    private Box getRegisterBox() {
-        
-        JLabel lblLogin = new JLabel("Логин пользователя");
-        JLabel lblPassword = new JLabel("Пароль");
-        Box box = Box.createVerticalBox();
-        box.add(Box.createVerticalStrut(10));
-
-        Box box1 = Box.createHorizontalBox();
-        box1.add(Box.createHorizontalStrut(10));
-        box1.add(lblUserName);
-        box1.add(Box.createHorizontalStrut((int) (lblLogin.getPreferredSize().getWidth() - 
-                lblUserName.getPreferredSize().getWidth()) + 10));
-        box1.add(txtUserName);
-        box1.add(Box.createHorizontalStrut(10));
-        
-        box.add(box1);
-        box.add(Box.createVerticalStrut(10));
-
-        Box box2 = Box.createHorizontalBox();
-        box2.add(Box.createHorizontalStrut(10));
-        box2.add(lblLogin);
-        box2.add(Box.createHorizontalStrut(10));
-        box2.add(txtLogin);
-        box2.add(Box.createHorizontalStrut(10));
-        box.add(box2);
-        box.add(Box.createVerticalStrut(10));
-
-        Box box3 = Box.createHorizontalBox();
-        box3.add(Box.createHorizontalStrut(10));
-        box3.add(lblPassword);
-        box3.add(Box.createHorizontalStrut((int) (lblLogin.getPreferredSize().getWidth() - 
-                lblPassword.getPreferredSize().getWidth()) + 10));
-        box3.add(passwordField);
-        box3.add(Box.createHorizontalStrut(10));
-        
-        box.add(box3);
-        box.add(Box.createVerticalStrut(40));
         return box;
     }
 
