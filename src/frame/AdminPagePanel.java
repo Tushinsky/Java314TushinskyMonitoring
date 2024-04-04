@@ -46,6 +46,9 @@ public class AdminPagePanel extends PagePanel{
     private ArrayList<Reading> responseData;
     private final JList<String> userList = new JList<>();// список зарегистрированных пользователей
         
+    /**
+     *
+     */
     public AdminPagePanel() {
         super();
     }
@@ -109,13 +112,13 @@ public class AdminPagePanel extends PagePanel{
         userRole = response.getBody()[2][1];
         // создаём элементы пользовательского интерфейса
         super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
-                "align=\"center\" cols=\"1\" width=\"100%\" bgcolor=\"#008080\">" +
+                "align=\"center\" cols=\"1\" width=\"100%\" " +
+                "style=\"font-size:medium;\" bgcolor=\"#AAFF80\">" +
                 "<tr><td align=\"center\">" +
                 "Вы вошли на страницу с правами администратора." + 
-                "</td></tr>" +
-                "<tr><td align=\"left\">Администратор <b><u>" +
+                " Администратор <b><u>" +
                 userName + "</u></b></td></tr>" +
-                "<tr><td align=\"right\">Сегодня <b><u>" + LocalDate.now() + "</u></b></td></tr></table>");
+                "<tr><td align=\"left\">Сегодня <b><u>" + LocalDate.now() + "</u></b></td></tr></table>");
         super.addComponent(getAdminBox());
         super.setRemoveCaption("Удалить аккаунт");
         super.setOkAction(NEW_READING);

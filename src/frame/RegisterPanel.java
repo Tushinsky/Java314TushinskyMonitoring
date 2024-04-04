@@ -62,8 +62,9 @@ public class RegisterPanel extends PagePanel {
         super.setExitAction(LOG_OUT);
         super.setOkAction(REGISTER);
         super.setOkCaption("Зарегистрироваться");
-        super.setCaption("<table border=\"1\" cellspacing=\"0\" cellpadding=\"3\" " + 
-                "align=\"center\" cols=\"1\" width=\"100%\" height=\"100%\" bgcolor=\"#00FF00\">" +
+        super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
+                "align=\"center\" cols=\"1\" style=\"font-size:medium;\"" +
+                "width=\"100%\" height=\"100%\" bgcolor=\"#00FF00\">" +
                 "<tr><td align=\"justify\">" +
                 "Вы находитесь на странице регистрации. " +
                 "Задайте Ваши <b><u>имя</u></b>, <b><u>логин</u></b> и " +

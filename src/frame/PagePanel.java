@@ -100,6 +100,8 @@ public class PagePanel extends JPanel {
     private void initComponents() {
         lblCaption = new JLabel("Caption");
         lblCaption.setBorder(new EtchedBorder(Color.yellow, Color.black));
+        lblCaption.setBackground(new Color(200, 255, 00, 1));
+//        lblCaption.setOpaque(true);
         box = Box.createHorizontalBox();// контейнер для кнопок
         box.add(Box.createHorizontalGlue());
         box.add(okButton);

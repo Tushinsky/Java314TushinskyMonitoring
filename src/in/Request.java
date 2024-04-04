@@ -35,8 +35,9 @@ public class Request {
     /**
      * Метод поиска значения по ключу в теле запроса
      *
-     * @param key
-     * @return  */
+     * @param key идентификатор (имя ключа), по которому выполняется поиска
+     * @return строка, содержащая значение ключа, или пусто, если не найдено
+     */
     public String getValueByKey(String key) {
         for (String[] strings : body) {
             if (strings[0].equals(key)) {
