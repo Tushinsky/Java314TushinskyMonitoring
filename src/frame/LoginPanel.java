@@ -23,19 +23,10 @@ public class LoginPanel extends PagePanel {
     
     @Override
     public Request getRequest() {
-        if(okAction.equals(ImappingConstants.LOG_IN)){
-            request.getBody()[0][0] = ImappingConstants.LOG_IN;// ключ
-            request.getBody()[0][1] = txtLogin.getText();// значение - логин пользователя
-            request.getBody()[1][0] = ImappingConstants.PASSWORD;// ключ
-            request.getBody()[1][1] = String.valueOf(passwordField.getPassword());// значение - пароль пользователя
-        } else {
-            request.getBody()[0][0] = ImappingConstants.USER_NAME;// ключ
-            request.getBody()[0][1] = txtUserName.getText();// значение - логин пользователя
-            request.getBody()[1][0] = ImappingConstants.LOG_IN;// ключ
-            request.getBody()[1][1] = txtLogin.getText();// значение - логин пользователя
-            request.getBody()[2][0] = ImappingConstants.PASSWORD;// ключ
-            request.getBody()[2][1] = String.valueOf(passwordField.getPassword());// значение - пароль пользователя
-        }
+        request.getBody()[0][0] = ImappingConstants.LOG_IN;// ключ
+        request.getBody()[0][1] = txtLogin.getText();// значение - логин пользователя
+        request.getBody()[1][0] = ImappingConstants.PASSWORD;// ключ
+        request.getBody()[1][1] = String.valueOf(passwordField.getPassword());// значение - пароль пользователя
         count++;// увеличиваем счётчик попыток
         if(count > 3) {
             // если количество попыток больше 3
@@ -47,6 +38,7 @@ public class LoginPanel extends PagePanel {
             
             return null;// возвращаем null в запросе
         }
+        System.out.println("request: " + request);
         return request;
     }
 
@@ -58,40 +50,6 @@ public class LoginPanel extends PagePanel {
     @Override
     public void addPropertyChangeListener(PropertyChangeListener listener) {
         super.addPropertyChangeListener(listener); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    /**
-     * Действия для кнопки ввода (задаёт свойство Name панели)
-     *
-     * @param okAction задаёт свойство Name панели
-     */
-    @Override
-    public void setOkAction(String okAction) {
-        super.setOkAction(okAction);
-        if (okAction.equals(ImappingConstants.LOG_IN)) {
-            super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
-                    "align=\"center\" cols=\"1\" width=\"100%\" height=\"100%\" bgcolor=\"#00FF00\">" +
-                    "<tr><td align=\"justify\">" +
-                    "Вы находитесь на странице авторизации. " +
-                    "Введите Ваш <b><u>логин</u></b> и <b><u>пароль</u></b>" +
-                    " для доступа в личный кабинет." +
-                    "</td></tr></table>");
-            // скрывавем метку и поле для ввода имени пользователя
-            super.addComponent(getLoginBox());
-        } else {
-            super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
-                    "align=\"center\" cols=\"1\" width=\"100%\" height=\"100%\" bgcolor=\"#00FF00\">" +
-                    "<tr><td align=\"justify\">" +
-                    "Вы находитесь на странице регистрации. " +
-                    "Задайте Ваши <b><u>имя</u></b>, <b><u>логин</u></b> и " +
-                    "<b><u>пароль</u></b> для регистрации на сайте и " +
-                    "получения доступа в личный кабинет." +
-                    "</td></tr></table>");
-            // показываем метку и поле для ввода имени пользователя
-            super.addComponent(getRegisterBox());
-        }
-        request = new Request(okAction, false);// запрос на сервер для входа
-        this.okAction = okAction;
     }
 
     public String getPassword() {
@@ -119,19 +77,22 @@ public class LoginPanel extends PagePanel {
      * Инициализация компонентов пользовательского интерфейса
      */
     private void initComponents() {
-        super.setCaption("Caption...");
         txtLogin = new JTextField(20);// поле для ввода логина
         passwordField = new JPasswordField(20);// поле для ввода пароля
         txtUserName = new JTextField(20);
-//        Box box = loginBox();
+        super.setOkAction(ImappingConstants.LOG_IN);
+        super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
+                    "align=\"center\" cols=\"1\" width=\"100%\" height=\"100%\" bgcolor=\"#00FF00\">" +
+                    "<tr><td align=\"justify\">" +
+                    "Вы находитесь на странице авторизации. " +
+                    "Введите Ваш <b><u>логин</u></b> и <b><u>пароль</u></b>" +
+                    " для доступа в личный кабинет." +
+                    "</td></tr></table>");
+        super.addComponent(getLoginBox());
         super.setExitAction(LOG_OUT);
 //        super.addComponent(box);
         super.setOkCaption("Войти");
-//        addPropertyChangeListener("visible", evt -> {
-//            System.out.println("visible " + evt.getNewValue().toString());
-//            txtLogin.setText("");
-//            passwordField.setText("");
-//        });
+        request = new Request(ImappingConstants.LOG_IN, false);
     }
 
     private Box getLoginBox() {
@@ -159,7 +120,7 @@ public class LoginPanel extends PagePanel {
         box3.add(Box.createHorizontalStrut(10));
         
         box.add(box3);
-        box.add(Box.createVerticalStrut(40));
+        box.add(Box.createVerticalStrut(10));
         return box;
     }
     

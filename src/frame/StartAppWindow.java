@@ -126,7 +126,6 @@ public class StartAppWindow extends JFrame {
      */
     private void createLoginPanel() {
         loginPanel = new LoginPanel();
-        loginPanel.setOkAction(LOG_IN);
         // добавляем к панели пароля слушатель изменения свойства Name
         loginPanel.addPropertyChangeListener(evt -> {
             Object value = evt.getNewValue();
