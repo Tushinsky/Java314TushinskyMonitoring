@@ -20,6 +20,8 @@ public class PagePanel extends JPanel {
     private int componentCount;
     private final JPanel centralPanel;// панель для размещения дополнительных элементов
     private final JPanel buttonPanel;// панель для размещения кнопок
+    private GroupLayout centralGroupLayout;
+    
     /**
      * Создаёт шаблон панели для размещения элементов пользовательского интерфейса
      * с рамочным менеджером компоновки. В верхней части панели располагается метка
@@ -110,35 +112,25 @@ public class PagePanel extends JPanel {
         /*
         ------Менеджеры размещения-------
         */
-//        // для центральной панели
-//        GroupLayout centalGroupLayout = new GroupLayout(centralPanel);
-//        centralPanel.setLayout(centalGroupLayout);
-//        centalGroupLayout.setHorizontalGroup(centalGroupLayout
-//                .createParallelGroup(GroupLayout.Alignment.LEADING).
-//                addGap(0, 0, Short.MAX_VALUE));
-//        centalGroupLayout.setVerticalGroup(centalGroupLayout.
-//                createParallelGroup(GroupLayout.Alignment.LEADING).
-//                addGap(0, 250, Short.MAX_VALUE));
-//        
+        // для центральной панели
+        centralGroupLayout = new GroupLayout(centralPanel);
+        centralPanel.setLayout(centralGroupLayout);
+        
         // для панели кнопок
         GroupLayout buttonGroupLayout = new GroupLayout(buttonPanel);
         buttonPanel.setLayout(buttonGroupLayout);
         buttonGroupLayout.setHorizontalGroup(buttonGroupLayout
                 .createParallelGroup(GroupLayout.Alignment.LEADING).
                 addGroup(buttonGroupLayout.createSequentialGroup()
-                        .addContainerGap().addGroup(buttonGroupLayout.
-                        createParallelGroup(GroupLayout.Alignment.LEADING)
-                                .addComponent(box, GroupLayout.DEFAULT_SIZE, 
-                                        500, Short.MAX_VALUE))
-                        .addContainerGap()));
+                        .addContainerGap().addComponent(box, 
+                                GroupLayout.DEFAULT_SIZE, 
+                                GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)));
         buttonGroupLayout.setVerticalGroup(buttonGroupLayout
                 .createParallelGroup(GroupLayout.Alignment.LEADING).
                 addGroup(buttonGroupLayout.createSequentialGroup()
-                        .addContainerGap().addGroup(buttonGroupLayout.
-                        createParallelGroup(GroupLayout.Alignment.LEADING)
-                                .addComponent(box, GroupLayout.DEFAULT_SIZE, 
-                                        80, Short.MAX_VALUE))
-                        .addContainerGap()));
+                        .addContainerGap().addComponent(box, 
+                                GroupLayout.DEFAULT_SIZE, 
+                                GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)));
         
         // для основной панели
         GroupLayout mainGroupLayout = new GroupLayout(mainPanel);
@@ -149,7 +141,7 @@ public class PagePanel extends JPanel {
                         .addContainerGap().addGroup(mainGroupLayout
                                 .createParallelGroup(GroupLayout.Alignment.LEADING)
                                 .addComponent(lblCaption, 
-                                        GroupLayout.DEFAULT_SIZE, 500, Short.MAX_VALUE)
+                                        GroupLayout.DEFAULT_SIZE, 0, Short.MAX_VALUE)
                         .addComponent(centralPanel, GroupLayout.DEFAULT_SIZE, 
                                 GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(buttonPanel, GroupLayout.DEFAULT_SIZE, 
@@ -158,16 +150,16 @@ public class PagePanel extends JPanel {
         mainGroupLayout.setVerticalGroup(mainGroupLayout.
                 createParallelGroup(GroupLayout.Alignment.LEADING)
                 .addGroup(mainGroupLayout.createSequentialGroup()
-                .addContainerGap().addComponent(lblCaption, 
-                        GroupLayout.PREFERRED_SIZE, 100, 
+                .addContainerGap(0, 10).addComponent(lblCaption, 
+                        GroupLayout.PREFERRED_SIZE, 70, 
                         GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(centralPanel, GroupLayout.PREFERRED_SIZE, 
-                        GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(centralPanel, 0, 
+                        GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(buttonPanel, GroupLayout.PREFERRED_SIZE, 
                         GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
+                .addContainerGap()));
         //------------------
         
         // добавляем обработчики
@@ -188,12 +180,19 @@ public class PagePanel extends JPanel {
      * @param component компонент для добавления
      */
     public void addComponent(Component component) {
-        if(mainPanel.getComponentCount() > componentCount) {
-            mainPanel.remove(mainPanel.getComponentCount() - 1);
-        }
-        mainPanel.add(component, BorderLayout.CENTER);
-//        centralPanel.removeAll();
-//        centralPanel.add(component);
+        centralGroupLayout.setHorizontalGroup(centralGroupLayout
+                .createParallelGroup(GroupLayout.Alignment.LEADING).
+                addGroup(centralGroupLayout.createSequentialGroup()
+                .addContainerGap().addComponent(component, GroupLayout.DEFAULT_SIZE, 500,
+                                Short.MAX_VALUE).addContainerGap()));
+        centralGroupLayout.setVerticalGroup(centralGroupLayout.
+                createParallelGroup(GroupLayout.Alignment.LEADING).
+                addGroup(centralGroupLayout.createSequentialGroup()
+                        .addContainerGap().addComponent(component, 
+                                GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, 
+                                GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap()));
+        
     }
 
     /**
