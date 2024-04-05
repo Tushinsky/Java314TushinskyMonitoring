@@ -85,24 +85,32 @@ public class PagePanel extends JPanel {
         }
     }
 
+    /**
+     * Задаёт текст, который выводится в верхней части панели в виде приветствия
+     * или инфjрмационного сообщения
+     * @param caption текст для вывода в формате HTML
+     */
     public void setCaption(String caption) {
         String text = "<html><body>" + caption + "</body></html>";
-        System.out.println("main:" + mainPanel.getSize());
-        lblCaption.setPreferredSize(new Dimension(
-                (int) box.getWidth(), 100));
-//        lblCaption.setSize(lblCaption.getPreferredSize());
-        lblCaption.setText(text);
-//        lblCaption.setMaximumSize(lblCaption.getPreferredSize());
+        
+//        lblCaption.setPreferredSize(new Dimension(
+//                (int) box.getWidth(), 100));
+        lblCaption.setText(text);// задаём текст на метке
     }
     /**
      * Инициализация компонентов пользовательского интерфейса
      */
     private void initComponents() {
+        /*
+        Метка для вывода приветствия или сообщения с гравированной рамкой и
+        светло-зелёным фоном
+        */
         lblCaption = new JLabel("Caption");
         lblCaption.setBorder(new EtchedBorder(Color.yellow, Color.black));
         lblCaption.setBackground(new Color(200, 255, 00, 1));
-//        lblCaption.setOpaque(true);
-        box = Box.createHorizontalBox();// контейнер для кнопок
+
+        // контейнер для кнопок
+        box = Box.createHorizontalBox();
         box.add(Box.createHorizontalGlue());
         box.add(okButton);
         box.add(Box.createHorizontalStrut(100));
@@ -111,9 +119,7 @@ public class PagePanel extends JPanel {
         box.add(exitButton);
         box.add(Box.createHorizontalGlue());
         
-        /*
-        ------Менеджеры размещения-------
-        */
+        //------Менеджеры группового размещения-------
         // для центральной панели
         centralGroupLayout = new GroupLayout(centralPanel);
         centralPanel.setLayout(centralGroupLayout);
@@ -143,7 +149,8 @@ public class PagePanel extends JPanel {
                         .addContainerGap().addGroup(mainGroupLayout
                                 .createParallelGroup(GroupLayout.Alignment.LEADING)
                                 .addComponent(lblCaption, 
-                                        GroupLayout.DEFAULT_SIZE, 0, Short.MAX_VALUE)
+                                        GroupLayout.DEFAULT_SIZE, 
+                                        600, Short.MAX_VALUE)
                         .addComponent(centralPanel, GroupLayout.DEFAULT_SIZE, 
                                 GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(buttonPanel, GroupLayout.DEFAULT_SIZE, 
@@ -153,7 +160,7 @@ public class PagePanel extends JPanel {
                 createParallelGroup(GroupLayout.Alignment.LEADING)
                 .addGroup(mainGroupLayout.createSequentialGroup()
                 .addContainerGap(0, 10).addComponent(lblCaption, 
-                        GroupLayout.PREFERRED_SIZE, 70, 
+                        GroupLayout.PREFERRED_SIZE, 100, 
                         GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(centralPanel, 0, 

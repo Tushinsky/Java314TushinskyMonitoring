@@ -23,13 +23,15 @@ public class HomePagePanel extends PagePanel {
     private String userRole;
     private final JCheckBox chkHotBox = new JCheckBox("горячая");// отмечает показания по горячей или холодной воде
     private ArrayList<Reading> responseData;
-    
+    private JTextField txtReadingDate;// поле для ввода даты показаний
     /**
      * Creates a new <code>JPanel</code> with a double buffer
      * and a flow layout.
+     * @param response результат запроса к базе данных, содержащий входные данные
      */
-    public HomePagePanel() {
+    public HomePagePanel(Response response) {
         super();
+        this.response = response;
         initComponents();
 
     }
@@ -50,51 +52,39 @@ public class HomePagePanel extends PagePanel {
     @Override
     public void setResponse(Response response) {
         this.response = response;
-        if (response.getBody()[0][0].equals(ImappingConstants.USER_NAME)) {
-            // если передаётся имя пользователя, вызывается инициализация компонентов
-            userName = response.getFromBody(0).getUsername();
-            accountNumber = response.getFromBody(0).getAcc().getAccountNumber();
-            super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
-                    "width=\"100%\" style=\"font-size:medium;\" bgcolor=\"#AAFF00\">" +
-                    "<tr><td align=\"justify\">" + 
-                    "Добро пожаловать на страницу персонального аккаунта." +
-                    " Пользователь: <b>" + 
-                    userName + "</b>  Лицевой счёт: <b>" + accountNumber +
-                    "</b></td></tr>" +
-                    "<tr><td align=\"left\">Сегодня: <b><u>" + LocalDate.now() + "</u></b>" +
-                    "</td></tr></table>");
-            userRole = response.getBody()[2][1];
-            responseData = response.getFromBody(0).getAcc().getReadings();
-            readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));// список показаний
-
+        // если ответ положительный, и новые показания приняты, добавляем их в список показаний
+        if (response.isAuth()) {
+            updateResponseData();// обновляем данные в списке
         } else {
-            // если ответ положительный, и новые показания приняты, добавляем их в список показаний
-            if (response.isAuth()) {
-                // создаём класс показаний
-                updateResponseData();// обновляем данные в списке
-            } else {
-                JOptionPane.showMessageDialog(null,
-                        "Внесение показаний допускается только одни раз в текущем месяце",
-                        "Warning", JOptionPane.WARNING_MESSAGE);
-            }
-
-//                }
-
+            JOptionPane.showMessageDialog(null,
+                    "Внесение показаний допускается только одни раз в текущем месяце",
+                    "Warning", JOptionPane.WARNING_MESSAGE);
         }
+
     }
 
     private void initComponents() {
         // вошёл простой пользователь
         txtReading = new JTextField(10);// поле для ввода показаний
+        txtReadingDate = new JTextField(10);// поле для ввода даты
+        User user = response.getFromBody(0);
+        userName = user.getUsername();
+        accountNumber = user.getAcc().getAccountNumber();
         super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
-                "align=\"center\" width=\"100%\" bgcolor=\"#AAFF80\">" +
-                "<tr><td align=\"center\">" + 
-                "Добро пожаловать на страницу персонального аккаунта." +
-                "</td></tr>" +
-                "<tr><td align=\"left\">Пользователь: <b>Пользователь</b>  Лицевой счёт: <b>" +
-                "Номер лицевого счёта</b></td></tr>" +
+                "width=\"100%\" style=\"font-size:small;\" bgcolor=\"#AAFF00\">" +
+                "<tr><td align=\"justify\">" + 
+                "Добро пожаловать на страницу персонального аккаунта. " +
+                "Здесь вы можете передать новые показания, посмотреть историю " +
+                "показаний. Предупреждение: внесение показаний допускается " +
+                "только один раз в текущем месяце для каждой категории. Пользователь: <b>" + 
+                userName + "</b>  Лицевой счёт: <b>" + accountNumber +
+                "</b></td></tr>" +
                 "<tr><td align=\"left\">Сегодня: <b><u>" + LocalDate.now() + "</u></b>" +
                 "</td></tr></table>");
+        userRole = response.getBody()[2][1];
+        responseData = user.getAcc().getReadings();
+        readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));// список показаний
+
         super.setRemoveAction("");// скрываем кнопку удаления аккаунта
         super.addComponent(getUserBox());
         
@@ -117,17 +107,23 @@ public class HomePagePanel extends PagePanel {
     }
 
     /**
-     * Возвращает данные текущего пользователя
+     * Создаёт и возвращает контейнер, содержащий данные текущего пользователя
      */
     private Box getUserBox() {
         Box userBox = createReadingBox();
 
-        JLabel lblReading = new JLabel("Введите показание");
+        JLabel lblReading = new JLabel("Показание");
+        JLabel lblDate = new JLabel("Дата");
         Box readingBox = Box.createHorizontalBox();
         readingBox.add(lblReading);
         readingBox.add(Box.createHorizontalStrut(5));
         readingBox.add(txtReading);
+        readingBox.add(Box.createHorizontalStrut(10));
+        readingBox.add(lblDate);
         readingBox.add(Box.createHorizontalStrut(5));
+        readingBox.add(txtReadingDate);
+        readingBox.add(Box.createHorizontalStrut(10));
+        
         readingBox.add(chkHotBox);
         readingBox.add(Box.createHorizontalStrut(5));
 
@@ -137,55 +133,25 @@ public class HomePagePanel extends PagePanel {
     }
 
     /**
-     * Возвращает данные для администратора сайта
+     * Создаёт и возвращает контейнер, содержащий список с показаниями
+     * текущего пользователя
+     * @return BOX - контейнер, содержащий список с показаниями
      */
-    private Box getAdminBox() {
-        Box adminBox = Box.createVerticalBox();
-        JLabel lblUsers = new JLabel("Пользователи");
-        final JList<String> userList = getUserList();// список зарегистрированных пользователей
-        JButton removeReadingButton = new JButton("Удалить показания");
-
-        Box box1 = Box.createVerticalBox();
-        box1.add(lblUsers);
-        box1.add(Box.createVerticalStrut(5));
-        box1.add(new JScrollPane(userList));
-        box1.add(Box.createVerticalStrut(10));
-
-        Box box2 = createReadingBox();
-
-        Box box3 = Box.createHorizontalBox();
-        box3.add(Box.createHorizontalStrut(10));
-        box3.add(new JLabel("Новые показания"));
-        box3.add(Box.createHorizontalStrut(10));
-        box3.add(txtReading);
-        box3.add(Box.createHorizontalStrut(5));
-        box3.add(chkHotBox);
-        box3.add(Box.createHorizontalStrut(20));
-        box3.add(removeReadingButton);
-        box3.add(Box.createHorizontalGlue());
-
-        Box box4 = Box.createHorizontalBox();
-        box4.add(box1);
-        box4.add(Box.createHorizontalStrut(10));
-        box4.add(box2);
-
-        adminBox.add(box4);
-        adminBox.add(Box.createVerticalStrut(20));
-        adminBox.add(box3);
-        adminBox.add(Box.createVerticalStrut(20));
-
-        return adminBox;
-    }
-
     private Box createReadingBox() {
         Box box = Box.createVerticalBox();
+        // контейнер для размещения мктки
         Box horBox = Box.createHorizontalBox();
         horBox.add(Box.createHorizontalGlue());
-        horBox.add(new JLabel("Показания"));
+        horBox.add(new JLabel("Переданные показания"));
         horBox.add(Box.createHorizontalGlue());
         box.add(horBox);
         box.add(Box.createVerticalStrut(5));
-        box.add(new JScrollPane(readingList));
+        // контейнер для размещения списка показаний
+        Box horListBox = Box.createHorizontalBox();
+        horListBox.add(Box.createHorizontalStrut(150));
+        horListBox.add(new JScrollPane(readingList));
+        horListBox.add(Box.createHorizontalStrut(150));
+        box.add(horListBox);
         box.add(Box.createVerticalStrut(10));
         return box;
     }

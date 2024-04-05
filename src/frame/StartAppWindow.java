@@ -206,7 +206,7 @@ public class StartAppWindow extends JFrame {
         if (retValue) {
             // если запрос на вход подтверждён, переходим на домашнюю страницу
             if(response.getBody()[2][1].equals(IRoleConstants.USER)) {
-                createHomePagePanel();// создаём панель домашней страницы пользователя
+                createHomePagePanel(response);// создаём панель домашней страницы пользователя
                 homePagePanel.setResponse(response);
             } else {
                 // создаём панель домашней страницы администратора
@@ -222,8 +222,8 @@ public class StartAppWindow extends JFrame {
     /**
      * Создаёт панель Домашняя страница
      */
-    private void createHomePagePanel() {
-        homePagePanel = new HomePagePanel();
+    private void createHomePagePanel(Response responseInit) {
+        homePagePanel = new HomePagePanel(responseInit);
         // добавляем слушатель изменений свойства NAME
         homePagePanel.addPropertyChangeListener("name", evt -> {
             if (evt.getNewValue() == null) return;
