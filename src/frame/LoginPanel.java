@@ -2,11 +2,13 @@ package frame;
 
 import mapping.ImappingConstants;
 import in.Request;
+import java.awt.Font;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 import javax.swing.*;
 
 import static mapping.ImappingConstants.LOG_OUT;
-import java.beans.PropertyChangeListener;
 
 /**
  * Панель для ввода логина и пароля
@@ -14,11 +16,8 @@ import java.beans.PropertyChangeListener;
 public class LoginPanel extends PagePanel {
 
     private JTextField txtLogin;
-    private JPasswordField passwordField;
+    private JPasswordField txtPasswordField;
     private Request request;
-    private JTextField txtUserName;
-    private final JLabel lblUserName = new JLabel("Имя пользователя");
-    private String okAction;
     private int count = 0;// счётчик попыток ввода
     
     @Override
@@ -26,7 +25,7 @@ public class LoginPanel extends PagePanel {
         request.getBody()[0][0] = ImappingConstants.LOG_IN;// ключ
         request.getBody()[0][1] = txtLogin.getText();// значение - логин пользователя
         request.getBody()[1][0] = ImappingConstants.PASSWORD;// ключ
-        request.getBody()[1][1] = String.valueOf(passwordField.getPassword());// значение - пароль пользователя
+        request.getBody()[1][1] = String.valueOf(txtPasswordField.getPassword());// значение - пароль пользователя
         count++;// увеличиваем счётчик попыток
         if(count > 3) {
             // если количество попыток больше 3
@@ -34,7 +33,7 @@ public class LoginPanel extends PagePanel {
             
             // очищаем поля ввода
             txtLogin.setText("");
-            passwordField.setText("");
+            txtPasswordField.setText("");
             
             return null;// возвращаем null в запросе
         }
@@ -42,33 +41,13 @@ public class LoginPanel extends PagePanel {
         return request;
     }
 
-    @Override
-    public void removePropertyChangeListener(PropertyChangeListener listener) {
-        super.removePropertyChangeListener(listener); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void addPropertyChangeListener(PropertyChangeListener listener) {
-        super.addPropertyChangeListener(listener); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public String getPassword() {
-        return String.valueOf(passwordField.getPassword());
-    }
-
-    public String getLogin() {
-        return txtLogin.getText();
-    }
-
-    public String getUserName() {
-        return txtUserName.getText();
-    }
     /**
      * Creates a new <code>JPanel</code> with a double buffer
      * and a flow layout.
      */
     public LoginPanel() {
         super();
+        this.requestFocusInWindow(true);
         initComponents();
 
     }
@@ -77,14 +56,13 @@ public class LoginPanel extends PagePanel {
      * Инициализация компонентов пользовательского интерфейса
      */
     private void initComponents() {
-        txtLogin = new JTextField(20);// поле для ввода логина
-        passwordField = new JPasswordField(20);// поле для ввода пароля
-        txtUserName = new JTextField(20);
+        initTextField();
         super.setOkAction(ImappingConstants.LOG_IN);
+        // текст для заголовка панели - приветствие
         super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
-                    "align=\"center\" cols=\"1\" style=\"font-size:medium;\" " +
+                    "align=\"center\" cols=\"1\" style=\"font-size:14px;\" " +
                     "width=\"100%\" bgcolor=\"#AAEE00\">" +
-                    "<tr><td align=\"justify\">" +
+                    "<tr><td align=\"center\">" +
                     "Вы находитесь на странице авторизации. " +
                     "Введите Ваш <b><u>логин</u></b> и <b><u>пароль</u></b>" +
                     " для доступа в личный кабинет." +
@@ -94,35 +72,79 @@ public class LoginPanel extends PagePanel {
 //        super.addComponent(box);
         super.setOkCaption("Войти");
         request = new Request(ImappingConstants.LOG_IN, false);
+        txtLogin.requestFocus(true);// фокус на поле ввода логина
+    }
+    
+    /**
+     * Инициализирует поля ввода и задаёт их свойства
+     */
+    private void initTextField() {
+        txtLogin = new JTextField(20);// поле для ввода логина
+        txtPasswordField = new JPasswordField(20);// поле для ввода пароля
+        Font font = txtLogin.getFont();// получили шрифт для полей ввода
+        font = new Font(font.getFontName(), Font.BOLD, 14);// увеличили размер
+        txtLogin.setFont(font);
+        txtPasswordField.setFont(font);
+        /* добавим обработку нажатия кнопок в текстовых полях ввода имени
+        пользователя и пароля
+        */
+        KeyAdapter ka = new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent ke) {
+                super.keyPressed(ke); //To change body of generated methods, choose Tools | Templates.
+                // если нажата клавиша ввода, то инициируем действие
+                // для клавиши OK, если Отмена, то инициируем действие для клавиши Cancel
+                switch(ke.getKeyCode()) {
+                    case KeyEvent.VK_ENTER:
+                        setName(ImappingConstants.LOG_IN);
+                        break;
+                    case KeyEvent.VK_ESCAPE:
+                        setName(ImappingConstants.LOG_OUT);
+                }
+                
+            }
+            
+        };
+        txtLogin.addKeyListener(ka);
+        txtPasswordField.addKeyListener(ka);
+        
     }
 
+    /**
+     * Создаёт и возвращает контейнер для размещения компонентов GUI
+     * @return BOX - контейнер для размещения компнентов GUI
+     */
     private Box getLoginBox() {
         
         JLabel lblLogin = new JLabel("Логин пользователя");
-        JLabel lblPassword = new JLabel("Пароль");
+        JLabel lblPassword = new JLabel("Пароль пользователя");
         Box box = Box.createVerticalBox();
         box.add(Box.createVerticalStrut(10));
 
+        // контейнер для размещения метки и поля ввода логина
         Box box2 = Box.createHorizontalBox();
-        box2.add(Box.createHorizontalStrut(10));
+        box2.add(Box.createHorizontalStrut(50));
         box2.add(lblLogin);
-        box2.add(Box.createHorizontalStrut(10));
+        box2.add(Box.createHorizontalStrut(20));
         box2.add(txtLogin);
-        box2.add(Box.createHorizontalStrut(10));
-        box.add(box2);
+        box2.add(Box.createHorizontalStrut(50));
+        box.add(box2);// добавляем контейнер на основной
         box.add(Box.createVerticalStrut(10));
 
+        // контейнер для размещения метки и поля ввода пароля
         Box box3 = Box.createHorizontalBox();
-        box3.add(Box.createHorizontalStrut(10));
+        box3.add(Box.createHorizontalStrut(50));
         box3.add(lblPassword);
-        box3.add(Box.createHorizontalStrut((int) (lblLogin.getPreferredSize().getWidth() - 
-                lblPassword.getPreferredSize().getWidth()) + 10));
-        box3.add(passwordField);
-        box3.add(Box.createHorizontalStrut(10));
+        // выравниваем поля ввода с помощью распорки
+        int strut = (int) (lblLogin.getPreferredSize().getWidth() - 
+                lblPassword.getPreferredSize().getWidth()) + 20;
+        box3.add(Box.createHorizontalStrut(strut));
+        box3.add(txtPasswordField);
+        box3.add(Box.createHorizontalStrut(50));
         
-        box.add(box3);
+        box.add(box3);// добавляем контейнер на основной
         box.add(Box.createVerticalStrut(10));
-        return box;
+        return box;// возвращаем созданный контейнер
     }
 
     
