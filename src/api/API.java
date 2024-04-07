@@ -40,8 +40,8 @@ public class API implements Iapi{
 
             case ImappingConstants.NEW_READING:
                 return addNewReading(request);// добавление новых показаний
-            case ImappingConstants.GET_READING:
-                return getReadings(request);
+            case ImappingConstants.CHANGE_READING:
+                return getChangeReadings(request);
             default:
                 return new Response(request.isAuth());
         }
@@ -79,17 +79,17 @@ public class API implements Iapi{
         String account = request.getValueByKey(ImappingConstants.ACCOUNT);
 //        User user = dao.findUserByAccountNumber(account);// ищем пользователя по аккаунту
         boolean success = dao.removeAccount(account);// удаляем его аккаунт
-        Response response = new Response(success);
-        response.getBody()[0][0] = ImappingConstants.REMOVE_ACCOUNT;
-        response.getBody()[0][1] = account;// получаем данные по показаниям
-        response.getBody()[1][0] = ImappingConstants.USER_NAME;
-        response.getBody()[1][1] = request
-                .getValueByKey(ImappingConstants.USER_NAME);// получаем данные по показаниям
-        response.getBody()[2][0] = ImappingConstants.ROLE;
-        response.getBody()[2][1] = request
-                .getValueByKey(ImappingConstants.ROLE);// получаем данные по показаниям
-
-        return response;
+        if(success) {
+            Response response = new Response(success);
+            response.getBody()[0][0] = ImappingConstants.REMOVE_ACCOUNT;
+            response.getBody()[0][1] = account;// получаем данные по показаниям
+            response.getBody()[1][0] = ImappingConstants.USER_NAME;
+            response.getBody()[1][1] = request
+                    .getValueByKey(ImappingConstants.USER_NAME);// получаем данные по показаниям
+            getAllUsers(response);
+            return response;
+        }
+        return new Response(false);
     }
 
     private Response addNewReading(Request request) {
@@ -106,12 +106,17 @@ public class API implements Iapi{
         WaterReading wr = new WaterReading(localDate, measuring, isHot);
         boolean success = dao
                 .addNewReading(account, wr);
-        User user = dao.findUserByAccountNumber(account);// ищем пользователя по аккаунту
-        Response response = new Response(success);
-        response.getBody()[0][0] = ImappingConstants.NEW_READING;
-        response.getBody()[0][1] = "";// получаем данные по показаниям
-        response.addToBody(user);
-        return response;
+        if(success) {
+            // ищем пользователя по аккаунту
+            User user = dao.findUserByAccountNumber(account);
+            Response response = new Response(success);
+            response.getBody()[0][0] = ImappingConstants.NEW_READING;
+            response.getBody()[0][1] = "";// получаем данные по показаниям
+            response.addToBody(user);
+            return response;
+        } else {
+            return new Response(false);
+        }
     }
 
     private void getAllUsers(Response response) {
@@ -149,13 +154,13 @@ public class API implements Iapi{
     }
     
     
-    private Response getReadings(Request request) {
+    private Response getChangeReadings(Request request) {
         String account = request.getValueByKey(ImappingConstants.ACCOUNT);
         // проверяем, что такой пользователь есть в нашей базе
         User user = dao.findUserByAccountNumber(account);
         if (user != null) {
             Response response = new Response(true);
-            response.getBody()[0][0] = ImappingConstants.GET_READING;
+            response.getBody()[0][0] = ImappingConstants.CHANGE_READING;
             response.getBody()[0][1] = getCurrentUserReadings(user);// данные по показаниям
             return response;
         } else return new Response(false);

@@ -6,30 +6,37 @@
 package frame;
 
 import api.Response;
-import entities.IRoleConstants;
 import entities.Reading;
 import entities.User;
 import entities.WaterReading;
+import in.FormattedTextFieldFerifier;
 import mapping.ImappingConstants;
 import in.Request;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.Box;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
-import static mapping.ImappingConstants.GET_READING;
+import javax.swing.text.MaskFormatter;
 import static mapping.ImappingConstants.LOG_OUT;
 import static mapping.ImappingConstants.NEW_READING;
 import static mapping.ImappingConstants.REMOVE_ACCOUNT;
 import static mapping.ImappingConstants.REMOVE_READING;
+import static mapping.ImappingConstants.CHANGE_READING;
 
 /**
  *
@@ -37,20 +44,26 @@ import static mapping.ImappingConstants.REMOVE_READING;
  */
 public class AdminPagePanel extends PagePanel{
     private final JList<String> readingList = new JList<>();// список показаний
-    private JTextField txtReading;// поле для ввода показаний
+    private JFormattedTextField txtReading;// поле для ввода показаний
     private Response response;
     private String accountNumber;
     private String userName;
-    private String userRole;
     private final JCheckBox chkHotBox = new JCheckBox("горячая");// отмечает показания по горячей или холодной воде
-    private ArrayList<Reading> responseData;
     private final JList<String> userList = new JList<>();// список зарегистрированных пользователей
-        
+    private JFormattedTextField txtReadingDate;// поле для ввода даты
+    
     /**
      *
+     * @param response результат запроса к базе данных, содержащий входные данные
      */
-    public AdminPagePanel() {
+    public AdminPagePanel(Response response) {
         super();
+        this.response = response;
+        try {
+            initComponents();// инициализация компонентов пользовательского интерфейса
+        } catch (ParseException ex) {
+            Logger.getLogger(AdminPagePanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     @Override
@@ -60,8 +73,10 @@ public class AdminPagePanel extends PagePanel{
                 return removeAccount();
             case REMOVE_READING:
                 return removeReadings();
-            case GET_READING:
-                return getReading();
+            case NEW_READING:
+                return addNewReading();
+            case CHANGE_READING:
+                break;
             default:
                 break;
         }
@@ -71,45 +86,45 @@ public class AdminPagePanel extends PagePanel{
     @Override
     public void setResponse(Response response) {
         this.response = response;
-        if (response.getBody()[0][0].equals(ImappingConstants.USER_NAME)) {
-            // если передаётся имя пользователя, вызывается инициализация компонентов
-            initComponents();// инициализация компонентов пользовательского интерфейса
-        } else {
-            // если передаются другие данные (новые показания, на удаление аккаунта)
-            switch (response.getBody()[0][0]) {
-                case REMOVE_ACCOUNT:
-                    if (!response.isAuth()) {
-                        // удаление аккаунта пользователя
-                        JOptionPane.showMessageDialog(null,
-                                "При удалении аккаунта произошли ошибки. Обратитесь к разработчику",
-                                "Warning", JOptionPane.WARNING_MESSAGE);
-                    } else {
-                        // проверяем кто дал запрос на удаление аккаунта: администратор или рядовой пользователь
-                        if (response.getBody()[2][1].equals(IRoleConstants.USER)) {
-                            // запрос сделал пользователь, выходим со страницы
-                            this.setName(LOG_OUT);
-                        } else {
-                            // запрос сделал администратор, обновляем список пользователей
-                            System.out.println("Удаление аккаунта успешно");
-                        }
-                    }   break;
-                case GET_READING:
-                    updateResponseData();
-                    break;
-                default:
-                    break;
-            }
+        // передаются другие данные (новые показания, на удаление аккаунта)
+        switch (response.getBody()[0][0]) {
+            case REMOVE_ACCOUNT:
+                if (!response.isAuth()) {
+                    // удаление аккаунта пользователя
+                    JOptionPane.showMessageDialog(this.getParent(),
+                            "При удалении аккаунта произошли ошибки. Обратитесь к разработчику",
+                            "Warning", JOptionPane.WARNING_MESSAGE);
+                } else {
+                    // извещаем пользователя, обновляем список
+                    JOptionPane.showMessageDialog(this.getParent(),
+                            "Удаление аккаунта успешно!", "Success", 
+                            JOptionPane.INFORMATION_MESSAGE);
+                    userList.setModel(getListModel());
+                    userList.setSelectedIndex(0);
+                }
+                break;
+            case REMOVE_READING:
+                updateResponseData();
         }
+        
     }
 
     /**
      * Инициализация компонентов пользовательского интерфейса
      */
-    private void initComponents() {
-        txtReading = new JTextField(10);// поле для ввода показаний
+    private void initComponents() throws ParseException {
+        txtReading = new JFormattedTextField(NumberFormat.getInstance());// поле для ввода показаний
+        txtReading.setValue(0);
+        txtReading.setInputVerifier(new FormattedTextFieldFerifier());
+        // поле для ввода даты - зададим маску ввода
+        MaskFormatter dateFormatter = new MaskFormatter("####-##-##");
+//        dateFormatter.setPlaceholderCharacter('1');// символ-заполнитель маски
+        dateFormatter.setValidCharacters("0123456789");// разрешённые символы для ввода
+        txtReadingDate = new JFormattedTextField(dateFormatter);
+        txtReadingDate.setValue(LocalDate.now());// задаём значение - текущая дата
+        
         chkHotBox.setSelected(false);// вывод показаний по холодной воде
         userName = response.getBody()[0][1];
-        userRole = response.getBody()[2][1];
         // создаём элементы пользовательского интерфейса
         super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
                 "align=\"center\" cols=\"1\" width=\"100%\" " +
@@ -225,6 +240,23 @@ public class AdminPagePanel extends PagePanel{
      * Создание и заполнение списка пользователей данными
      */
     private void createUserList() {
+        userList.setModel(getListModel());
+        userList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);// выделение одной строки
+        userList.addListSelectionListener((ListSelectionEvent e) -> {
+            try {
+            // получаем пользователя по индексу выделенного элемента списка
+            int index = userList.getSelectedIndex();
+            User u = response.getFromBody(userList.getSelectedIndex());
+            // заполняем список показаний
+            readingList.setModel(readingListModel(u.getAcc().getReadings(), 
+                    chkHotBox.isSelected()));// список показаний
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                System.out.println("error: " + ex.getMessage());
+            }
+        });
+    }
+    
+    private DefaultListModel<String> getListModel() {
         DefaultListModel<String> model = new DefaultListModel<>();
         int index = 0;
         User user;
@@ -233,15 +265,7 @@ public class AdminPagePanel extends PagePanel{
             model.addElement(user.getUsername());// имя пользователя
             index++;// увеличиваем счётчик цикла
         }
-        userList.setModel(model);
-        userList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);// выделение одной строки
-        userList.addListSelectionListener((ListSelectionEvent e) -> {
-            // получаем пользователя по индексу выделенного элемента списка
-            User u = response.getFromBody(userList.getSelectedIndex());
-            // заполняем список показаний
-            readingList.setModel(readingListModel(u.getAcc().getReadings(), 
-                    chkHotBox.isSelected()));// список показаний
-        });
+        return model;
     }
 
     /**
@@ -249,13 +273,14 @@ public class AdminPagePanel extends PagePanel{
      * @return request - запрос на удаление аккаунта
      */
     private Request removeAccount() {
-        Request request = new Request(REMOVE_ACCOUNT, false);// создаём запрос на добавление показаний
+        // получаем пользователя по выбранному индексу списка
+        User user = response.getFromBody(userList.getSelectedIndex());
+        // создаём запрос на удаление аккаунта
+        Request request = new Request(REMOVE_ACCOUNT, false);
         request.getBody()[0][0] = ImappingConstants.USER_NAME;
-        request.getBody()[0][1] = userName;
-        request.getBody()[1][0] = ImappingConstants.ROLE;
-        request.getBody()[1][1] = userRole;
-        request.getBody()[2][0] = ImappingConstants.ACCOUNT;
-        request.getBody()[2][1] = accountNumber;
+        request.getBody()[0][1] = user.getUsername();// имя пользователя
+        request.getBody()[1][0] = ImappingConstants.ACCOUNT;
+        request.getBody()[1][1] = user.getAcc().getAccountNumber();// номер аккаунта
 
         return request;
     }
@@ -272,10 +297,11 @@ public class AdminPagePanel extends PagePanel{
      * Возвращает запрос на получение показаний выделенного пользователя
      * @return request - запрос на получение показаний
      */
-    private Request getReading() {
-        Request request = new Request(GET_READING, false);// создаём запрос на добавление показаний
+    private Request addNewReading() {
+        Request request = new Request(NEW_READING, false);// создаём запрос на добавление показаний
         request.getBody()[0][0] = ImappingConstants.ACCOUNT;
         request.getBody()[0][1] = accountNumber;
+        
         return request;
     }
 
@@ -284,7 +310,7 @@ public class AdminPagePanel extends PagePanel{
      */
     private void updateResponseData() {
         int index = userList.getSelectedIndex();
-        responseData = response.getFromBody(index).getAcc().getReadings();
+        ArrayList<Reading> responseData = response.getFromBody(index).getAcc().getReadings();
         readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));
 
     }

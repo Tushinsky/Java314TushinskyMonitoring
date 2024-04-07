@@ -16,12 +16,8 @@ import static mapping.ImappingConstants.*;
 public class StartAppWindow extends JFrame {
     private JPanel mainPanel;// главная панель, на которой будут располагаться все компоненты
     private CardLayout cardLayout;// менеджер карточной компоновки для главной панели
-    private LoginPanel loginPanel;
-    private final API api = new API();
-    private HomePagePanel homePagePanel;
-    private StartPanel startPanel;
-    private RegisterPanel registerPanel;
-    private AdminPagePanel adminPagePanel;
+    private final API api = new API();// класс для связи с базой данных
+    private StartPanel startPanel;// начальная панель
     
     /**
      * Constructs a new frame that is initially invisible.
@@ -56,33 +52,31 @@ public class StartAppWindow extends JFrame {
         showPanel(LOG_OUT);// начальная панель
     }
 
+    /**
+     * Инициализация компонентов пользовательского интерфейса
+     */
     private void initComponents() {
-        cardLayout = new CardLayout();
-        mainPanel = new JPanel();
-        mainPanel.setBorder(new BevelBorder(2));
-        mainPanel.setBackground(Color.CYAN);
-        mainPanel.setOpaque(true);
+        cardLayout = new CardLayout();// создаём менеджер компоновки
+        
+        // создаём главную панель и задаём её свойства
+        mainPanel = new JPanel(true);
+        mainPanel.setBorder(new BevelBorder(2));// граница
+        mainPanel.setBackground(Color.CYAN);// фон
+        mainPanel.setOpaque(true);// прозрачность
+        mainPanel.setAutoscrolls(true);// автоматическая прокрутка содержимого
+        // панель прокрутки
+        JScrollPane pane = new JScrollPane(mainPanel, 
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
+                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         createStartPanel();// создаём стартовую панель
-//        createLoginPanel();// создаём панель для ввода логина и пароля пользователя
-////            LoginPanel registerPanel = registerPanel();// создаём панель для регистрации пользователя
-//        createHomePagePanel();// создаём домашнюю страницу пользователя
-        
-//            mainPanel.add(registerPanel, REGISTER);
 
-        super.setSize(650, 450);
-        super.getContentPane().add(mainPanel);
-        mainPanel.setLayout(cardLayout);
-//        startPanel.setPreferredSize(mainPanel.getPreferredSize());
-//        loginPanel.setPreferredSize(new Dimension(600, 400));
-//        homePagePanel.setPreferredSize(new Dimension(600, 400));
+        super.setSize(650, 450);// размеры формы
+        super.getContentPane().add(pane);// на панель содержимого добавляем панель
+        mainPanel.setLayout(cardLayout);// задаём менеджер компоновки
         
-        startPanel.setSize(mainPanel.getSize());
-//        loginPanel.setSize(loginPanel.getPreferredSize());
-//        homePagePanel.setSize(homePagePanel.getPreferredSize());
+        startPanel.setSize(mainPanel.getSize());// размер стартовой панели
         
         mainPanel.add(startPanel,LOG_OUT);
-//        mainPanel.add(loginPanel, LOG_IN);
-//        mainPanel.add(homePagePanel, HOME_PAGE);
         super.setType(Type.NORMAL);
         
     }
@@ -102,7 +96,6 @@ public class StartAppWindow extends JFrame {
         startPanel = new StartPanel();// создаём стартовую панель
         // добавляем к стартовой панели слушатель изменения свойства Name
         startPanel.addPropertyChangeListener(evt -> {
-//                System.out.println("start_name=" + evt.getPropertyName());
             if (evt.getNewValue() == null) return;
             if (evt.getNewValue().equals(LOG_IN)) {
                 // показываем страницу ввода пароля и логина
@@ -110,13 +103,13 @@ public class StartAppWindow extends JFrame {
                 showPanel(LOG_IN);
                 startPanel.setOkEnabled(true);// разблокируем кнопку входа
             } else if(evt.getNewValue().equals(REGISTER)) {
-                // показываем страницу регистрацию
+                // показываем страницу регистрации
                 createRegisterPanel();
                 showPanel(REGISTER);
             } else if (evt.getNewValue().equals(EXIT)){
                 System.exit(0);
             }
-            startPanel.setName(null);
+            startPanel.setName(null);// сбрасываем свойство в null
         });
     }
 
@@ -124,11 +117,10 @@ public class StartAppWindow extends JFrame {
      * Создаёт панель ввода пароля
      */
     private void createLoginPanel() {
-        loginPanel = new LoginPanel();
+        LoginPanel loginPanel = new LoginPanel();
         // добавляем к панели пароля слушатель изменения свойства Name
         loginPanel.addPropertyChangeListener(evt -> {
             Object value = evt.getNewValue();
-//                System.out.println("login_name=" + evt.getNewValue().toString());
             if (value == null) return;
             switch (value.toString()) {
                 case LOG_IN:
@@ -137,8 +129,8 @@ public class StartAppWindow extends JFrame {
                     // проверяем запрос
                     if(request != null) {
                         if(signIn(request)) {
-                            
-                            cardLayout.removeLayoutComponent(loginPanel);// удаляем панель из менеджера
+                            // удаляем панель из менеджера
+                            cardLayout.removeLayoutComponent(loginPanel);
                         } else {
                             JOptionPane.showMessageDialog(this, 
                                 "Проверьте правильность ввода логина или пароля!", "Аутентификация", 
@@ -150,20 +142,16 @@ public class StartAppWindow extends JFrame {
                                 "Превышен лимит попыток для входа. Доступ закрыт.\n" +
                                         "Обратитесь к администратору!", "Аутентификация", 
                                         JOptionPane.WARNING_MESSAGE);
-                        cardLayout.removeLayoutComponent(loginPanel);// удаляем панель из менеджера
+                        // удаляем панель из менеджера
+                        cardLayout.removeLayoutComponent(loginPanel);
                         showPanel(LOG_OUT);// показываем начальную страницу
                         startPanel.setOkEnabled(false);// блокируем кнопку ввода
                     }
                     break;
                 case LOG_OUT:
                     showPanel(LOG_OUT);
-                    break;
-                default:
-                    break;
             }
-            loginPanel.setName(null);
-//            loginPanel = null;
-
+            loginPanel.setName(null);// сбрасываем свойство в null
         });
         mainPanel.add(loginPanel, LOG_IN);
     }
@@ -172,7 +160,7 @@ public class StartAppWindow extends JFrame {
      * Создаёт панель регистрации нового пользователя
      */
     private void createRegisterPanel() {
-        registerPanel = new RegisterPanel();
+        RegisterPanel registerPanel = new RegisterPanel();
         // добавляем к панели регистрации слушатель изменения свойства Name
         registerPanel.addPropertyChangeListener(evt -> {
             Object value = evt.getNewValue();
@@ -190,7 +178,7 @@ public class StartAppWindow extends JFrame {
                     break;
             }
             cardLayout.removeLayoutComponent(registerPanel);// удаляем панель из менеджера
-            registerPanel.setName(null);
+            registerPanel.setName(null);// сбрасываем свойство в null
         });
         mainPanel.add(registerPanel, REGISTER);
     }
@@ -207,11 +195,11 @@ public class StartAppWindow extends JFrame {
             // если запрос на вход подтверждён, переходим на домашнюю страницу
             if(response.getBody()[2][1].equals(IRoleConstants.USER)) {
                 createHomePagePanel(response);// создаём панель домашней страницы пользователя
-                homePagePanel.setResponse(response);
+//                homePagePanel.setResponse(response);
             } else {
                 // создаём панель домашней страницы администратора
-                createAdminPagePanel();
-                adminPagePanel.setResponse(response);
+                createAdminPagePanel(response);
+//                adminPagePanel.setResponse(response);
             }
             
             showPanel(HOME_PAGE);
@@ -223,7 +211,7 @@ public class StartAppWindow extends JFrame {
      * Создаёт панель Домашняя страница
      */
     private void createHomePagePanel(Response responseInit) {
-        homePagePanel = new HomePagePanel(responseInit);
+        HomePagePanel homePagePanel = new HomePagePanel(responseInit);
         // добавляем слушатель изменений свойства NAME
         homePagePanel.addPropertyChangeListener("name", evt -> {
             if (evt.getNewValue() == null) return;
@@ -234,14 +222,13 @@ public class StartAppWindow extends JFrame {
                     showPanel(LOG_OUT);
                     break;
                 case NEW_READING:
-                case GET_READING:
-                    Response response = api.response(homePagePanel.getRequest());
-                    homePagePanel.setResponse(response);
-                    break;
-                default:
-                    return;
+                    Request request = homePagePanel.getRequest();// получаем тело запроса
+                    if(request != null) {
+                        Response response = api.response(request);
+                        homePagePanel.setResponse(response);
+                    }
             }
-            homePagePanel.setName(null);
+            homePagePanel.setName(null);// сбрасываем имя в null
         });
         mainPanel.add(homePagePanel, HOME_PAGE);
     }
@@ -249,8 +236,8 @@ public class StartAppWindow extends JFrame {
     /**
      * Создаёт панель страницы для администратора
      */
-    private void createAdminPagePanel() {
-        adminPagePanel = new AdminPagePanel();
+    private void createAdminPagePanel(Response responseInit) {
+        AdminPagePanel adminPagePanel = new AdminPagePanel(responseInit);
         // добавляем слушатель изменений свойства NAME
         adminPagePanel.addPropertyChangeListener("name", evt -> {
             if (evt.getNewValue() == null) return;
@@ -261,14 +248,13 @@ public class StartAppWindow extends JFrame {
                     showPanel(LOG_OUT);
                     break;
                 case NEW_READING:
-                case GET_READING:
+                case CHANGE_READING:
+                case REMOVE_ACCOUNT:
+                case REMOVE_READING:
                     Response response = api.response(adminPagePanel.getRequest());
                     adminPagePanel.setResponse(response);
-                    break;
-                default:
-                    return;
             }
-            adminPagePanel.setName(null);
+            adminPagePanel.setName(null);// сбрасываем имя в null
         });
         mainPanel.add(adminPagePanel, HOME_PAGE);
     }

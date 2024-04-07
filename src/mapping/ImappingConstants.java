@@ -2,11 +2,11 @@ package mapping;
 
 public interface ImappingConstants {
     /**
-     * Логин пользователя
+     * Идентификатор запроса - Логин пользователя
      */
     String LOG_IN = "login";
     /**
-     * Регистрация пользователя
+     * Идентификатор запроса - Регистрация пользователя
      */
     String REGISTER = "register";
     /**
@@ -14,7 +14,7 @@ public interface ImappingConstants {
      */
     String LOG_OUT = "log_out";
     /**
-     * Удаление аккаунта пользователя
+     * Идентификатор запроса - Удаление аккаунта пользователя
      */
     String REMOVE_ACCOUNT = "remove_account";
     /**
@@ -26,39 +26,39 @@ public interface ImappingConstants {
      */
     String HOME_PAGE = "home_page";
     /**
-     * Новые показания
+     * Идентификатор запроса - Новые показания
      */
     String NEW_READING = "new_reading";
     /**
-     * Удаление показаний
+     * Идентификатор запроса - Удаление показаний
      */
     String REMOVE_READING = "remove_reading";
     /**
-     * Получение показаний
+     * Идентификатор запроса - Изменение показаний
      */
-    String GET_READING = "get_reading";
+    String CHANGE_READING = "get_reading";
     /**
-     * Имя пользователя
+     * Идентификатор запроса - Имя пользователя
      */
     String USER_NAME = "username";
     /**
-     * Пароль пользователя
+     * Идентификатор запроса - Пароль пользователя
      */
     String PASSWORD = "password";
     /**
-     * Аккаунт пользователя
+     * Идентификатор запроса - Аккаунт пользователя
      */
     String ACCOUNT = "account";
     /**
-     * Дата по местному часовому поясу
+     * Идентификатор запроса - Дата по местному часовому поясу
      */
     String LOCAL_DATE = "localDate";
     /**
-     * измерение показаний
+     * Идентификатор запроса - Измерение показаний
      */
     String MEASURING = "measuring";
     /**
-     * Флаг горячей воды
+     * Идентификатор запроса - Флаг горячей воды
      */
     String IS_HOT = "isHot";
     /**
@@ -66,11 +66,11 @@ public interface ImappingConstants {
      */
     String ROLE = "role";
     /**
-     * Показания
+     * Идентификатор запроса - Показания
      */
     String READINGS = "readings";
     /**
-     * Все пользователи
+     * Идентификатор запроса запроса - Все пользователи
      */
     String ALL_USERS = "all_users";
 }

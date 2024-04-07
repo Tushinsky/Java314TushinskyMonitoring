@@ -17,7 +17,6 @@ public class PagePanel extends JPanel {
     private String exitAction = "exit";
     private String removeAction = "";
     private Box box;
-    private int componentCount;
     private final JPanel centralPanel;// панель для размещения дополнительных элементов
     private final JPanel buttonPanel;// панель для размещения кнопок
     private GroupLayout centralGroupLayout;
@@ -181,7 +180,7 @@ public class PagePanel extends JPanel {
             removeButton.setVisible(false);
         }
         
-        componentCount = mainPanel.getComponentCount();
+        
     }
 
     /**
