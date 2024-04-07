@@ -4,10 +4,8 @@ import csv.CSVOperate;
 import entities.Account;
 import entities.User;
 import entities.WaterReading;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -23,7 +21,7 @@ import java.util.logging.Logger;
  * а через объекты, дающие доступ к конкретным ее сущностям
  * */
 public class DataBase implements IDao {
-    private ArrayList<User> users = new ArrayList<>();
+    private final ArrayList<User> users = new ArrayList<>();
 //    private boolean aBoolean = false;// флаг добавления нового пользователя
     private final CSVOperate csvOperate;
     private final String accountFileName = "readingsDB/Account.csv";
@@ -197,32 +195,37 @@ public class DataBase implements IDao {
     }
 
     @Override
-    public boolean removeAccount(String account) {
-        boolean remove = false;
-        User user = findUserByAccountNumber(account);// нашли пользователя
-        try {
+    public boolean removeAccount(String accountNumber) {
+        Object[] data;// массив данных
+        data = getIDRecord(accountFileName, 2, accountNumber);
+        /*
+        Получаем код аккаунта и код пользователя для удаления данных из таблиц
+        Users, Account, Readings
+        */
+        Object idAccount = data[0];
+        Object idUser = data[1];
+        /*
+        удаление всех данных этого пользователя: показания, номер аккаунта,
+        запись из таблицы пользователей
+        */
+        Object[][] removeData;
+        if((removeData = removeDataFromFile(userFileName, 0, idUser)) != null) {
             /*
-            удаление всех данных этого пользователя: показания, номер аккаунта,
-            запись из таблицы пользователей
+            сначала удаляем данные из таблицы показаний и проверяем:
+            если всё нормально удаляем дальше
             */
-            // создаём объект для произвольного доступа к файлу показаний
-            RandomAccessFile raf = new RandomAccessFile(readingFileName, "rwd");
-             
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(DataBase.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("removeUser: " + Arrays.toString(removeData));
+            if((removeData = removeDataFromFile(accountFileName, 0, idAccount)) != null) {
+                System.out.println("removeAccount: " + Arrays.toString(removeData));
+                if((removeData = removeDataFromFile(readingFileName, 1, idAccount)) != null) {
+                    System.out.println("removeReading: " + Arrays.toString(removeData));
+                    return true;
+                }
+            } else {
+                return false;
+            }
         }
-        remove = users.remove(user);// удаляем найденного пользователя
-        
-        return remove;
-    }
-
-    private String generateAccount() {
-        StringBuilder returnValue = new StringBuilder();
-        for(int i = 0; i < 6; i++) {
-            int number = (int) (Math.random() * 10);
-            returnValue.append(number);
-        }
-        return returnValue.toString();
+        return false;
     }
 
     @Override
@@ -316,16 +319,69 @@ public class DataBase implements IDao {
         
         // перебираем, получаем код аккаунта
         for(Object[] data : database) {
-            System.out.println("data:" + Arrays.toString(data));
-            System.out.println("col:" + data[col].toString() + ", number=" + template);
-            // номер аккаунта пользователя находится в 3-м столбце таблицы
+            // проверяем соответствие значения в указанном столбце шаблону
             if(!data[col].toString().equals(template)) {
                 continue;
             }
-            // если номер акканта найден в базе данных, получаем код
+            // если шаблон в строке найден, возвращаем данные
             return data;
             
         }
         return null;
+    }
+    
+    /**
+     * Удаляет данные из указанного файла.
+     * @param filename имя файла для удаления
+     * @param col номер столбца для поиска строки-шаблона
+     * @param template строка-шаблон, содержащаяся в удаляемой строке данных
+     * @return двухмерный массив данных, которые были удалены, или null, если строка-шаблон
+     * не была найдена
+     */
+    private Object[][] removeDataFromFile(String filename, int col, Object template) {
+        Object[][] database = getDataTable(filename);// получаем массив данных из файла
+        ArrayList<Object[]> writeData = new ArrayList<>();// список данных для записи
+        ArrayList<Object[]> data = new ArrayList<>();// список данных для возврата
+        for(Object[] db : database) {
+            // сравниваем данные
+            if(Objects.equals(db[col], template)) {
+                data.add(db);// добавляем в список удаления
+            } else {
+                writeData.add(db);// добавляем в список для перезаписи файла
+            }
+        }
+        // проверяем данные
+        if(!data.isEmpty()) {
+            // формируем данные для возврата
+            database = new Object[data.size()][];
+            for(int i = 0; i < data.size(); i++) {
+                database[i] = data.get(i);
+            }
+            // перезаписываем файл
+            reWriteFile(filename, writeData);
+            return database;
+        }
+        return null;
+        
+    }
+    
+    /**
+     * Перезаписывает файл с указанными данными
+     * @param fileName имя файла для перезаписи
+     * @param writeData массив данных для записи
+     */
+    private void reWriteFile(String fileName, ArrayList<Object[]> writeData) {
+        if(!writeData.isEmpty()) {
+            
+            // формируем данные для записи в файл
+            Object[][] database = new Object[writeData.size()][];
+            for(int i = 0; i < writeData.size(); i++) {
+                database[i] = writeData.get(i);
+            }
+            csvOperate.setFileName(fileName);
+            csvOperate.setData(database);
+            csvOperate.writeData();
+        }
+
     }
 }

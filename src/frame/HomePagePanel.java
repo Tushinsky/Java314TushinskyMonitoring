@@ -5,32 +5,37 @@ import api.Response;
 import entities.Reading;
 import entities.User;
 import entities.WaterReading;
+import in.FormattedTextFieldFerifier;
+import java.awt.Font;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import mapping.ImappingConstants;
 
 import javax.swing.*;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import javax.swing.event.ListSelectionEvent;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.text.MaskFormatter;
 
 import static mapping.ImappingConstants.*;
 
 public class HomePagePanel extends PagePanel {
     private final JList<String> readingList = new JList<>();// список показаний
-    private JTextField txtReading;// поле для ввода показаний
-    private Response response;
-    private String accountNumber;
-    private String userName;
-    private String userRole;
+    private JFormattedTextField txtReading;// поле для ввода показаний
+    private Response response;// ответ базы данных
+    private String accountNumber;// номер аккаунта
+    private String userName;// имя пользователя
     private final JCheckBox chkHotBox = new JCheckBox("горячая");// отмечает показания по горячей или холодной воде
-    private ArrayList<Reading> responseData;
-    private JTextField txtReadingDate;// поле для ввода даты показаний
+    private JFormattedTextField txtReadingDate;// поле для ввода даты показаний
     /**
      * Creates a new <code>JPanel</code> with a double buffer
      * and a flow layout.
      * @param response результат запроса к базе данных, содержащий входные данные
      */
     public HomePagePanel(Response response) {
-        super();
+        super(NEW_READING, LOG_OUT, "");
         this.response = response;
         initComponents();
 
@@ -38,15 +43,8 @@ public class HomePagePanel extends PagePanel {
 
     @Override
     public Request getRequest() {
-        switch (this.getName()) {
-            case NEW_READING:
-                return addNewReading();
-            case GET_READING:
-                return getReading();
-            default:
-                break;
-        }
-        return null;
+        return addNewReading();
+        
     }
 
     @Override
@@ -63,13 +61,19 @@ public class HomePagePanel extends PagePanel {
 
     }
 
+    /**
+     * Инициализация компонентов пользовательского интерфейса
+     */
     private void initComponents() {
-        // вошёл простой пользователь
-        txtReading = new JTextField(10);// поле для ввода показаний
-        txtReadingDate = new JTextField(10);// поле для ввода даты
+        try {
+            initTextField();
+        } catch (ParseException ex) {
+            Logger.getLogger(HomePagePanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        // получаем данные пользователя из тела запроса
         User user = response.getFromBody(0);
-        userName = user.getUsername();
-        accountNumber = user.getAcc().getAccountNumber();
+        userName = user.getUsername();// получаем имя пользователя
+        accountNumber = user.getAcc().getAccountNumber();// получаем номер аккаунта
         super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
                 "width=\"100%\" style=\"font-size:small;\" bgcolor=\"#AAFF00\">" +
                 "<tr><td align=\"justify\">" + 
@@ -81,29 +85,53 @@ public class HomePagePanel extends PagePanel {
                 "</b></td></tr>" +
                 "<tr><td align=\"left\">Сегодня: <b><u>" + LocalDate.now() + "</u></b>" +
                 "</td></tr></table>");
-        userRole = response.getBody()[2][1];
-        responseData = user.getAcc().getReadings();
-        readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));// список показаний
-
-        super.setRemoveAction("");// скрываем кнопку удаления аккаунта
+        // заполняем список данными
+        readingList.setModel(readingListModel(user.getAcc().getReadings(), 
+                chkHotBox.isSelected()));// список показаний
+        // добавляем на родителя созданный контейнер с данными пользователя
         super.addComponent(getUserBox());
-        
-        super.setOkAction(NEW_READING);
-        super.setRemoveAction(REMOVE_ACCOUNT);
-        super.setExitAction(LOG_OUT);
+        // задаём название для кнопки ввода
         super.setOkCaption("Добавить показания");
 
         // добавляем слушатель на флажок
         chkHotBox.addActionListener((e -> {
             try {
-                readingList.setModel(readingListModel(responseData, 
-                        chkHotBox.isSelected()));// список показаний
+                updateResponseData();// список показаний
             } catch(Exception ex) {
                 System.out.println("error:" + ex.getMessage());
             }
         }));
         chkHotBox.setSelected(false);// вывод показаний по холодной воде
         
+    }
+    
+    /**
+     * Инициализирует поля ввода и задаёт их свойства
+     * @throws ParseException 
+     */
+    private void initTextField() throws ParseException {
+        // поле для ввода показаний
+        txtReading = new JFormattedTextField(NumberFormat.getIntegerInstance());
+        txtReading.setValue(0);
+        // задаём верификатор для проверки корректности ввода показаний
+        txtReading.setInputVerifier(new FormattedTextFieldFerifier());
+        
+        // поле для ввода даты - зададим маску ввода
+        MaskFormatter dateFormatter = new MaskFormatter("####-##-##");
+//        dateFormatter.setPlaceholderCharacter('1');// символ-заполнитель маски
+        dateFormatter.setValidCharacters("0123456789");// разрешённые символы для ввода
+        txtReadingDate = new JFormattedTextField(dateFormatter);
+        txtReadingDate.setValue(LocalDate.now());// задаём значение - текущая дата
+        
+        /*
+        ------------------Установим шрифт для полей----------------------
+        */
+        // получаем текущий шрифт поля ввода показаний и увеличиваем его размер
+        Font font = txtReading.getFont();
+        font = new Font(font.getFontName(), Font.BOLD, 14);
+        // и передаём его полям ввода
+        txtReading.setFont(font);
+        txtReadingDate.setFont(font);
     }
 
     /**
@@ -156,80 +184,73 @@ public class HomePagePanel extends PagePanel {
         return box;
     }
 
+    /**
+     * Создаёт и возвращает модель списка по умолчанию
+     * @param data данные для заполнения модели
+     * @param isHot флаг, задающий тип выводимых показаний
+     * @return модель списка, заполненную полученными данными
+     */
     private DefaultListModel<String> readingListModel(ArrayList<Reading> data, boolean isHot) {
         DefaultListModel<String> model = new DefaultListModel<>();
         System.out.println("data= " + data);
         if(data != null) {
+            // фильтруем данные по флагу
             data.stream().filter((r) -> {
-                WaterReading wr = (WaterReading) r;
-                return wr.isHot() == isHot;
+                WaterReading wr = (WaterReading) r;// приводим к нужному типу
+                return wr.isHot() == isHot;// возвращаем, если флаг соответствует
             }).forEach((Reading r) -> model.addElement(r.getDate() + 
-                    " | " + r.getMeasuring()));
+                    " | " + r.getMeasuring()));// в модель ложим дату и показания
             
         }
-        return model;
+        return model;// результат фильтра
     }
 
-    private JList<String> getUserList() {
-        JList<String> userList = new JList<>();// список зарегистрированных пользователей
-        DefaultListModel<String> model = new DefaultListModel<>();
-        int index = 0;
-        User user;
-        // заполняем модель списка
-        while((user = response.getFromBody(index)) != null) {
-//            System.out.println("user:" + user.getUsername() + "; readings:" + 
-//                    user.getAcc().getReadings());
-            model.addElement(user.getUsername());// имя пользователя
-            index++;// увеличиваем счётчик цикла
-        }
-        userList.setModel(model);
-        userList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);// выделение одной строки
-        userList.addListSelectionListener((ListSelectionEvent e) -> {
-            // получаем пользователя по индексу выделенного элемента списка
-            User u = response.getFromBody(userList.getSelectedIndex());
-            // заполняем список показаний
-            readingList.setModel(readingListModel(u.getAcc().getReadings(), 
-                    chkHotBox.isSelected()));// список показаний
-        });
-        return userList;
-    }
-
+    /**
+     * Создаёт и заполняет тело запроса на добавление новых показаний пользователя
+     * @return request - тело запроса, содержащее данные
+     */
     private Request addNewReading() {
-        Request request = new Request(NEW_READING, false);// создаём запрос на добавление показаний
+        LocalDate ld;
+        // проверяем корректность ввода даты
+        try {
+            ld = LocalDate.parse(txtReadingDate.getValue().toString());
+        } catch (DateTimeParseException ex) {
+            JOptionPane.showMessageDialog(this, 
+                    "Неверный ввод даты! Проверьте правильность ввода.", 
+                    "Ошибка", JOptionPane.ERROR_MESSAGE);
+            ld = LocalDate.now();
+        }
+        // проверяем корректность ввода показаний
+        if(!txtReading.isEditValid()) {
+            // если пользователь ввёл некорректные данные, уведомляем его
+            JOptionPane.showMessageDialog(this, 
+                    "Проверьте правильность ввода показаний!", 
+                    "Ошибка", JOptionPane.ERROR_MESSAGE);
+            return null;// возвращаем null
+        }
+        // создаём запрос на добавление показаний
+        Request request = new Request(NEW_READING, false);
         request.getBody()[0][0] = ImappingConstants.ACCOUNT;
         request.getBody()[0][1] = accountNumber;
         request.getBody()[1][0] = ImappingConstants.MEASURING;
-        request.getBody()[1][1] = txtReading.getText();
+        request.getBody()[1][1] = txtReading.getValue().toString();
         request.getBody()[2][0] = ImappingConstants.LOCAL_DATE;
-        request.getBody()[2][1] = LocalDate.now().toString();
+        request.getBody()[2][1] = ld.toString();
         request.getBody()[3][0] = ImappingConstants.IS_HOT;
         request.getBody()[3][1] = chkHotBox.isSelected() ? "1" : "0";
         return request;
     }
 
-    private Request removeAccount() {
-        Request request = new Request(REMOVE_ACCOUNT, false);// создаём запрос на добавление показаний
-        request.getBody()[0][0] = ImappingConstants.USER_NAME;
-        request.getBody()[0][1] = userName;
-        request.getBody()[1][0] = ImappingConstants.ROLE;
-        request.getBody()[1][1] = userRole;
-        request.getBody()[2][0] = ImappingConstants.ACCOUNT;
-        request.getBody()[2][1] = accountNumber;
-
-        return request;
-    }
-
-    private Request getReading() {
-        Request request = new Request(GET_READING, false);// создаём запрос на добавление показаний
-        request.getBody()[0][0] = ImappingConstants.ACCOUNT;
-        request.getBody()[0][1] = accountNumber;
-        return request;
-    }
-
+    /**
+     * Обновление данных, полученных из ответа к базе данных
+     */
     private void updateResponseData() {
-        responseData = response.getFromBody(0).getAcc().getReadings();
+        // получаем данные по показаниям
+        ArrayList<Reading> responseData = response.getFromBody(0).getAcc().getReadings();
+        // заполняем список
         readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));
 
     }
 
+    
 }

@@ -7,6 +7,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 import javax.swing.*;
+import static mapping.ImappingConstants.LOG_IN;
 
 import static mapping.ImappingConstants.LOG_OUT;
 
@@ -46,8 +47,8 @@ public class LoginPanel extends PagePanel {
      * and a flow layout.
      */
     public LoginPanel() {
-        super();
-        this.requestFocusInWindow(true);
+        super(LOG_IN, LOG_OUT, "");
+//        this.requestFocusInWindow();
         initComponents();
 
     }
@@ -57,7 +58,6 @@ public class LoginPanel extends PagePanel {
      */
     private void initComponents() {
         initTextField();
-        super.setOkAction(ImappingConstants.LOG_IN);
         // текст для заголовка панели - приветствие
         super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
                     "align=\"center\" cols=\"1\" style=\"font-size:14px;\" " +
@@ -67,12 +67,13 @@ public class LoginPanel extends PagePanel {
                     "Введите Ваш <b><u>логин</u></b> и <b><u>пароль</u></b>" +
                     " для доступа в личный кабинет." +
                     "</td></tr></table>");
+        // добавляем на родителя контейнер с элементами управления для ввода данных
         super.addComponent(getLoginBox());
-        super.setExitAction(LOG_OUT);
-//        super.addComponent(box);
+        // текст для кнопки входа
         super.setOkCaption("Войти");
+        // создаём запрос на вход
         request = new Request(ImappingConstants.LOG_IN, false);
-        txtLogin.requestFocus(true);// фокус на поле ввода логина
+        txtLogin.requestFocusInWindow();// фокус на поле ввода логина
     }
     
     /**
@@ -80,20 +81,24 @@ public class LoginPanel extends PagePanel {
      */
     private void initTextField() {
         txtLogin = new JTextField(20);// поле для ввода логина
+        txtLogin.setFocusable(true);
         txtPasswordField = new JPasswordField(20);// поле для ввода пароля
+        txtPasswordField.setFocusable(true);
         Font font = txtLogin.getFont();// получили шрифт для полей ввода
         font = new Font(font.getFontName(), Font.BOLD, 14);// увеличили размер
         txtLogin.setFont(font);
         txtPasswordField.setFont(font);
-        /* добавим обработку нажатия кнопок в текстовых полях ввода имени
+        
+        /*
+        добавим обработку нажатия кнопок в текстовых полях ввода имени
         пользователя и пароля
         */
         KeyAdapter ka = new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent ke) {
-                super.keyPressed(ke); //To change body of generated methods, choose Tools | Templates.
-                // если нажата клавиша ввода, то инициируем действие
-                // для клавиши OK, если Отмена, то инициируем действие для клавиши Cancel
+                super.keyPressed(ke);
+                // если нажата клавиша Enter, то инициируем действие
+                // для кнопки Вход, если Escape, то для кнопки Выход
                 switch(ke.getKeyCode()) {
                     case KeyEvent.VK_ENTER:
                         setName(ImappingConstants.LOG_IN);

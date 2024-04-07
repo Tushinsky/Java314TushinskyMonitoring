@@ -41,19 +41,6 @@ public class RegisterPanel extends PagePanel {
         request.getBody()[2][1] = String.valueOf(passwordField.getPassword());// значение - пароль пользователя
         return request;
     }
-
-    
-    public String getPassword() {
-        return String.valueOf(passwordField.getPassword());
-    }
-
-    public String getLogin() {
-        return txtLogin.getText();
-    }
-
-    public String getUserName() {
-        return txtUserName.getText();
-    }
     
     /**
      * Инициализация компонентов пользовательского интерфейса
