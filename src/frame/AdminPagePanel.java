@@ -15,6 +15,7 @@ import in.Request;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,16 +28,14 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.text.MaskFormatter;
 import static mapping.ImappingConstants.LOG_OUT;
-import static mapping.ImappingConstants.NEW_READING;
 import static mapping.ImappingConstants.REMOVE_ACCOUNT;
 import static mapping.ImappingConstants.REMOVE_READING;
 import static mapping.ImappingConstants.CHANGE_READING;
+import static mapping.ImappingConstants.NEW_READING;
 
 /**
  *
@@ -51,7 +50,7 @@ public class AdminPagePanel extends PagePanel{
     private final JCheckBox chkHotBox = new JCheckBox("горячая");// отмечает показания по горячей или холодной воде
     private final JList<String> userList = new JList<>();// список зарегистрированных пользователей
     private JFormattedTextField txtReadingDate;// поле для ввода даты
-    
+    private ArrayList<User> userArray;// 
     /**
      *
      * @param response результат запроса к базе данных, содержащий входные данные
@@ -70,11 +69,11 @@ public class AdminPagePanel extends PagePanel{
     public Request getRequest() {
         switch (this.getName()) {
             case REMOVE_ACCOUNT:
-                return removeAccount();
+                return getRemoveAccountRequest();
             case REMOVE_READING:
-                return removeReadings();
+                return getRemoveReadingsRequest();
             case NEW_READING:
-                return addNewReading();
+                return getAddNewReadingRequest();
             case CHANGE_READING:
                 break;
             default:
@@ -89,22 +88,17 @@ public class AdminPagePanel extends PagePanel{
         // передаются другие данные (новые показания, на удаление аккаунта)
         switch (response.getBody()[0][0]) {
             case REMOVE_ACCOUNT:
-                if (!response.isAuth()) {
-                    // удаление аккаунта пользователя
-                    JOptionPane.showMessageDialog(this.getParent(),
-                            "При удалении аккаунта произошли ошибки. Обратитесь к разработчику",
-                            "Warning", JOptionPane.WARNING_MESSAGE);
-                } else {
-                    // извещаем пользователя, обновляем список
-                    JOptionPane.showMessageDialog(this.getParent(),
-                            "Удаление аккаунта успешно!", "Success", 
-                            JOptionPane.INFORMATION_MESSAGE);
-                    userList.setModel(getListModel());
-                    userList.setSelectedIndex(0);
-                }
+                removeAccount(response);
                 break;
             case REMOVE_READING:
                 updateResponseData();
+                break;
+            case NEW_READING:
+                addReading(response);
+                break;
+            case CHANGE_READING:
+                changeReading(response);
+                break;
         }
         
     }
@@ -178,7 +172,12 @@ public class AdminPagePanel extends PagePanel{
         box3.add(new JLabel("Новые показания"));
         box3.add(Box.createHorizontalStrut(10));
         box3.add(txtReading);
-        box3.add(Box.createHorizontalStrut(5));
+        box3.add(Box.createHorizontalStrut(10));
+        box3.add(new JLabel("Дата"));
+        box3.add(Box.createHorizontalStrut(10));
+        box3.add(txtReadingDate);
+        box3.add(Box.createHorizontalStrut(10));
+        
         box3.add(chkHotBox);
         box3.add(Box.createHorizontalStrut(20));
         box3.add(removeReadingButton);
@@ -247,6 +246,7 @@ public class AdminPagePanel extends PagePanel{
             // получаем пользователя по индексу выделенного элемента списка
             int index = userList.getSelectedIndex();
             User u = response.getFromBody(userList.getSelectedIndex());
+            accountNumber = u.getAcc().getAccountNumber();
             // заполняем список показаний
             readingList.setModel(readingListModel(u.getAcc().getReadings(), 
                     chkHotBox.isSelected()));// список показаний
@@ -272,7 +272,7 @@ public class AdminPagePanel extends PagePanel{
      * Возвращает запрос на удаление пользовательского аккаунта
      * @return request - запрос на удаление аккаунта
      */
-    private Request removeAccount() {
+    private Request getRemoveAccountRequest() {
         // получаем пользователя по выбранному индексу списка
         User user = response.getFromBody(userList.getSelectedIndex());
         // создаём запрос на удаление аккаунта
@@ -289,7 +289,7 @@ public class AdminPagePanel extends PagePanel{
      * Возвращает запрос на удаление показаний из аккаунта выбранного пользователя
      * @return request - запрос на удаление показаний
      */
-    private Request removeReadings() {
+    private Request getRemoveReadingsRequest() {
         return null;
     }
 
@@ -297,11 +297,35 @@ public class AdminPagePanel extends PagePanel{
      * Возвращает запрос на получение показаний выделенного пользователя
      * @return request - запрос на получение показаний
      */
-    private Request addNewReading() {
-        Request request = new Request(NEW_READING, false);// создаём запрос на добавление показаний
+    private Request getAddNewReadingRequest() {
+        LocalDate ld;
+        // проверяем корректность ввода даты
+        try {
+            ld = LocalDate.parse(txtReadingDate.getValue().toString());
+        } catch (DateTimeParseException ex) {
+            JOptionPane.showMessageDialog(this, 
+                    "Неверный ввод даты! Проверьте правильность ввода.", 
+                    "Ошибка", JOptionPane.ERROR_MESSAGE);
+            ld = LocalDate.now();
+        }
+        // проверяем корректность ввода показаний
+        if(!txtReading.isEditValid()) {
+            // если пользователь ввёл некорректные данные, уведомляем его
+            JOptionPane.showMessageDialog(this, 
+                    "Проверьте правильность ввода показаний!", 
+                    "Ошибка", JOptionPane.ERROR_MESSAGE);
+            return null;// возвращаем null
+        }
+        // создаём запрос на добавление показаний
+        Request request = new Request(NEW_READING, false);
         request.getBody()[0][0] = ImappingConstants.ACCOUNT;
         request.getBody()[0][1] = accountNumber;
-        
+        request.getBody()[1][0] = ImappingConstants.MEASURING;
+        request.getBody()[1][1] = txtReading.getValue().toString();
+        request.getBody()[2][0] = ImappingConstants.LOCAL_DATE;
+        request.getBody()[2][1] = ld.toString();
+        request.getBody()[3][0] = ImappingConstants.IS_HOT;
+        request.getBody()[3][1] = chkHotBox.isSelected() ? "1" : "0";
         return request;
     }
 
@@ -313,5 +337,66 @@ public class AdminPagePanel extends PagePanel{
         ArrayList<Reading> responseData = response.getFromBody(index).getAcc().getReadings();
         readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));
 
+    }
+    
+    /**
+     * Информирует пользователя об операции удаления аккаунта
+     * @param response ответ базы данных о результатах операции удаления
+     */
+    private void removeAccount(Response response) {
+        if (!response.isAuth()) {
+            // удаление аккаунта пользователя
+            JOptionPane.showMessageDialog(this.getParent(),
+                    "При удалении аккаунта произошли ошибки. Обратитесь к разработчику",
+                    "Warning", JOptionPane.WARNING_MESSAGE);
+        } else {
+            // извещаем пользователя, обновляем список
+            JOptionPane.showMessageDialog(this.getParent(),
+                    "Удаление аккаунта успешно!", "Success", 
+                    JOptionPane.INFORMATION_MESSAGE);
+            userList.setModel(getListModel());
+            userList.setSelectedIndex(0);
+        }
+    }
+    
+    /**
+     * Информирует пользователя об операции удаления показаний
+     * @param response ответ базы данных о результатах операции удаления
+     */
+    private void removeReading(Response response) {
+        
+    }
+    
+    /**
+     * Информирует пользователя об операции добавления новых показаний
+     * @param response ответ базы данных о результатах операции добавления
+     */
+    private void addReading(Response response) {
+        // если ответ положительный, и новые показания приняты, добавляем их в список показаний
+        if (response.isAuth()) {
+            // создаём объект показаний
+            WaterReading reading = new WaterReading(LocalDate
+                    .parse(txtReadingDate.getValue().toString()), 
+                    Integer.parseInt(txtReading.getValue().toString()), 
+                    chkHotBox.isSelected());
+            // получаем список показаний
+            int index = userList.getSelectedIndex();
+            ArrayList<Reading> readings = response.getFromBody(index).getAcc()
+                    .getReadings();
+            readings.add(reading);// добавляем показание в список
+            updateResponseData();
+        } else {
+            JOptionPane.showMessageDialog(null,
+                    "Внесение показаний допускается только одни раз в текущем месяце",
+                    "Warning", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+    
+    /**
+     * Информирует пользователя об операции изменения показаний
+     * @param response ответ базы данных о результатах операции изменения
+     */
+    private void changeReading(Response response) {
+        
     }
 }
