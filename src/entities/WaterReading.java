@@ -6,8 +6,8 @@ public class WaterReading extends Reading{
     private final String type = "water";
     private final boolean isHot;
 
-    public WaterReading(LocalDate date, int measuring, boolean isHot) {
-        super(date, measuring);
+    public WaterReading(int id, LocalDate date, int measuring, boolean isHot) {
+        super(id, date, measuring);
         this.isHot = isHot;
     }
 

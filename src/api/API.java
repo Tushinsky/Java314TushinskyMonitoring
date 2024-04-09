@@ -5,11 +5,8 @@ import db.DataBase;
 import db.IDao;
 import entities.IRoleConstants;
 import entities.User;
-import entities.Reading;
 import entities.WaterReading;
 import mapping.ImappingConstants;
-import java.time.LocalDate;
-import java.util.ArrayList;
 
 /**
  * Класс, реализующий функционал сервера
@@ -41,7 +38,9 @@ public class API implements Iapi{
             case ImappingConstants.NEW_READING:
                 return addNewReading(request);// добавление новых показаний
             case ImappingConstants.CHANGE_READING:
-                return getChangeReadings(request);
+                return changeReadings(request);
+            case ImappingConstants.REMOVE_READING:
+                return removeReading(request);
             default:
                 return new Response(request.isAuth());
         }
@@ -82,11 +81,7 @@ public class API implements Iapi{
         if(success) {
             Response response = new Response(success);
             response.getBody()[0][0] = ImappingConstants.REMOVE_ACCOUNT;
-            response.getBody()[0][1] = account;// получаем данные по показаниям
-            response.getBody()[1][0] = ImappingConstants.USER_NAME;
-            response.getBody()[1][1] = request
-                    .getValueByKey(ImappingConstants.USER_NAME);// получаем данные по показаниям
-            getAllUsers(response);
+            response.getBody()[0][1] = "";// получаем данные по показаниям
             return response;
         }
         return new Response(false);
@@ -95,24 +90,17 @@ public class API implements Iapi{
     private Response addNewReading(Request request) {
         System.out.println(request);
         String account = request.getValueByKey(ImappingConstants.ACCOUNT);
-        LocalDate localDate = LocalDate.parse(request
-                .getValueByKey(ImappingConstants.LOCAL_DATE));
-        int measuring = Integer.parseInt(request
-                .getValueByKey(ImappingConstants.MEASURING));
-        boolean isHot = request
-                .getValueByKey(ImappingConstants.IS_HOT).equals("1");
-
         // добавляем новые показания в аккаунт пользователя
-        WaterReading wr = new WaterReading(localDate, measuring, isHot);
+        WaterReading wr = (WaterReading) request.getFromBody(0);
         boolean success = dao.addNewReading(account, wr);
         Response response = new Response(success);
         if(success) {
             // ищем пользователя по аккаунту
             response.getBody()[0][0] = ImappingConstants.NEW_READING;
             response.getBody()[0][1] = "";// получаем данные по показаниям
-            return response;
         }
-        return new Response(false);
+        return response;
+        
         
     }
 
@@ -123,44 +111,20 @@ public class API implements Iapi{
         */
         dao.getAllUsers().forEach((user) -> response.addToBody(user));
     }
-
-    /**
-     * Возвращает показания по текущему пользователю
-     * @param user пользователь для получения данных
-     * @return строка, содержащая форматированные данные по показаниям
-     */
-    private String getCurrentUserReadings(User user) {
-        
-        // получаем массив показаний текущего пользователя
-        ArrayList<Reading> readings = user.getAcc().getReadings();
-        StringBuilder builder = new StringBuilder();// построитель строк
-        
-        if(readings.isEmpty()) {
-            // если показаний нет
-            return null;
-        }
-        // преобразуем в строку
-        readings.stream().map((r) -> (WaterReading) r).forEachOrdered((wr) -> {
-            builder.append(wr.getDate()).append(" | ").append(wr.getMeasuring())
-                    .append(" | ").append(wr.isHot()).append(";");
-        });
-        builder.deleteCharAt(builder.lastIndexOf(";"));// удаляем последний символ;
-        return builder.toString();
-            
-        
-    }
     
     
-    private Response getChangeReadings(Request request) {
+    private Response changeReadings(Request request) {
+        // разбираем тело запроса на аккауант, измерение, тип
         String account = request.getValueByKey(ImappingConstants.ACCOUNT);
-        // проверяем, что такой пользователь есть в нашей базе
-        User user = dao.findUserByAccountNumber(account);
-        if (user != null) {
-            Response response = new Response(true);
-            response.getBody()[0][0] = ImappingConstants.CHANGE_READING;
-            response.getBody()[0][1] = getCurrentUserReadings(user);// данные по показаниям
-            return response;
-        } else return new Response(false);
+        // создаём объект показаний и передаём в базу данных
+        WaterReading wr = (WaterReading) request.getFromBody(0);
+        boolean succes = dao.changeReading(account, wr);
+        // если изменения приняты, возвращаем результат
+        Response response = new Response(succes);
+        response.getBody()[0][0] = ImappingConstants.CHANGE_READING;
+        response.getBody()[0][1] = "";// данные по показаниям
+        return response;
+        
     }
 
     private Response dataResponse() {
@@ -175,10 +139,6 @@ public class API implements Iapi{
         if (currentUser.getRole().equals(IRoleConstants.USER)) {
             // подключился обычный пользователь
             response.addToBody(currentUser);
-//            response.getBody()[3][0] = ImappingConstants.ACCOUNT;
-//            response.getBody()[3][1] = currentUser.getAcc().getAccountNumber();
-//            response.getBody()[4][0] = ImappingConstants.READINGS;
-//            response.getBody()[4][1] = getCurrentUserReadings(currentUser);// данные по показаниям
         } else {
             /*
              Подключился администратор. Для него мы должны передать
@@ -186,6 +146,19 @@ public class API implements Iapi{
              */
             getAllUsers(response);
         }
+        return response;
+    }
+
+    private Response removeReading(Request request) {
+        // разбираем тело запроса на аккауант, измерение, тип
+        String account = request.getValueByKey(ImappingConstants.ACCOUNT);
+        // создаём объект показаний и передаём в базу данных
+        WaterReading wr = (WaterReading) request.getFromBody(0);
+        boolean succes = dao.removeReading(account, wr);
+        // если изменения приняты, возвращаем результат
+        Response response = new Response(succes);
+        response.getBody()[0][0] = ImappingConstants.CHANGE_READING;
+        response.getBody()[0][1] = "";// данные по показаниям
         return response;
     }
 }

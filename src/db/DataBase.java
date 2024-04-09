@@ -81,10 +81,11 @@ public class DataBase implements IDao {
         for(Object[] db : database) {
             if(Objects.equals(db[1], String.valueOf(acc.getId()))) {
                 // заполняем аккаунт пользователя данными
+                int id = Integer.parseInt(db[0].toString());
                 LocalDate date = LocalDate.parse(db[4].toString());
                 int count = Integer.parseInt(db[2].toString());
                 boolean hot = !db[3].toString().equals("0");
-                WaterReading reading = new WaterReading(date, count, hot);
+                WaterReading reading = new WaterReading(id, date, count, hot);
         //                    System.out.println("reading:" + reading);
                 acc.addReading(reading);
             }
@@ -233,12 +234,14 @@ public class DataBase implements IDao {
         // ищем код по номеру аккаунта
         Object[] data = getIDRecord(accountFileName, 2, accountNumber);
         int idAccount = Integer.parseInt(data[0].toString());
-        if(idAccount == 0) {
-            return false;
-        }
+        
         Object[][] database;
         // читаем таблицу показаний
         database = getDataTable(readingFileName);// получаем массив
+        // проверяем новые показания на соответствие заданным условиям
+        if(testNewReading(database, idAccount, waterReading) == false) {
+            return false;// если не соответствуют, возвращаем false
+        }
         
         // из последнего элемента массива получаем код последней записи в таблице
         int idReading = Integer.parseInt(database[database.length - 1][0].toString());
@@ -383,5 +386,76 @@ public class DataBase implements IDao {
             csvOperate.writeData();
         }
 
+    }
+    
+    /**
+     * Проверяет переданные показания на соответствие заданным условиям:
+     * период и дата ввода новых показаний должны быть больше уже имеющихся в 
+     * базе данных
+     * @param data двухмерный массив данных, содержащий показания
+     * @param idAccount код аккаунта, по которому выбирабтся показания
+     * @param wr показания, которые вносятся
+     * @return true если условия выполнены, иначе false
+     */
+    private boolean testNewReading(Object[][] data, int idAccount, 
+            WaterReading wr) {
+        // массив, куда складываем показания по заданному коду аккаунта
+        ArrayList<Object[]> listReading = new ArrayList<>();
+        for(Object[] dat : data) {
+            if(Objects.deepEquals(Integer.parseInt(String.valueOf(dat[1])), idAccount)) {
+                listReading.add(dat);
+            }
+        }
+        System.out.println("list: " + listReading);
+        if(listReading.isEmpty()) {
+            /*
+            если список пустой, показаний по данному аккаунту нет, значит
+            новые показания можно добавлвять
+            */
+            return true;
+        }
+        // обрабатыааем полученный список
+        int hot = wr.isHot() ? 1 : 0;
+        // фильтруем наш список в массив показаний по нужному признаку
+        Object[] array = listReading.stream()
+                .filter(dat -> Objects.deepEquals(Integer.
+                        parseInt(String.valueOf(dat[3])), hot)).toArray();
+        // берём последний элемент и сравниваем дату внесения данных
+        Object[] dat = (Object[]) array[array.length - 1];
+        // дата внесения показаний содержится в последнем элементе
+        LocalDate date = LocalDate.parse(dat[dat.length - 1].toString());
+        // сравниваем месяцы из этой даты и из даты новых показаний
+        if(date.getMonthValue() == LocalDate.now().getMonthValue()) {
+            // если месяцы совпадают (в этом месяце показания уже вносились)
+            return false;
+        } else {
+            // проверим ещё возможное совпадение с датой предыдущих показаний
+            int m = wr.getDate().getMonthValue();
+            for(Object a : array) {
+                // преобразуем к массиву
+                dat = (Object[]) a;
+                // вытаскиваем из даты месяц
+                int month = LocalDate.parse(dat[dat.length - 2]
+                        .toString()).getMonthValue();
+                // сравниваем
+                if(month == m) {
+                    return false;
+                }
+            }
+        }
+        return true;
+        
+        
+    }
+
+    @Override
+    public boolean removeReading(String accountNumber, WaterReading waterReading) {
+        
+        return false;
+    }
+
+    @Override
+    public boolean changeReading(String accountNumber, WaterReading waterReading) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

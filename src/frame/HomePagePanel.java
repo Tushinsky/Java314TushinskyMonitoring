@@ -95,14 +95,11 @@ public class HomePagePanel extends PagePanel {
 
         // добавляем слушатель на флажок
         chkHotBox.addActionListener((e -> {
-//            try {
-                Color color = chkHotBox.isSelected() ? Color.PINK : Color.BLUE;
+                Color color = chkHotBox.isSelected() ? Color.PINK : 
+                        new Color(150, 150, 255, 20);
                 chkHotBox.setBackground(color);
                 
                 updateResponseData();// список показаний
-//            } catch(Exception ex) {
-//                System.out.println("error:" + ex.getMessage());
-//            }
         }));
         chkHotBox.setSelected(true);// вывод показаний по холодной воде
         chkHotBox.doClick();// список показаний
@@ -235,12 +232,10 @@ public class HomePagePanel extends PagePanel {
         Request request = new Request(NEW_READING, false);
         request.getBody()[0][0] = ImappingConstants.ACCOUNT;
         request.getBody()[0][1] = accountNumber;
-        request.getBody()[1][0] = ImappingConstants.MEASURING;
-        request.getBody()[1][1] = txtReading.getValue().toString();
-        request.getBody()[2][0] = ImappingConstants.LOCAL_DATE;
-        request.getBody()[2][1] = ld.toString();
-        request.getBody()[3][0] = ImappingConstants.IS_HOT;
-        request.getBody()[3][1] = chkHotBox.isSelected() ? "1" : "0";
+        WaterReading wr = new WaterReading(0, ld, 
+                Integer.parseInt(txtReading.getValue().toString()), 
+                chkHotBox.isSelected());
+        request.addToBody(wr);
         return request;
     }
 
@@ -262,7 +257,7 @@ public class HomePagePanel extends PagePanel {
         // получаем список показаний
         ArrayList<Reading> readings = user.getAcc().getReadings();
         // создаём объект показаний
-        WaterReading reading = new WaterReading(LocalDate
+        WaterReading reading = new WaterReading(0, LocalDate
                 .parse(txtReadingDate.getValue().toString()), 
                 Integer.parseInt(txtReading.getValue().toString()), 
                 chkHotBox.isSelected());

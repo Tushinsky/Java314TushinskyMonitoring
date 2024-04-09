@@ -67,4 +67,20 @@ public interface IDao {
      * @return currentUser - текущий пользователь
      */
     User getCurrentUser();
+    
+    /**
+     * Удаляет показания из заданного аккаунта
+     * @param accountNumber номер аккаунта для удаления
+     * @param waterReading показания для удаления
+     * @return true в случае успеха, иначе возвращает false
+     */
+    boolean removeReading(String accountNumber, WaterReading waterReading);
+    
+    /**
+     * Изменяет показания в заданном аккаунте
+     * @param accountNumber номер аккаунта
+     * @param waterReading показания, которые изменяются
+     * @return true в случае успеха, иначе возвращает false
+     */
+    boolean changeReading(String accountNumber, WaterReading waterReading);
 }
