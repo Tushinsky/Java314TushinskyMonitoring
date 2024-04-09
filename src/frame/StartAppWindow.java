@@ -7,8 +7,18 @@ import entities.IRoleConstants;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.border.BevelBorder;
 
 import static mapping.ImappingConstants.*;
@@ -18,7 +28,10 @@ public class StartAppWindow extends JFrame {
     private CardLayout cardLayout;// менеджер карточной компоновки для главной панели
     private final API api = new API();// класс для связи с базой данных
     private StartPanel startPanel;// начальная панель
-    
+    private final Properties props = new Properties();// класс свойств
+    // имя файла свойств для записи изменений размеров формы
+    private final String fileNameProperties = "properties/startapp.properties";
+
     /**
      * Constructs a new frame that is initially invisible.
      * <p>
@@ -34,7 +47,6 @@ public class StartAppWindow extends JFrame {
      */
     public StartAppWindow() throws HeadlessException {
         super.setTitle("Сервис передачи показаний счётчиков воды");
-        initComponents();// инициализируем компоненты интерфейса
         super.addWindowListener(new WindowAdapter() {
             /**
              * Invoked when a window is in the process of being closed.
@@ -47,8 +59,30 @@ public class StartAppWindow extends JFrame {
                 super.windowClosing(e);
                 System.exit(0);
             }
+
+            @Override
+            public void windowOpened(WindowEvent we) {
+                super.windowOpened(we);
+                startPanel.setSize(mainPanel.getSize());// размер стартовой панели
+        
+            }
             
         });
+        // слушатель измменения размеров компонента
+        super.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent ce) {
+                try {
+                    super.componentResized(ce);
+                    writeFrameSize();
+                } catch (IOException ex) {
+                    Logger.getLogger(StartAppWindow.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            
+        });
+        initComponents();// инициализируем компоненты интерфейса
+        
         showPanel(LOG_OUT);// начальная панель
     }
 
@@ -69,12 +103,14 @@ public class StartAppWindow extends JFrame {
                 JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         createStartPanel();// создаём стартовую панель
-
-        super.setSize(650, 450);// размеры формы
+        try {
+            super.setSize(setFrameSize());// размеры формы
+        } catch (IOException ex) {
+            Logger.getLogger(StartAppWindow.class.getName()).log(Level.SEVERE, null, ex);
+        }
         super.getContentPane().add(pane);// на панель содержимого добавляем панель
         mainPanel.setLayout(cardLayout);// задаём менеджер компоновки
         
-        startPanel.setSize(mainPanel.getSize());// размер стартовой панели
         
         mainPanel.add(startPanel,LOG_OUT);
         super.setType(Type.NORMAL);
@@ -259,4 +295,50 @@ public class StartAppWindow extends JFrame {
         mainPanel.add(adminPagePanel, HOME_PAGE);
     }
 
+    /**
+     * Счтитывает и задаёт размеры формы
+     * @return массив, содрежащий ширину и высоту формы
+     * @throws FileNotFoundException
+     * @throws IOException 
+     */
+    private Dimension setFrameSize() throws FileNotFoundException, IOException {
+        Dimension d = new Dimension();
+        File file = new File(fileNameProperties);
+        try (FileInputStream in = new FileInputStream(file)) {
+            props.load(in);
+            in.close();// закрываем поток ввода
+            String index = props.getProperty("height");
+            int i = index == null ? 400 : Integer.parseInt(index);
+            d.height = i;
+            index = props.getProperty("width");
+            i = index == null ? 600 : Integer.parseInt(index);
+            d.width= i;
+        }
+        return d;
+    }
+    
+    /**
+     * Записывает размеры формы в файл свойвств
+     */
+    private void writeFrameSize() throws IOException {
+        props.setProperty("height", 
+                String.valueOf(this.getSize().height));
+        props.setProperty("width", 
+                String.valueOf(this.getSize().width));
+        try (FileOutputStream out=new FileOutputStream(fileNameProperties);) {
+            try {
+                // создаём поток вывода
+                props.store(out, fileNameProperties);// сохраняем данные в указанный файл
+            } catch (IOException ex) {
+                Logger.getLogger(StartAppWindow.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            try {
+                out.close();// закрываем созданный поток
+            } catch (IOException ex) {
+                Logger.getLogger(StartAppWindow.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(StartAppWindow.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 }

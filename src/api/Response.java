@@ -26,7 +26,7 @@ public class Response {
     }
     
     public User getFromBody(int index) {
-        if(index >= listBody.size()) {
+        if(index == listBody.size()) {
             return null;
         }
         return listBody.get(index);

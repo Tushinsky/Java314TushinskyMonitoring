@@ -12,6 +12,7 @@ import entities.WaterReading;
 import in.FormattedTextFieldFerifier;
 import mapping.ImappingConstants;
 import in.Request;
+import java.awt.Color;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.time.LocalDate;
@@ -48,16 +49,18 @@ public class AdminPagePanel extends PagePanel{
     private String accountNumber;
     private String userName;
     private final JCheckBox chkHotBox = new JCheckBox("горячая");// отмечает показания по горячей или холодной воде
-    private final JList<String> userList = new JList<>();// список зарегистрированных пользователей
+    private final JList<String> userList = new JList<>();// элемент-список зарегистрированных пользователей
     private JFormattedTextField txtReadingDate;// поле для ввода даты
-    private ArrayList<User> userArray;// 
+    private ArrayList<User> userArray;// массив пользователей
+    
     /**
-     *
+     * Создаёт панель администратора
      * @param response результат запроса к базе данных, содержащий входные данные
      */
     public AdminPagePanel(Response response) {
-        super();
+        super(NEW_READING, LOG_OUT, REMOVE_ACCOUNT);
         this.response = response;
+        userArray = new ArrayList<>();
         try {
             initComponents();// инициализация компонентов пользовательского интерфейса
         } catch (ParseException ex) {
@@ -91,7 +94,7 @@ public class AdminPagePanel extends PagePanel{
                 removeAccount(response);
                 break;
             case REMOVE_READING:
-                updateResponseData();
+                removeReading(response);
                 break;
             case NEW_READING:
                 addReading(response);
@@ -128,18 +131,31 @@ public class AdminPagePanel extends PagePanel{
                 " Администратор <b><u>" +
                 userName + "</u></b></td></tr>" +
                 "<tr><td align=\"left\">Сегодня <b><u>" + LocalDate.now() + "</u></b></td></tr></table>");
+        fillUserArrayList();// заполняем список пользователей
         super.addComponent(getAdminBox());
         super.setRemoveCaption("Удалить аккаунт");
-        super.setOkAction(NEW_READING);
-        super.setRemoveAction(REMOVE_ACCOUNT);
-        super.setExitAction(LOG_OUT);
         super.setOkCaption("Добавить показания");
 
         // добавляем слушатель на флажок
         chkHotBox.addActionListener((e -> {
+            Color color = chkHotBox.isSelected() ? Color.PINK : 
+                    new Color(150, 150, 255, 20);
+            chkHotBox.setBackground(color);
             updateResponseData();// список показаний
         }));
         userList.setSelectedIndex(0);
+    }
+
+    /**
+     * Заполняет список пользователей, полученный из ответа базы данных
+     */
+    private void fillUserArrayList() {
+        int index = 0;
+        User user;
+        while((user = response.getFromBody(index))!= null) {
+            userArray.add(user);
+            index++;
+        }
     }
 
     /**
@@ -245,7 +261,7 @@ public class AdminPagePanel extends PagePanel{
             try {
             // получаем пользователя по индексу выделенного элемента списка
             int index = userList.getSelectedIndex();
-            User u = response.getFromBody(userList.getSelectedIndex());
+            User u = userArray.get(userList.getSelectedIndex());
             accountNumber = u.getAcc().getAccountNumber();
             // заполняем список показаний
             readingList.setModel(readingListModel(u.getAcc().getReadings(), 
@@ -258,13 +274,9 @@ public class AdminPagePanel extends PagePanel{
     
     private DefaultListModel<String> getListModel() {
         DefaultListModel<String> model = new DefaultListModel<>();
-        int index = 0;
-        User user;
-        // заполняем модель списка
-        while((user = response.getFromBody(index)) != null) {
-            model.addElement(user.getUsername());// имя пользователя
-            index++;// увеличиваем счётчик цикла
-        }
+        userArray.forEach(user -> {
+            model.addElement(user.getUsername());
+        });
         return model;
     }
 
@@ -274,14 +286,12 @@ public class AdminPagePanel extends PagePanel{
      */
     private Request getRemoveAccountRequest() {
         // получаем пользователя по выбранному индексу списка
-        User user = response.getFromBody(userList.getSelectedIndex());
+        User user = userArray.get(userList.getSelectedIndex());
         // создаём запрос на удаление аккаунта
         Request request = new Request(REMOVE_ACCOUNT, false);
-        request.getBody()[0][0] = ImappingConstants.USER_NAME;
-        request.getBody()[0][1] = user.getUsername();// имя пользователя
-        request.getBody()[1][0] = ImappingConstants.ACCOUNT;
-        request.getBody()[1][1] = user.getAcc().getAccountNumber();// номер аккаунта
-
+        request.getBody()[0][0] = ImappingConstants.ACCOUNT;
+        request.getBody()[0][1] = user.getAcc().getAccountNumber();// имя пользователя
+        
         return request;
     }
 
@@ -290,7 +300,14 @@ public class AdminPagePanel extends PagePanel{
      * @return request - запрос на удаление показаний
      */
     private Request getRemoveReadingsRequest() {
-        return null;
+        // создаём запрос на добавление показаний
+        Request request = new Request(REMOVE_READING, false);
+        WaterReading wr = (WaterReading) userArray.get(userList.getSelectedIndex()).getAcc()
+                .getReadings().get(readingList.getSelectedIndex());
+        request.getBody()[0][0] = ImappingConstants.ACCOUNT;
+        request.getBody()[0][1] = accountNumber;
+        request.addToBody(wr);
+        return request;
     }
 
     /**
@@ -320,12 +337,10 @@ public class AdminPagePanel extends PagePanel{
         Request request = new Request(NEW_READING, false);
         request.getBody()[0][0] = ImappingConstants.ACCOUNT;
         request.getBody()[0][1] = accountNumber;
-        request.getBody()[1][0] = ImappingConstants.MEASURING;
-        request.getBody()[1][1] = txtReading.getValue().toString();
-        request.getBody()[2][0] = ImappingConstants.LOCAL_DATE;
-        request.getBody()[2][1] = ld.toString();
-        request.getBody()[3][0] = ImappingConstants.IS_HOT;
-        request.getBody()[3][1] = chkHotBox.isSelected() ? "1" : "0";
+        WaterReading wr = new WaterReading(0, ld, 
+                Integer.parseInt(txtReading.getValue().toString()), 
+                chkHotBox.isSelected());
+        request.addToBody(wr);
         return request;
     }
 
@@ -334,7 +349,7 @@ public class AdminPagePanel extends PagePanel{
      */
     private void updateResponseData() {
         int index = userList.getSelectedIndex();
-        ArrayList<Reading> responseData = response.getFromBody(index).getAcc().getReadings();
+        ArrayList<Reading> responseData = userArray.get(index).getAcc().getReadings();
         readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));
 
     }
@@ -354,6 +369,7 @@ public class AdminPagePanel extends PagePanel{
             JOptionPane.showMessageDialog(this.getParent(),
                     "Удаление аккаунта успешно!", "Success", 
                     JOptionPane.INFORMATION_MESSAGE);
+            userArray.remove(userList.getSelectedIndex());// удаляем пользователя из списка
             userList.setModel(getListModel());
             userList.setSelectedIndex(0);
         }
@@ -375,13 +391,13 @@ public class AdminPagePanel extends PagePanel{
         // если ответ положительный, и новые показания приняты, добавляем их в список показаний
         if (response.isAuth()) {
             // создаём объект показаний
-            WaterReading reading = new WaterReading(LocalDate
+            WaterReading reading = new WaterReading(0, LocalDate
                     .parse(txtReadingDate.getValue().toString()), 
                     Integer.parseInt(txtReading.getValue().toString()), 
                     chkHotBox.isSelected());
             // получаем список показаний
             int index = userList.getSelectedIndex();
-            ArrayList<Reading> readings = response.getFromBody(index).getAcc()
+            ArrayList<Reading> readings = userArray.get(index).getAcc()
                     .getReadings();
             readings.add(reading);// добавляем показание в список
             updateResponseData();

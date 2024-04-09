@@ -1,5 +1,6 @@
 package in;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 
@@ -14,6 +15,7 @@ public class Request {
     private final String mapping;
     private final boolean isAuth;
     private final String[][] body = new String[5][2];
+    private final ArrayList<Object> listBody = new ArrayList<>();
 
     public Request(String mapping, boolean isAuth) {
         this.mapping = mapping;
@@ -55,5 +57,25 @@ public class Request {
                 ", isAuth=" + isAuth +
                 ", body=" + Arrays.toString(body) +
                 '}';
+    }
+    
+    /**
+     * Добавляет объект в тело запроса
+     * @param object объект для добавления
+     */
+    public void addToBody(Object object) {
+        listBody.add(object);
+    }
+    
+    /**
+     * Возвращает объект с указанным индексом из тела запроса
+     * @param index индекс объекта
+     * @return объект с указанным индексом, иначе null
+     */
+    public Object getFromBody(int index) {
+        if(index == listBody.size()) {
+            return null;
+        }
+        return listBody.get(index);
     }
 }
