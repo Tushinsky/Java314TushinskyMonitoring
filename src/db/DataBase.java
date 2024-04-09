@@ -158,12 +158,12 @@ public class DataBase implements IDao {
     }
 
     @Override
-    public boolean addNewUser(String username, String login, String password) {
+    public int addNewUser(String username, String login, String password) {
         // проверяем существование пользователя с таким же логином
         ArrayList<User> Users = getDBInit();
         if(!Users.stream().noneMatch(u -> u.getLogin().equals(login))) {
             // если такой пользователь существует в списке, возвращаемся
-            return false;
+            return 0;
         }
         /*
         если пользователей с такими данными не найдено в списке, тогда
@@ -189,21 +189,21 @@ public class DataBase implements IDao {
             u.setAcc(accountInit(u.getId()));
             Users.add(u);// добавляем его в список
             currentUser = u;
-            return true;
+            return id;
         }
-        return false;
+        return 0;
         
     }
 
     @Override
-    public boolean removeAccount(String accountNumber) {
+    public boolean removeAccount(Account account) {
         Object[] data;// массив данных
-        data = getIDRecord(accountFileName, 2, accountNumber);
+        data = getIDRecord(accountFileName, 2, String.valueOf(account.getId()));
         /*
         Получаем код аккаунта и код пользователя для удаления данных из таблиц
         Users, Account, Readings
         */
-        Object idAccount = data[0];
+        Object idAccount = account.getId();
         Object idUser = data[1];
         /*
         удаление всех данных этого пользователя: показания, номер аккаунта,
@@ -230,7 +230,7 @@ public class DataBase implements IDao {
     }
 
     @Override
-    public boolean addNewReading(String accountNumber, WaterReading waterReading) {
+    public int addNewReading(String accountNumber, WaterReading waterReading) {
         // ищем код по номеру аккаунта
         Object[] data = getIDRecord(accountFileName, 2, accountNumber);
         int idAccount = Integer.parseInt(data[0].toString());
@@ -240,7 +240,7 @@ public class DataBase implements IDao {
         database = getDataTable(readingFileName);// получаем массив
         // проверяем новые показания на соответствие заданным условиям
         if(testNewReading(database, idAccount, waterReading) == false) {
-            return false;// если не соответствуют, возвращаем false
+            return 0;// если не соответствуют, возвращаем false
         }
         
         // из последнего элемента массива получаем код последней записи в таблице
@@ -256,7 +256,10 @@ public class DataBase implements IDao {
                 waterReading.getDate().toString() + ";" +
                 LocalDate.now().toString() + separator;
         System.out.println("str=" + str);
-        return writeDataToFile(readingFileName, str);
+        if(writeDataToFile(readingFileName, str)) {
+            return idReading;
+        }
+        return 0;
     }
 
     /**
@@ -449,13 +452,17 @@ public class DataBase implements IDao {
     }
 
     @Override
-    public boolean removeReading(String accountNumber, WaterReading waterReading) {
+    public boolean removeReading(WaterReading waterReading) {
+        // в качестве шаблона для поиска удаляемых записей используем код показаний
+        Object template = waterReading.getId();
+        // получаем данные, возвращаемые в результате удаления
+        Object[][] data = removeDataFromFile(readingFileName, 0, template);
         
-        return false;
+        return (data != null);
     }
 
     @Override
-    public boolean changeReading(String accountNumber, WaterReading waterReading) {
+    public boolean changeReading(WaterReading waterReading) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

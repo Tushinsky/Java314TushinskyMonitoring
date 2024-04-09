@@ -25,12 +25,11 @@ import static mapping.ImappingConstants.*;
 public class HomePagePanel extends PagePanel {
     private final JList<String> readingList = new JList<>();// список показаний
     private JFormattedTextField txtReading;// поле для ввода показаний
-    private final Response response;// ответ базы данных
     private String accountNumber;// номер аккаунта
     private String userName;// имя пользователя
     private JCheckBox chkHotBox;// отмечает показания по горячей или холодной воде
     private JFormattedTextField txtReadingDate;// поле для ввода даты показаний
-    private User user;
+    private final User user;
     /**
      * Creates a new <code>JPanel</code> with a double buffer
      * and a flow layout.
@@ -38,8 +37,9 @@ public class HomePagePanel extends PagePanel {
      */
     public HomePagePanel(Response response) {
         super(NEW_READING, LOG_OUT, "");
-        this.response = response;
-        initComponents();
+        // получаем пользователя из тела ответа
+        user = response.getFromBody(0);
+        initComponents();// инициализация компонентов
 
     }
 
@@ -51,11 +51,11 @@ public class HomePagePanel extends PagePanel {
 
     @Override
     public void setResponse(Response response) {
-//        this.response = response;
+        
         // если ответ положительный, и новые показания приняты, добавляем их в список показаний
         if (response.isAuth()) {
-            addReading();// добавляем показание в аккаунт пользователя
-            updateResponseData();// обновляем данные в списке
+            int id = Integer.parseInt(response.getBody()[0][1]);
+            addReading(id);// добавляем показание в аккаунт пользователя
         } else {
             JOptionPane.showMessageDialog(null,
                     "Внесение показаний допускается только одни раз в текущем месяце",
@@ -73,9 +73,8 @@ public class HomePagePanel extends PagePanel {
         } catch (ParseException ex) {
             Logger.getLogger(HomePagePanel.class.getName()).log(Level.SEVERE, null, ex);
         }
+//        this.response = response;
         chkHotBox = new JCheckBox("горячая");
-        // получаем данные пользователя из тела запроса
-        user = response.getFromBody(0);
         userName = user.getUsername();// получаем имя пользователя
         accountNumber = user.getAcc().getAccountNumber();// получаем номер аккаунта
         super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
@@ -133,7 +132,7 @@ public class HomePagePanel extends PagePanel {
         txtReading.setFont(font);
         txtReadingDate.setFont(font);
     }
-
+    
     /**
      * Создаёт и возвращает контейнер, содержащий данные текущего пользователя
      */
@@ -187,7 +186,6 @@ public class HomePagePanel extends PagePanel {
     /**
      * Создаёт и возвращает модель списка по умолчанию
      * @param data данные для заполнения модели
-     * @param isHot флаг, задающий тип выводимых показаний (по горячей или холодной воде)
      * @return модель списка, заполненную полученными данными
      */
     private DefaultListModel<String> readingListModel(ArrayList<Reading> data, boolean isHot) {
@@ -232,35 +230,44 @@ public class HomePagePanel extends PagePanel {
         Request request = new Request(NEW_READING, false);
         request.getBody()[0][0] = ImappingConstants.ACCOUNT;
         request.getBody()[0][1] = accountNumber;
+        // создаём объект показаний с нулевым кодом
         WaterReading wr = new WaterReading(0, ld, 
                 Integer.parseInt(txtReading.getValue().toString()), 
                 chkHotBox.isSelected());
-        request.addToBody(wr);
+        request.addToBody(wr);// ложим его в тело запроса
         return request;
     }
 
+    /**
+     * Информирует пользователя об операции добавления новых показаний
+     * @param response ответ базы данных о результатах операции добавления
+     */
+    private void addReading(int id) {
+        // создаём объект показаний
+        WaterReading reading = new WaterReading(id, LocalDate
+                .parse(txtReadingDate.getValue().toString()), 
+                Integer.parseInt(txtReading.getValue().toString()), 
+                chkHotBox.isSelected());
+        // получаем список показаний
+        ArrayList<Reading> readings = user.getAcc()
+                .getReadings();
+        readings.add(reading);// добавляем показание в список
+        updateResponseData();
+
+    }
+    
     /**
      * Обновление данных, полученных из ответа к базе данных
      */
     private void updateResponseData() {
         // получаем данные по показаниям
-        ArrayList<Reading> responseData = user.getAcc().getReadings();
-        // заполняем список
-        readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));
-        
-    }
+        ArrayList<Reading> readings = user.getAcc()
+                .getReadings();
 
-    /**
-     * Добавляет показание в аккаунт пользователя
-     */
-    private void addReading() {
-        // получаем список показаний
-        ArrayList<Reading> readings = user.getAcc().getReadings();
-        // создаём объект показаний
-        WaterReading reading = new WaterReading(0, LocalDate
-                .parse(txtReadingDate.getValue().toString()), 
-                Integer.parseInt(txtReading.getValue().toString()), 
-                chkHotBox.isSelected());
-        readings.add(reading);// добавляем показание в список
+        // заполняем список
+        readingList.setModel(readingListModel(readings, chkHotBox.isSelected()));
     }
+    
+
+//            
 }

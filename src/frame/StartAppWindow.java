@@ -229,13 +229,13 @@ public class StartAppWindow extends JFrame {
         boolean retValue = response.isAuth();// получаем результат ответа
         if (retValue) {
             // если запрос на вход подтверждён, переходим на домашнюю страницу
-            if(response.getBody()[2][1].equals(IRoleConstants.USER)) {
-                createHomePagePanel(response);// создаём панель домашней страницы пользователя
+            if(response.getBody()[1][1].equals(IRoleConstants.USER)) {
+                // если вошёл обычный пользователь создаём панель домашней страницы
+                createHomePagePanel(response);
 //                homePagePanel.setResponse(response);
             } else {
-                // создаём панель домашней страницы администратора
+                // создаём панель администратора
                 createAdminPagePanel(response);
-//                adminPagePanel.setResponse(response);
             }
             
             showPanel(HOME_PAGE);

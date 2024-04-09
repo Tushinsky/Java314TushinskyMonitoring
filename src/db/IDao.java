@@ -1,5 +1,6 @@
 package db;
 
+import entities.Account;
 import entities.User;
 import entities.WaterReading;
 import java.util.ArrayList;
@@ -37,16 +38,16 @@ public interface IDao {
      * @param userName имя пользователя
      * @param login логин пользователя
      * @param password пароль пользователя
-     * @return true - если добавление удачно, иначе возвращает false
+     * @return целое - код добавленной записи
      */
-    boolean addNewUser(String userName, String login, String password);
+    int addNewUser(String userName, String login, String password);
     
     /**
      * Удаляет аккаунт пользователя
      * @param account номер удаляемого аккаунта
      * @return true в случае успеха, иначе возвращает false
      */
-    boolean removeAccount(String account);
+    boolean removeAccount(Account account);
     
     /**
      * Возвращает массив всех зарегистрированных пользоватвелей
@@ -58,9 +59,9 @@ public interface IDao {
      * Добавляет новые показания по заданному аккаунту
      * @param accountNumber номер аккаунта для добавления
      * @param waterReading показания для добавления
-     * @return true в случае успеха, иначе возвращает false
+     * @return целое - код добавленной записи
      */
-    boolean addNewReading(String accountNumber, WaterReading waterReading);
+    int addNewReading(String accountNumber, WaterReading waterReading);
     
     /**
      * Возвращает текущего пользователя, который подключился
@@ -70,17 +71,15 @@ public interface IDao {
     
     /**
      * Удаляет показания из заданного аккаунта
-     * @param accountNumber номер аккаунта для удаления
      * @param waterReading показания для удаления
      * @return true в случае успеха, иначе возвращает false
      */
-    boolean removeReading(String accountNumber, WaterReading waterReading);
+    boolean removeReading(WaterReading waterReading);
     
     /**
      * Изменяет показания в заданном аккаунте
-     * @param accountNumber номер аккаунта
      * @param waterReading показания, которые изменяются
      * @return true в случае успеха, иначе возвращает false
      */
-    boolean changeReading(String accountNumber, WaterReading waterReading);
+    boolean changeReading(WaterReading waterReading);
 }
