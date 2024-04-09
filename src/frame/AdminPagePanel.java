@@ -78,9 +78,7 @@ public class AdminPagePanel extends PagePanel{
             case NEW_READING:
                 return getAddNewReadingRequest();
             case CHANGE_READING:
-                break;
-            default:
-                break;
+                return getChangeReadingRequest();
         }
         return null;
     }
@@ -290,8 +288,8 @@ public class AdminPagePanel extends PagePanel{
         // создаём запрос на удаление аккаунта
         Request request = new Request(REMOVE_ACCOUNT, false);
         request.getBody()[0][0] = ImappingConstants.ACCOUNT;
-        request.getBody()[0][1] = user.getAcc().getAccountNumber();// имя пользователя
-        
+        request.getBody()[0][1] = "";// имя пользователя
+        request.addToBody(user.getAcc());
         return request;
     }
 
@@ -391,7 +389,8 @@ public class AdminPagePanel extends PagePanel{
         // если ответ положительный, и новые показания приняты, добавляем их в список показаний
         if (response.isAuth()) {
             // создаём объект показаний
-            WaterReading reading = new WaterReading(0, LocalDate
+            int id = Integer.parseInt(response.getBody()[0][1]);
+            WaterReading reading = new WaterReading(id, LocalDate
                     .parse(txtReadingDate.getValue().toString()), 
                     Integer.parseInt(txtReading.getValue().toString()), 
                     chkHotBox.isSelected());
@@ -414,5 +413,9 @@ public class AdminPagePanel extends PagePanel{
      */
     private void changeReading(Response response) {
         
+    }
+
+    private Request getChangeReadingRequest() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
