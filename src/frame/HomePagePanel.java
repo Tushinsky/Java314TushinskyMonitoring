@@ -190,14 +190,13 @@ public class HomePagePanel extends PagePanel {
      */
     private DefaultListModel<String> readingListModel(ArrayList<Reading> data, boolean isHot) {
         DefaultListModel<String> model = new DefaultListModel<>();
-        System.out.println("data= " + data);
+//        System.out.println("data= " + data);
         if(data != null) {
             // фильтруем данные по флагу
             data.stream().filter((r) -> {
                 WaterReading wr = (WaterReading) r;// приводим к нужному типу
                 return wr.isHot() == isHot;// возвращаем, если флаг соответствует
-            }).forEach((Reading r) -> model.addElement(r.getDate() + 
-                    " | " + r.getMeasuring()));// в модель ложим дату и показания
+            }).forEach((Reading r) -> model.addElement(r.toString()));// в модель ложим дату и показания
             
         }
         return model;// результат фильтра
@@ -208,6 +207,11 @@ public class HomePagePanel extends PagePanel {
      * @return request - тело запроса, содержащее данные
      */
     private Request addNewReading() {
+        // запрос на подтверждение
+        if(JOptionPane.showConfirmDialog(this, "Добавить новые показания?", 
+                "Внимание", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.CANCEL_OPTION) {
+            return null;// если отмена
+        }
         LocalDate ld;
         // проверяем корректность ввода даты
         try {

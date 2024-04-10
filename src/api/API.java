@@ -119,9 +119,9 @@ public class API implements Iapi{
     private Response changeReadings(Request request) {
         // создаём объект показаний и передаём в базу данных
         WaterReading wr = (WaterReading) request.getFromBody(0);
-        boolean succes = dao.changeReading(wr);
+        boolean success = dao.changeReading(wr);
         // если изменения приняты, возвращаем результат
-        Response response = new Response(succes);
+        Response response = new Response(success);
         response.getBody()[0][0] = ImappingConstants.CHANGE_READING;
         response.getBody()[0][1] = "";// данные по показаниям
         return response;
@@ -151,9 +151,9 @@ public class API implements Iapi{
     private Response removeReading(Request request) {
         // создаём объект показаний и передаём в базу данных
         WaterReading wr = (WaterReading) request.getFromBody(0);
-        boolean succes = dao.removeReading(wr);
+        boolean success = dao.removeReading(wr);
         // если изменения приняты, возвращаем результат
-        Response response = new Response(succes);
+        Response response = new Response(success);
         response.getBody()[0][0] = ImappingConstants.REMOVE_READING;
         response.getBody()[0][1] = "";// данные по показаниям
         return response;
