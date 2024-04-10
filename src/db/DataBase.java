@@ -21,8 +21,6 @@ import java.util.logging.Logger;
  * а через объекты, дающие доступ к конкретным ее сущностям
  * */
 public class DataBase implements IDao {
-    private final ArrayList<User> users = new ArrayList<>();
-//    private boolean aBoolean = false;// флаг добавления нового пользователя
     private final CSVOperate csvOperate;
     private final String accountFileName = "readingsDB/Account.csv";
     private final String readingFileName = "readingsDB/Readings.csv";
@@ -97,7 +95,7 @@ public class DataBase implements IDao {
     @Override
     public String toString() {
         return "DataBase{" +
-                "users=" + users +
+                "users=" + getAllUsers() +
                 '}';
     }
 
@@ -350,7 +348,7 @@ public class DataBase implements IDao {
         ArrayList<Object[]> data = new ArrayList<>();// список данных для возврата
         for(Object[] db : database) {
             // сравниваем данные
-            if(Objects.equals(db[col], template)) {
+            if(Objects.equals(db[col].toString(), template.toString())) {
                 data.add(db);// добавляем в список удаления
             } else {
                 writeData.add(db);// добавляем в список для перезаписи файла
@@ -455,6 +453,7 @@ public class DataBase implements IDao {
     public boolean removeReading(WaterReading waterReading) {
         // в качестве шаблона для поиска удаляемых записей используем код показаний
         Object template = waterReading.getId();
+        
         // получаем данные, возвращаемые в результате удаления
         Object[][] data = removeDataFromFile(readingFileName, 0, template);
         

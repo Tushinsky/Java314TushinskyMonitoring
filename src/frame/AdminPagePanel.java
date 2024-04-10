@@ -12,12 +12,14 @@ import entities.WaterReading;
 import in.FormattedTextFieldFerifier;
 import mapping.ImappingConstants;
 import in.Request;
-import java.awt.Color;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Box;
@@ -124,11 +126,13 @@ public class AdminPagePanel extends PagePanel{
         super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
                 "align=\"center\" cols=\"1\" width=\"100%\" " +
                 "style=\"font-size:medium;\" bgcolor=\"#AAFF80\">" +
-                "<tr><td align=\"center\">" +
-                "Вы вошли на страницу с правами администратора." + 
-                " Администратор <b><u>" +
-                userName + "</u></b></td></tr>" +
-                "<tr><td align=\"left\">Сегодня <b><u>" + LocalDate.now() + "</u></b></td></tr></table>");
+                "<tr><td align=\"justify\">" +
+                "Вы вошли на страницу с правами администратора. " + 
+                "Здесь можно удалить аккаунт выбранного пользователя, добавить, " + 
+                "удалить или изменить показания выбранного пользователя.</td></tr>" +
+                "<tr><td align=\"left\">Администратор <b><u>" +
+                userName + "</u></b>. Сегодня <b><u>" + LocalDate.now() + 
+                "</u></b></td></tr></table>");
         fillUserArrayList();// заполняем список пользователей
         super.addComponent(getAdminBox());
         super.setRemoveCaption("Удалить аккаунт");
@@ -136,9 +140,9 @@ public class AdminPagePanel extends PagePanel{
 
         // добавляем слушатель на флажок
         chkHotBox.addActionListener((e -> {
-            Color color = chkHotBox.isSelected() ? Color.PINK : 
-                    new Color(150, 150, 255, 20);
-            chkHotBox.setBackground(color);
+//            Color color = chkHotBox.isSelected() ? Color.PINK : 
+//                    new Color(150, 150, 255, 20);
+//            chkHotBox.setBackground(color);
             updateResponseData();// список показаний
         }));
         userList.setSelectedIndex(0);
@@ -165,7 +169,9 @@ public class AdminPagePanel extends PagePanel{
         Box adminBox = Box.createVerticalBox();// контейнер для размещения
         JLabel lblUsers = new JLabel("Пользователи");
         JButton removeReadingButton = new JButton("Удалить показания");
-
+        removeReadingButton.addActionListener(al -> {
+            super.setName(REMOVE_READING);
+        });
         // создаём контейнер для размещения списка пользователей
         Box box1 = Box.createVerticalBox();
         box1.add(lblUsers);
@@ -217,6 +223,21 @@ public class AdminPagePanel extends PagePanel{
      * @return box - контейнер для размещения списка показаний
      */
     private Box createReadingBox() {
+        readingList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent me) {
+                super.mouseClicked(me);
+                // при двойном щелчке по элементу выводим показания и дату в полях ввода
+                if(me.getClickCount() == 2) {
+                    WaterReading wr = getWaterReading();
+//                    txtReading.setText(String.valueOf(wr.getMeasuring()));
+                    txtReading.setValue(wr.getMeasuring());
+//                    txtReadingDate.setText(wr.getDate().toString());
+                    txtReadingDate.setValue(wr.getDate().toString());
+                }
+            }
+            
+        });
         Box box = Box.createVerticalBox();
         Box horBox = Box.createHorizontalBox();
         horBox.add(Box.createHorizontalGlue());
@@ -237,13 +258,12 @@ public class AdminPagePanel extends PagePanel{
      */
     private DefaultListModel<String> readingListModel(ArrayList<Reading> data, boolean isHot) {
         DefaultListModel<String> model = new DefaultListModel<>();
-        System.out.println("data= " + data);
+//        System.out.println("data= " + data);
         if(data != null) {
             data.stream().filter((r) -> {
                 WaterReading wr = (WaterReading) r;
                 return wr.isHot() == isHot;
-            }).forEach((Reading r) -> model.addElement(r.getDate() + 
-                    " | " + r.getMeasuring()));
+            }).forEach((Reading r) -> model.addElement(r.toString()));
             
         }
         return model;
@@ -283,6 +303,11 @@ public class AdminPagePanel extends PagePanel{
      * @return request - запрос на удаление аккаунта
      */
     private Request getRemoveAccountRequest() {
+        // запрос на подтверждение
+        if(JOptionPane.showConfirmDialog(this, "Удалить выбранный аккаунт?", 
+                "Внимание", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.CANCEL_OPTION) {
+            return null;// если отмена
+        }
         // получаем пользователя по выбранному индексу списка
         User user = userArray.get(userList.getSelectedIndex());
         // создаём запрос на удаление аккаунта
@@ -298,10 +323,14 @@ public class AdminPagePanel extends PagePanel{
      * @return request - запрос на удаление показаний
      */
     private Request getRemoveReadingsRequest() {
+        // запрос на подтверждение
+        if(JOptionPane.showConfirmDialog(this, "Удалить показания?", 
+                "Внимание", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.CANCEL_OPTION) {
+            return null;// если отмена
+        }
         // создаём запрос на добавление показаний
         Request request = new Request(REMOVE_READING, false);
-        WaterReading wr = (WaterReading) userArray.get(userList.getSelectedIndex()).getAcc()
-                .getReadings().get(readingList.getSelectedIndex());
+        WaterReading wr = getWaterReading();
         request.getBody()[0][0] = ImappingConstants.ACCOUNT;
         request.getBody()[0][1] = accountNumber;
         request.addToBody(wr);
@@ -313,6 +342,11 @@ public class AdminPagePanel extends PagePanel{
      * @return request - запрос на получение показаний
      */
     private Request getAddNewReadingRequest() {
+        // запрос на подтверждение
+        if(JOptionPane.showConfirmDialog(this, "Добавить новые показания?", 
+                "Внимание", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.CANCEL_OPTION) {
+            return null;// если отмена
+        }
         LocalDate ld;
         // проверяем корректность ввода даты
         try {
@@ -378,6 +412,20 @@ public class AdminPagePanel extends PagePanel{
      * @param response ответ базы данных о результатах операции удаления
      */
     private void removeReading(Response response) {
+        if(response.isAuth()) {
+            // получаем показания, которые нужно удалить
+            WaterReading reading = getWaterReading();
+            // получаем список показаний
+            int index = userList.getSelectedIndex();
+            ArrayList<Reading> readings = userArray.get(index).getAcc()
+                    .getReadings();
+            readings.remove(reading);// добавляем показание в список
+            updateResponseData();
+            JOptionPane.showMessageDialog(null,
+                    "Удаление показаний успешно!",
+                    "Success", JOptionPane.INFORMATION_MESSAGE);
+        }
+        
         
     }
     
@@ -416,6 +464,23 @@ public class AdminPagePanel extends PagePanel{
     }
 
     private Request getChangeReadingRequest() {
+        // запрос на подтверждение
+        if(JOptionPane.showConfirmDialog(this, "Изменить показания?", 
+                "Внимание", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.CANCEL_OPTION) {
+            return null;// если отмена
+        }
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    private WaterReading getWaterReading () {
+        ArrayList<Reading> responseData = userArray.
+                get(userList.getSelectedIndex()).getAcc().getReadings();
+        String string = readingList.getSelectedValue();
+        Optional<Reading> waterReading = responseData.stream()
+                .filter((r) -> {
+                    WaterReading wr = (WaterReading) r;
+                    return ((wr.isHot() == chkHotBox.isSelected()));
+                }).filter(wr -> wr.toString().equals(string)).findFirst();
+        return (WaterReading) waterReading.get();
     }
 }

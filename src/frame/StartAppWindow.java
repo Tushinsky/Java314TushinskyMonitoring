@@ -287,8 +287,11 @@ public class StartAppWindow extends JFrame {
                 case CHANGE_READING:
                 case REMOVE_ACCOUNT:
                 case REMOVE_READING:
-                    Response response = api.response(adminPagePanel.getRequest());
-                    adminPagePanel.setResponse(response);
+                    Request request = adminPagePanel.getRequest();
+                    if(request != null) {
+                        Response response = api.response(request);
+                        adminPagePanel.setResponse(response);
+                    }
             }
             adminPagePanel.setName(null);// сбрасываем имя в null
         });
