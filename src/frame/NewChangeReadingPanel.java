@@ -7,19 +7,26 @@ package frame;
 
 import entities.WaterReading;
 import in.FormattedTextFieldFerifier;
+import in.Request;
+import java.awt.Color;
 import java.awt.Font;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.text.MaskFormatter;
+import mapping.ImappingConstants;
+import static mapping.ImappingConstants.NEW_READING;
 
 /**
  *
@@ -32,8 +39,6 @@ public class NewChangeReadingPanel extends JPanel{
     private JFormattedTextField txtReadingDate = new JFormattedTextField();
     private final JButton okButton = new JButton("Добавить/Изменить");
     private final JCheckBox chkHotBox = new JCheckBox("горячая");
-    private String okAction;
-    private WaterReading waterReading;
     
     /**
      * Создаёт панель с компонентами пользовательского интерфейса для добавления
@@ -42,21 +47,68 @@ public class NewChangeReadingPanel extends JPanel{
     public NewChangeReadingPanel() {
         super();
         initComponents();
+        super.setBorder(BorderFactory.createTitledBorder(BorderFactory.
+                createLineBorder(Color.DARK_GRAY, 1), "Новые показания"));
     }
 
-    public WaterReading getWaterReading() {
-        waterReading = new WaterReading(0, 
-                LocalDate.parse(txtReadingDate.getValue().toString()), 
-                Integer.parseInt(txtReading.getValue().toString()), chkHotBox.isSelected());
-        return waterReading;
+    public Request getNewReadingRequest(String accountNumber) {
+        LocalDate ld;
+        // проверяем корректность ввода даты
+        try {
+            ld = LocalDate.parse(txtReadingDate.getValue().toString());
+        } catch (DateTimeParseException ex) {
+            JOptionPane.showMessageDialog(this, 
+                    "Неверный ввод даты! Проверьте правильность ввода.", 
+                    "Ошибка", JOptionPane.ERROR_MESSAGE);
+            ld = LocalDate.now();
+        }
+        // проверяем корректность ввода показаний
+        if(!txtReading.isEditValid()) {
+            // если пользователь ввёл некорректные данные, уведомляем его
+            JOptionPane.showMessageDialog(this, 
+                    "Проверьте правильность ввода показаний!", 
+                    "Ошибка", JOptionPane.ERROR_MESSAGE);
+            return null;// возвращаем null
+        }
+        
+        WaterReading wr = new WaterReading(0, ld, Integer
+                .parseInt(txtReading.getValue().toString()), 
+                chkHotBox.isSelected());
+        // создаём запрос на добавление показаний
+        Request request = new Request(NEW_READING, false);
+        request.getBody()[0][0] = ImappingConstants.ACCOUNT;
+        request.getBody()[0][1] = accountNumber;
+        request.addToBody(wr);
+        return request;
+    }
+
+    public void setWaterReading(WaterReading reading) {
+        // задаём значения
+        txtReading.setValue(reading.getMeasuring());
+        txtReadingDate.setValue(reading.getDate().toString());
+    }
+    /**
+     * Задаёт действие для кнопки
+     * @param okAction действие для кнопки (одна из констант ImappingConstants)
+     */
+    public void setOkAction(String okAction) {
+        okButton.addActionListener(al -> {
+            this.getParent().setName(okAction);
+        });
     }
     
-    public String getOkAction() {
-        return okAction;
-    }
-
-    public void setOkAction(String okAction) {
-        okButton.addActionListener(al -> this.getParent().setName(okAction));
+    /**
+     * Задаёт название для кнопки. Если передан null или пусто, кнопка
+     * становится невидимой.
+     * @param caption название для кнопки
+     */
+    public void setOkCaption(String caption) {
+        if(caption == null || caption.equals("")) {
+            okButton.setVisible(false);
+        } else {
+            okButton.setText(caption);
+        }
+        
     }
     
     /**
@@ -153,6 +205,13 @@ public class NewChangeReadingPanel extends JPanel{
         // и передаём его полям ввода
         txtReading.setFont(font);
         txtReadingDate.setFont(font);
+    }
+
+    public WaterReading getWaterReading(int id) {
+        LocalDate ld = LocalDate.parse(txtReadingDate.getValue().toString());
+        return new WaterReading(id, ld, Integer
+                .parseInt(txtReading.getValue().toString()), 
+                chkHotBox.isSelected());
     }
     
     

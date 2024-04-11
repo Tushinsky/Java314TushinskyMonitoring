@@ -19,7 +19,7 @@ public class ReadingListComponent extends JList<Reading> {
         super();
         super.setCellRenderer(new ReadingCellRenderer());// класс рисовальщик ячеек
         super.setFixedCellHeight(20);// высота ячейки списка
-        super.setFixedCellWidth(150);// ширина ячейки списка
+        super.setFixedCellWidth(130);// ширина ячейки списка
         super.setAutoscrolls(true);// автоматическое отображение полос прокрутки
     }
     
