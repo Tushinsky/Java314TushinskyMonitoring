@@ -9,21 +9,14 @@ import api.Response;
 import entities.Reading;
 import entities.User;
 import entities.WaterReading;
-import in.FormattedTextFieldFerifier;
 import mapping.ImappingConstants;
 import in.Request;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.text.NumberFormat;
-import java.text.ParseException;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.Box;
 import javax.swing.DefaultListModel;
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
@@ -32,7 +25,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.text.MaskFormatter;
 import static mapping.ImappingConstants.LOG_OUT;
 import static mapping.ImappingConstants.REMOVE_ACCOUNT;
 import static mapping.ImappingConstants.REMOVE_READING;
@@ -45,28 +37,19 @@ import static mapping.ImappingConstants.NEW_READING;
  */
 public class AdminPagePanel extends PagePanel{
     private final ReadingListComponent readingList = new ReadingListComponent();// список показаний
-    private JFormattedTextField txtReading;// поле для ввода показаний
-    private Response response;
     private String accountNumber;
     private String userName;
-    private final JCheckBox chkHotBox = new JCheckBox("горячая");// отмечает показания по горячей или холодной воде
     private final JList<String> userList = new JList<>();// элемент-список зарегистрированных пользователей
-    private JFormattedTextField txtReadingDate;// поле для ввода даты
-    private ArrayList<User> userArray;// массив пользователей
-    
+    private final ArrayList<User> userArray;// массив пользователей
+    private final NewChangeReadingPanel newChangeReadingPanel = new NewChangeReadingPanel();
     /**
      * Создаёт панель администратора
      * @param response результат запроса к базе данных, содержащий входные данные
      */
     public AdminPagePanel(Response response) {
         super(REMOVE_READING, LOG_OUT, REMOVE_ACCOUNT);
-        this.response = response;
         userArray = new ArrayList<>();
-        try {
-            initComponents();// инициализация компонентов пользовательского интерфейса
-        } catch (ParseException ex) {
-            Logger.getLogger(AdminPagePanel.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        initComponents(response);// инициализация компонентов пользовательского интерфейса
     }
     
     @Override
@@ -86,7 +69,6 @@ public class AdminPagePanel extends PagePanel{
 
     @Override
     public void setResponse(Response response) {
-        this.response = response;
         // передаются другие данные (новые показания, на удаление аккаунта)
         switch (response.getBody()[0][0]) {
             case REMOVE_ACCOUNT:
@@ -107,19 +89,9 @@ public class AdminPagePanel extends PagePanel{
 
     /**
      * Инициализация компонентов пользовательского интерфейса
+     * @param response результат запроса к базе данных, содержащий входные данные
      */
-    private void initComponents() throws ParseException {
-        txtReading = new JFormattedTextField(NumberFormat.getInstance());// поле для ввода показаний
-        txtReading.setValue(0);
-        txtReading.setInputVerifier(new FormattedTextFieldFerifier());
-        // поле для ввода даты - зададим маску ввода
-        MaskFormatter dateFormatter = new MaskFormatter("####-##-##");
-//        dateFormatter.setPlaceholderCharacter('1');// символ-заполнитель маски
-        dateFormatter.setValidCharacters("0123456789");// разрешённые символы для ввода
-        txtReadingDate = new JFormattedTextField(dateFormatter);
-        txtReadingDate.setValue(LocalDate.now());// задаём значение - текущая дата
-        
-        chkHotBox.setSelected(false);// вывод показаний по холодной воде
+    private void initComponents(Response response) {
         userName = response.getBody()[0][1];
         // создаём элементы пользовательского интерфейса
         super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
@@ -132,25 +104,19 @@ public class AdminPagePanel extends PagePanel{
                 "<tr><td align=\"left\">Администратор <b><u>" +
                 userName + "</u></b>. Сегодня <b><u>" + LocalDate.now() + 
                 "</u></b></td></tr></table>");
-        fillUserArrayList();// заполняем список пользователей
+        fillUserArrayList(response);// заполняем список пользователей
         super.addComponent(getAdminBox());
         super.setRemoveCaption("Удалить аккаунт");
         super.setOkCaption("Удалить показания");
 
-        // добавляем слушатель на флажок
-        chkHotBox.addActionListener((e -> {
-//            Color color = chkHotBox.isSelected() ? Color.PINK : 
-//                    new Color(150, 150, 255, 20);
-//            chkHotBox.setBackground(color);
-//            updateResponseData();// список показаний
-        }));
         userList.setSelectedIndex(0);
     }
 
     /**
      * Заполняет список пользователей, полученный из ответа базы данных
+     * @param response результат запроса к базе данных, содержащий входные данные
      */
-    private void fillUserArrayList() {
+    private void fillUserArrayList(Response response) {
         int index = 0;
         User user;
         while((user = response.getFromBody(index))!= null) {
@@ -164,54 +130,44 @@ public class AdminPagePanel extends PagePanel{
      * Заполняет их данными
      */
     private Box getAdminBox() {
-        createUserList();// создаём и заполняем список пользователей
-        Box adminBox = Box.createVerticalBox();// контейнер для размещения
-        JLabel lblUsers = new JLabel("Пользователи");
-        JButton removeReadingButton = new JButton("Добавить показания");
-        removeReadingButton.addActionListener(al -> {
-            super.setName(NEW_READING);
-        });
+        
+        Box adminBox = Box.createHorizontalBox();// контейнер для размещения
+        
         // создаём контейнер для размещения списка пользователей
-        Box box1 = Box.createVerticalBox();
-        box1.add(lblUsers);
-        box1.add(Box.createVerticalStrut(5));
-        // список ложим в панель прокрутки и размещаем в контейнере
-        box1.add(new JScrollPane(userList));
-        box1.add(Box.createVerticalStrut(10));
-
-        Box box2 = createReadingBox();// создаём контейнер для списка показаний
+        Box userBox = getUserBox();
+        // создаём контейнер для списка показаний
+        Box readingBox = getReadingBox();
 
         /*
-        Создаём контейнер для размещения поля ввода новы показаний, флажка
+        Создаём контейнер для размещения поля ввода новых показаний, флажка
         для задания признака холодной или горячей воды, кнопки для удаления
         выбранных показаний
         */
-        Box box3 = Box.createHorizontalBox();
-        box3.add(Box.createHorizontalStrut(10));
-        box3.add(new JLabel("Новые показания"));
-        box3.add(Box.createHorizontalStrut(10));
-        box3.add(txtReading);
-        box3.add(Box.createHorizontalStrut(10));
-        box3.add(new JLabel("Дата"));
-        box3.add(Box.createHorizontalStrut(10));
-        box3.add(txtReadingDate);
-        box3.add(Box.createHorizontalStrut(10));
-        
-        box3.add(chkHotBox);
-        box3.add(Box.createHorizontalStrut(20));
-        box3.add(removeReadingButton);
-        box3.add(Box.createHorizontalGlue());
+        newChangeReadingPanel.setOkAction(ImappingConstants.NEW_READING);
+//        Box box3 = Box.createHorizontalBox();
+//        box3.add(Box.createHorizontalStrut(10));
+//        box3.add(new JLabel("Новые показания"));
+//        box3.add(Box.createHorizontalStrut(10));
+//        box3.add(txtReading);
+//        box3.add(Box.createHorizontalStrut(10));
+//        box3.add(new JLabel("Дата"));
+//        box3.add(Box.createHorizontalStrut(10));
+//        box3.add(txtReadingDate);
+//        box3.add(Box.createHorizontalStrut(10));
+//        
+//        box3.add(chkHotBox);
+//        box3.add(Box.createHorizontalStrut(20));
+//        box3.add(readingButton);
+//        box3.add(Box.createHorizontalGlue());
 
         // размещаем все созданные элементы
-        Box box4 = Box.createHorizontalBox();
-        box4.add(box1);
-        box4.add(Box.createHorizontalStrut(10));
-        box4.add(box2);
-
-        adminBox.add(box4);
-        adminBox.add(Box.createVerticalStrut(20));
-        adminBox.add(box3);
-        adminBox.add(Box.createVerticalStrut(20));
+        adminBox.add(Box.createHorizontalStrut(5));
+        adminBox.add(userBox);
+        adminBox.add(Box.createHorizontalStrut(5));
+        adminBox.add(readingBox);
+        adminBox.add(Box.createHorizontalStrut(25));
+        adminBox.add(newChangeReadingPanel);
+        adminBox.add(Box.createHorizontalGlue());
 
         return adminBox;
     }
@@ -221,26 +177,24 @@ public class AdminPagePanel extends PagePanel{
      * пользователя.
      * @return box - контейнер для размещения списка показаний
      */
-    private Box createReadingBox() {
+    private Box getReadingBox() {
+        /*
+        к списку показаний добавляем обработку двойного щелчка по выбранному
+        элементу списка
+        */
         readingList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent me) {
                 super.mouseClicked(me);
                 // при двойном щелчке по элементу выводим показания и дату в полях ввода
                 if(me.getClickCount() == 2) {
-                    WaterReading wr = getWaterReading();
-//                    txtReading.setText(String.valueOf(wr.getMeasuring()));
-                    txtReading.setValue(wr.getMeasuring());
-//                    txtReadingDate.setText(wr.getDate().toString());
-                    txtReadingDate.setValue(wr.getDate().toString());
+                    WaterReading wr = (WaterReading) readingList.getSelectedValue();// получаем показание
+                    // задаём значения
+                    newChangeReadingPanel.setWaterReading(wr);
                 }
             }
             
         });
-//        readingList.setFixedCellHeight(20);
-//        readingList.setFixedCellWidth(150);
-//        // назначаем рисовальщика элементов
-//        readingList.setCellRenderer(new ReadingCellRenderer());
         
         Box box = Box.createVerticalBox();
         Box horBox = Box.createHorizontalBox();
@@ -271,9 +225,10 @@ public class AdminPagePanel extends PagePanel{
     }
 
     /**
-     * Создание и заполнение списка пользователей данными
+     * Создаёт контейнер, содержащий заполненный данными список пользователей
+     * @return BOX - созданный контейнер
      */
-    private void createUserList() {
+    private Box getUserBox() {
         userList.setModel(getListModel());
         userList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);// выделение одной строки
         userList.addListSelectionListener((ListSelectionEvent e) -> {
@@ -290,8 +245,21 @@ public class AdminPagePanel extends PagePanel{
         });
         userList.setFixedCellHeight(20);
         userList.setFixedCellWidth(150);
+        JLabel lblUsers = new JLabel("Пользователи");
+        // создаём контейнер для размещения списка пользователей
+        Box box = Box.createVerticalBox();
+        box.add(lblUsers);
+        box.add(Box.createVerticalStrut(5));
+        // список ложим в панель прокрутки и размещаем в контейнере
+        box.add(new JScrollPane(userList));
+        box.add(Box.createVerticalStrut(10));
+        return box;
     }
     
+    /**
+     * Создаёт и возвращает модель списка, принятую по умолчанию
+     * @return созданную модель списка
+     */
     private DefaultListModel<String> getListModel() {
         DefaultListModel<String> model = new DefaultListModel<>();
         userArray.forEach(user -> {
@@ -332,7 +300,7 @@ public class AdminPagePanel extends PagePanel{
         }
         // создаём запрос на добавление показаний
         Request request = new Request(REMOVE_READING, false);
-        WaterReading wr = getWaterReading();
+        WaterReading wr = (WaterReading) readingList.getSelectedValue();
         request.getBody()[0][0] = ImappingConstants.ACCOUNT;
         request.getBody()[0][1] = accountNumber;
         request.addToBody(wr);
@@ -349,33 +317,9 @@ public class AdminPagePanel extends PagePanel{
                 "Внимание", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.CANCEL_OPTION) {
             return null;// если отмена
         }
-        LocalDate ld;
-        // проверяем корректность ввода даты
-        try {
-            ld = LocalDate.parse(txtReadingDate.getValue().toString());
-        } catch (DateTimeParseException ex) {
-            JOptionPane.showMessageDialog(this, 
-                    "Неверный ввод даты! Проверьте правильность ввода.", 
-                    "Ошибка", JOptionPane.ERROR_MESSAGE);
-            ld = LocalDate.now();
-        }
-        // проверяем корректность ввода показаний
-        if(!txtReading.isEditValid()) {
-            // если пользователь ввёл некорректные данные, уведомляем его
-            JOptionPane.showMessageDialog(this, 
-                    "Проверьте правильность ввода показаний!", 
-                    "Ошибка", JOptionPane.ERROR_MESSAGE);
-            return null;// возвращаем null
-        }
         // создаём запрос на добавление показаний
-        Request request = new Request(NEW_READING, false);
-        request.getBody()[0][0] = ImappingConstants.ACCOUNT;
-        request.getBody()[0][1] = accountNumber;
-        WaterReading wr = new WaterReading(0, ld, 
-                Integer.parseInt(txtReading.getValue().toString()), 
-                chkHotBox.isSelected());
-        request.addToBody(wr);
-        return request;
+        return newChangeReadingPanel.getNewReadingRequest(accountNumber);
+        
     }
 
     /**
@@ -416,12 +360,12 @@ public class AdminPagePanel extends PagePanel{
     private void removeReading(Response response) {
         if(response.isAuth()) {
             // получаем показания, которые нужно удалить
-            WaterReading reading = getWaterReading();
+            WaterReading reading = (WaterReading) readingList.getSelectedValue();
             // получаем список показаний
             int index = userList.getSelectedIndex();
             ArrayList<Reading> readings = userArray.get(index).getAcc()
                     .getReadings();
-            readings.remove(reading);// добавляем показание в список
+            readings.remove(reading);// удаляем показание из списка
             updateResponseData();
             JOptionPane.showMessageDialog(null,
                     "Удаление показаний успешно!",
@@ -440,10 +384,9 @@ public class AdminPagePanel extends PagePanel{
         if (response.isAuth()) {
             // создаём объект показаний
             int id = Integer.parseInt(response.getBody()[0][1]);
-            WaterReading reading = new WaterReading(id, LocalDate
-                    .parse(txtReadingDate.getValue().toString()), 
-                    Integer.parseInt(txtReading.getValue().toString()), 
-                    chkHotBox.isSelected());
+            WaterReading wr = newChangeReadingPanel.getWaterReading(id);
+            WaterReading reading = new WaterReading(id, wr.getDate(), 
+                    wr.getMeasuring(), wr.isHot());
             // получаем список показаний
             int index = userList.getSelectedIndex();
             ArrayList<Reading> readings = userArray.get(index).getAcc()
@@ -465,6 +408,10 @@ public class AdminPagePanel extends PagePanel{
         
     }
 
+    /**
+     * Возвращает запрос на изменение показаний
+     * @return тело запроса на изменение показаний
+     */
     private Request getChangeReadingRequest() {
         // запрос на подтверждение
         if(JOptionPane.showConfirmDialog(this, "Изменить показания?", 
@@ -472,12 +419,5 @@ public class AdminPagePanel extends PagePanel{
             return null;// если отмена
         }
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-    
-    private WaterReading getWaterReading () {
-        ArrayList<Reading> responseData = userArray.
-                get(userList.getSelectedIndex()).getAcc().getReadings();
-        WaterReading wr = (WaterReading) readingList.getSelectedValue();
-        return wr;
     }
 }

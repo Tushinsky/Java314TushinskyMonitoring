@@ -13,7 +13,6 @@ import mapping.ImappingConstants;
 
 import javax.swing.*;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -91,7 +90,7 @@ public class HomePagePanel extends PagePanel {
         super.addComponent(getReadingBox());
         // задаём название для кнопки ввода
         super.setOkCaption("Добавить показания");
-
+        newChangeReadingPanel.setOkCaption(null);
         updateResponseData();
     }
     
@@ -198,34 +197,9 @@ public class HomePagePanel extends PagePanel {
                 "Внимание", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.CANCEL_OPTION) {
             return null;// если отмена
         }
-        LocalDate ld;
-        // проверяем корректность ввода даты
-        try {
-            ld = LocalDate.parse(txtReadingDate.getValue().toString());
-        } catch (DateTimeParseException ex) {
-            JOptionPane.showMessageDialog(this, 
-                    "Неверный ввод даты! Проверьте правильность ввода.", 
-                    "Ошибка", JOptionPane.ERROR_MESSAGE);
-            ld = LocalDate.now();
-        }
-        // проверяем корректность ввода показаний
-        if(!txtReading.isEditValid()) {
-            // если пользователь ввёл некорректные данные, уведомляем его
-            JOptionPane.showMessageDialog(this, 
-                    "Проверьте правильность ввода показаний!", 
-                    "Ошибка", JOptionPane.ERROR_MESSAGE);
-            return null;// возвращаем null
-        }
         // создаём запрос на добавление показаний
-        Request request = new Request(NEW_READING, false);
-        request.getBody()[0][0] = ImappingConstants.ACCOUNT;
-        request.getBody()[0][1] = accountNumber;
-        // создаём объект показаний с нулевым кодом
-        WaterReading wr = new WaterReading(0, ld, 
-                Integer.parseInt(txtReading.getValue().toString()), 
-                chkHotBox.isSelected());
-        request.addToBody(wr);// ложим его в тело запроса
-        return request;
+        return newChangeReadingPanel.getNewReadingRequest(accountNumber);
+        
     }
 
     /**
@@ -234,10 +208,7 @@ public class HomePagePanel extends PagePanel {
      */
     private void addReading(int id) {
         // создаём объект показаний
-        WaterReading reading = new WaterReading(id, LocalDate
-                .parse(txtReadingDate.getValue().toString()), 
-                Integer.parseInt(txtReading.getValue().toString()), 
-                chkHotBox.isSelected());
+        WaterReading reading = newChangeReadingPanel.getWaterReading(id);
         // получаем список показаний
         ArrayList<Reading> readings = user.getAcc()
                 .getReadings();
