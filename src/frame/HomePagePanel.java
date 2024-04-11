@@ -6,7 +6,6 @@ import entities.Reading;
 import entities.User;
 import entities.WaterReading;
 import in.FormattedTextFieldFerifier;
-import java.awt.Color;
 import java.awt.Font;
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -23,13 +22,14 @@ import javax.swing.text.MaskFormatter;
 import static mapping.ImappingConstants.*;
 
 public class HomePagePanel extends PagePanel {
-    private final JList<String> readingList = new JList<>();// список показаний
+    private final ReadingListComponent readingList = new ReadingListComponent();// список показаний
     private JFormattedTextField txtReading;// поле для ввода показаний
     private String accountNumber;// номер аккаунта
     private String userName;// имя пользователя
     private JCheckBox chkHotBox;// отмечает показания по горячей или холодной воде
     private JFormattedTextField txtReadingDate;// поле для ввода даты показаний
     private final User user;
+    private final NewChangeReadingPanel newChangeReadingPanel = new NewChangeReadingPanel();
     /**
      * Creates a new <code>JPanel</code> with a double buffer
      * and a flow layout.
@@ -88,20 +88,11 @@ public class HomePagePanel extends PagePanel {
                 "</b></td></tr>" +
                 "<tr><td align=\"left\">Сегодня: <b><u>" + LocalDate.now() + "</u></b>" +
                 "</td></tr></table>");
-        super.addComponent(getUserBox());
+        super.addComponent(getReadingBox());
         // задаём название для кнопки ввода
         super.setOkCaption("Добавить показания");
 
-        // добавляем слушатель на флажок
-        chkHotBox.addActionListener((e -> {
-                Color color = chkHotBox.isSelected() ? Color.PINK : 
-                        new Color(150, 150, 255, 20);
-                chkHotBox.setBackground(color);
-                
-                updateResponseData();// список показаний
-        }));
-        chkHotBox.setSelected(true);// вывод показаний по холодной воде
-        chkHotBox.doClick();// список показаний
+        updateResponseData();
     }
     
     /**
@@ -136,26 +127,26 @@ public class HomePagePanel extends PagePanel {
     /**
      * Создаёт и возвращает контейнер, содержащий данные текущего пользователя
      */
-    private Box getUserBox() {
+    private Box getReadingBox() {
         Box userBox = createReadingBox();
 
-        JLabel lblReading = new JLabel("Показание");
-        JLabel lblDate = new JLabel("Дата");
-        Box readingBox = Box.createHorizontalBox();
-        readingBox.add(lblReading);
-        readingBox.add(Box.createHorizontalStrut(5));
-        readingBox.add(txtReading);
-        readingBox.add(Box.createHorizontalStrut(10));
-        readingBox.add(lblDate);
-        readingBox.add(Box.createHorizontalStrut(5));
-        readingBox.add(txtReadingDate);
-        readingBox.add(Box.createHorizontalStrut(10));
-        
-        readingBox.add(chkHotBox);
-        readingBox.add(Box.createHorizontalStrut(5));
-
-        userBox.add(readingBox);
-        userBox.add(Box.createVerticalStrut(10));
+//        JLabel lblReading = new JLabel("Показание");
+//        JLabel lblDate = new JLabel("Дата");
+//        Box readingBox = Box.createHorizontalBox();
+//        readingBox.add(lblReading);
+//        readingBox.add(Box.createHorizontalStrut(5));
+//        readingBox.add(txtReading);
+//        readingBox.add(Box.createHorizontalStrut(10));
+//        readingBox.add(lblDate);
+//        readingBox.add(Box.createHorizontalStrut(5));
+//        readingBox.add(txtReadingDate);
+//        readingBox.add(Box.createHorizontalStrut(10));
+//        
+//        readingBox.add(chkHotBox);
+//        readingBox.add(Box.createHorizontalStrut(5));
+//
+//        userBox.add(readingBox);
+//        userBox.add(Box.createVerticalStrut(10));
         return userBox;
     }
 
@@ -165,21 +156,19 @@ public class HomePagePanel extends PagePanel {
      * @return BOX - контейнер, содержащий список с показаниями
      */
     private Box createReadingBox() {
-        Box box = Box.createVerticalBox();
-        // контейнер для размещения мктки
-        Box horBox = Box.createHorizontalBox();
-        horBox.add(Box.createHorizontalGlue());
-        horBox.add(new JLabel("Переданные показания"));
-        horBox.add(Box.createHorizontalGlue());
-        box.add(horBox);
-        box.add(Box.createVerticalStrut(5));
+        Box box = Box.createHorizontalBox();
         // контейнер для размещения списка показаний
-        Box horListBox = Box.createHorizontalBox();
-        horListBox.add(Box.createHorizontalStrut(150));
-        horListBox.add(new JScrollPane(readingList));
-        horListBox.add(Box.createHorizontalStrut(150));
-        box.add(horListBox);
-        box.add(Box.createVerticalStrut(10));
+        Box vertBox = Box.createVerticalBox();
+        vertBox.add(Box.createVerticalStrut(10));
+        vertBox.add(new JLabel("История показаний"));
+        vertBox.add(Box.createVerticalStrut(10));
+        vertBox.add(new JScrollPane(readingList));
+        box.add(Box.createHorizontalGlue());
+        box.add(vertBox);
+        box.add(Box.createHorizontalStrut(15));
+        // контейнер для размещения списка показаний
+        box.add(newChangeReadingPanel);
+        box.add(Box.createHorizontalGlue());
         return box;
     }
 
@@ -188,15 +177,12 @@ public class HomePagePanel extends PagePanel {
      * @param data данные для заполнения модели
      * @return модель списка, заполненную полученными данными
      */
-    private DefaultListModel<String> readingListModel(ArrayList<Reading> data, boolean isHot) {
-        DefaultListModel<String> model = new DefaultListModel<>();
+    private DefaultListModel<Reading> readingListModel(ArrayList<Reading> data) {
+        DefaultListModel<Reading> model = new DefaultListModel<>();
 //        System.out.println("data= " + data);
         if(data != null) {
             // фильтруем данные по флагу
-            data.stream().filter((r) -> {
-                WaterReading wr = (WaterReading) r;// приводим к нужному типу
-                return wr.isHot() == isHot;// возвращаем, если флаг соответствует
-            }).forEach((Reading r) -> model.addElement(r.toString()));// в модель ложим дату и показания
+            data.forEach((Reading r) -> model.addElement(r));// в модель ложим дату и показания
             
         }
         return model;// результат фильтра
@@ -269,7 +255,7 @@ public class HomePagePanel extends PagePanel {
                 .getReadings();
 
         // заполняем список
-        readingList.setModel(readingListModel(readings, chkHotBox.isSelected()));
+        readingList.setModel(readingListModel(readings));
     }
     
 
