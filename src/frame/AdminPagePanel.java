@@ -19,7 +19,6 @@ import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Box;
@@ -45,7 +44,7 @@ import static mapping.ImappingConstants.NEW_READING;
  * @author Sergey
  */
 public class AdminPagePanel extends PagePanel{
-    private final JList<String> readingList = new JList<>();// список показаний
+    private final ReadingListComponent readingList = new ReadingListComponent();// список показаний
     private JFormattedTextField txtReading;// поле для ввода показаний
     private Response response;
     private String accountNumber;
@@ -60,7 +59,7 @@ public class AdminPagePanel extends PagePanel{
      * @param response результат запроса к базе данных, содержащий входные данные
      */
     public AdminPagePanel(Response response) {
-        super(NEW_READING, LOG_OUT, REMOVE_ACCOUNT);
+        super(REMOVE_READING, LOG_OUT, REMOVE_ACCOUNT);
         this.response = response;
         userArray = new ArrayList<>();
         try {
@@ -136,14 +135,14 @@ public class AdminPagePanel extends PagePanel{
         fillUserArrayList();// заполняем список пользователей
         super.addComponent(getAdminBox());
         super.setRemoveCaption("Удалить аккаунт");
-        super.setOkCaption("Добавить показания");
+        super.setOkCaption("Удалить показания");
 
         // добавляем слушатель на флажок
         chkHotBox.addActionListener((e -> {
 //            Color color = chkHotBox.isSelected() ? Color.PINK : 
 //                    new Color(150, 150, 255, 20);
 //            chkHotBox.setBackground(color);
-            updateResponseData();// список показаний
+//            updateResponseData();// список показаний
         }));
         userList.setSelectedIndex(0);
     }
@@ -168,9 +167,9 @@ public class AdminPagePanel extends PagePanel{
         createUserList();// создаём и заполняем список пользователей
         Box adminBox = Box.createVerticalBox();// контейнер для размещения
         JLabel lblUsers = new JLabel("Пользователи");
-        JButton removeReadingButton = new JButton("Удалить показания");
+        JButton removeReadingButton = new JButton("Добавить показания");
         removeReadingButton.addActionListener(al -> {
-            super.setName(REMOVE_READING);
+            super.setName(NEW_READING);
         });
         // создаём контейнер для размещения списка пользователей
         Box box1 = Box.createVerticalBox();
@@ -238,6 +237,11 @@ public class AdminPagePanel extends PagePanel{
             }
             
         });
+//        readingList.setFixedCellHeight(20);
+//        readingList.setFixedCellWidth(150);
+//        // назначаем рисовальщика элементов
+//        readingList.setCellRenderer(new ReadingCellRenderer());
+        
         Box box = Box.createVerticalBox();
         Box horBox = Box.createHorizontalBox();
         horBox.add(Box.createHorizontalGlue());
@@ -256,14 +260,11 @@ public class AdminPagePanel extends PagePanel{
      * @param isHot флаг для фильтра данных
      * @return полученную модель для заполнения списка
      */
-    private DefaultListModel<String> readingListModel(ArrayList<Reading> data, boolean isHot) {
-        DefaultListModel<String> model = new DefaultListModel<>();
+    private DefaultListModel<Reading> readingListModel(ArrayList<Reading> data) {
+        DefaultListModel<Reading> model = new DefaultListModel<>();
 //        System.out.println("data= " + data);
         if(data != null) {
-            data.stream().filter((r) -> {
-                WaterReading wr = (WaterReading) r;
-                return wr.isHot() == isHot;
-            }).forEach((Reading r) -> model.addElement(r.toString()));
+            data.forEach((Reading r) -> model.addElement(r));
             
         }
         return model;
@@ -282,12 +283,13 @@ public class AdminPagePanel extends PagePanel{
             User u = userArray.get(userList.getSelectedIndex());
             accountNumber = u.getAcc().getAccountNumber();
             // заполняем список показаний
-            readingList.setModel(readingListModel(u.getAcc().getReadings(), 
-                    chkHotBox.isSelected()));// список показаний
+            readingList.setModel(readingListModel(u.getAcc().getReadings()));// список показаний
             } catch (ArrayIndexOutOfBoundsException ex) {
                 System.out.println("error: " + ex.getMessage());
             }
         });
+        userList.setFixedCellHeight(20);
+        userList.setFixedCellWidth(150);
     }
     
     private DefaultListModel<String> getListModel() {
@@ -382,7 +384,7 @@ public class AdminPagePanel extends PagePanel{
     private void updateResponseData() {
         int index = userList.getSelectedIndex();
         ArrayList<Reading> responseData = userArray.get(index).getAcc().getReadings();
-        readingList.setModel(readingListModel(responseData, chkHotBox.isSelected()));
+        readingList.setModel(readingListModel(responseData));
 
     }
     
@@ -475,12 +477,7 @@ public class AdminPagePanel extends PagePanel{
     private WaterReading getWaterReading () {
         ArrayList<Reading> responseData = userArray.
                 get(userList.getSelectedIndex()).getAcc().getReadings();
-        String string = readingList.getSelectedValue();
-        Optional<Reading> waterReading = responseData.stream()
-                .filter((r) -> {
-                    WaterReading wr = (WaterReading) r;
-                    return ((wr.isHot() == chkHotBox.isSelected()));
-                }).filter(wr -> wr.toString().equals(string)).findFirst();
-        return (WaterReading) waterReading.get();
+        WaterReading wr = (WaterReading) readingList.getSelectedValue();
+        return wr;
     }
 }
