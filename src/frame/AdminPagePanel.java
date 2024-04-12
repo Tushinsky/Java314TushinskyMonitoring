@@ -11,14 +11,14 @@ import entities.User;
 import entities.WaterReading;
 import mapping.ImappingConstants;
 import in.Request;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import javax.swing.Box;
 import javax.swing.DefaultListModel;
-import javax.swing.JCheckBox;
-import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -138,27 +138,9 @@ public class AdminPagePanel extends PagePanel{
         // создаём контейнер для списка показаний
         Box readingBox = getReadingBox();
 
-        /*
-        Создаём контейнер для размещения поля ввода новых показаний, флажка
-        для задания признака холодной или горячей воды, кнопки для удаления
-        выбранных показаний
-        */
-        newChangeReadingPanel.setOkAction(ImappingConstants.NEW_READING);
-//        Box box3 = Box.createHorizontalBox();
-//        box3.add(Box.createHorizontalStrut(10));
-//        box3.add(new JLabel("Новые показания"));
-//        box3.add(Box.createHorizontalStrut(10));
-//        box3.add(txtReading);
-//        box3.add(Box.createHorizontalStrut(10));
-//        box3.add(new JLabel("Дата"));
-//        box3.add(Box.createHorizontalStrut(10));
-//        box3.add(txtReadingDate);
-//        box3.add(Box.createHorizontalStrut(10));
-//        
-//        box3.add(chkHotBox);
-//        box3.add(Box.createHorizontalStrut(20));
-//        box3.add(readingButton);
-//        box3.add(Box.createHorizontalGlue());
+        // 
+        newChangeReadingPanel.setParentContainer(this);
+        newChangeReadingPanel.setOkAction(NEW_READING);
 
         // размещаем все созданные элементы
         adminBox.add(Box.createHorizontalStrut(5));
@@ -186,16 +168,26 @@ public class AdminPagePanel extends PagePanel{
             @Override
             public void mouseClicked(MouseEvent me) {
                 super.mouseClicked(me);
-                // при двойном щелчке по элементу выводим показания и дату в полях ввода
+                // при двойном щелчке по элементу входим в режим редактирования
                 if(me.getClickCount() == 2) {
-                    WaterReading wr = (WaterReading) readingList.getSelectedValue();// получаем показание
-                    // задаём значения
-                    newChangeReadingPanel.setWaterReading(wr);
+                    editReading();
                 }
             }
             
         });
-        
+        readingList.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent ke) {
+                super.keyPressed(ke);
+                // при нажатии клавишы ввода входим в режим редактирования
+                if(ke.getKeyCode() == KeyEvent.VK_ENTER) {
+                    editReading();
+                }
+            }
+            
+        });
+        readingList.setToolTipText("двойной клик / нажать ENTER"
+                + " для входа в режиим редактирования");
         Box box = Box.createVerticalBox();
         Box horBox = Box.createHorizontalBox();
         horBox.add(Box.createHorizontalGlue());
@@ -325,9 +317,7 @@ public class AdminPagePanel extends PagePanel{
     /**
      * Обновление данных из полученного ответа, заполнение списка
      */
-    private void updateResponseData() {
-        int index = userList.getSelectedIndex();
-        ArrayList<Reading> responseData = userArray.get(index).getAcc().getReadings();
+    private void updateResponseData(ArrayList<Reading> responseData) {
         readingList.setModel(readingListModel(responseData));
 
     }
@@ -359,14 +349,16 @@ public class AdminPagePanel extends PagePanel{
      */
     private void removeReading(Response response) {
         if(response.isAuth()) {
-            // получаем показания, которые нужно удалить
-            WaterReading reading = (WaterReading) readingList.getSelectedValue();
             // получаем список показаний
             int index = userList.getSelectedIndex();
             ArrayList<Reading> readings = userArray.get(index).getAcc()
                     .getReadings();
-            readings.remove(reading);// удаляем показание из списка
-            updateResponseData();
+            System.out.println("readings before [" + readings +"]");
+            readings.remove(readingList.getSelectedIndex());// удаляем показание из списка
+            System.out.println("readings after [" + readings +"]");
+            DefaultListModel model = (DefaultListModel) readingList.getModel();
+            model.removeElementAt(readingList.getSelectedIndex());
+//            updateResponseData(readings);
             JOptionPane.showMessageDialog(null,
                     "Удаление показаний успешно!",
                     "Success", JOptionPane.INFORMATION_MESSAGE);
@@ -392,7 +384,7 @@ public class AdminPagePanel extends PagePanel{
             ArrayList<Reading> readings = userArray.get(index).getAcc()
                     .getReadings();
             readings.add(reading);// добавляем показание в список
-            updateResponseData();
+            updateResponseData(readings);
         } else {
             JOptionPane.showMessageDialog(null,
                     "Внесение показаний допускается только одни раз в текущем месяце",
@@ -419,5 +411,13 @@ public class AdminPagePanel extends PagePanel{
             return null;// если отмена
         }
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    private void editReading() {
+        WaterReading wr = 
+                (WaterReading) readingList.getSelectedValue();// получаем показание
+        // задаём значения
+        newChangeReadingPanel.setWaterReading(wr);
+        newChangeReadingPanel.setOkAction(CHANGE_READING);
     }
 }

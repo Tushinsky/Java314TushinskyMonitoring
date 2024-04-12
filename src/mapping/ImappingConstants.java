@@ -36,7 +36,7 @@ public interface ImappingConstants {
     /**
      * Идентификатор запроса - Изменение показаний
      */
-    String CHANGE_READING = "get_reading";
+    String CHANGE_READING = "change_reading";
     /**
      * Идентификатор запроса - Имя пользователя
      */
