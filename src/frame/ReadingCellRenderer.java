@@ -19,18 +19,21 @@ import javax.swing.ListCellRenderer;
  * @author Sergii.Tushinskyi
  */
 public class ReadingCellRenderer implements ListCellRenderer<Reading>{
+    private final Color lightRedColor = new Color(242, 125, 140, 255);
+    private final Color lightBlueColor = new Color(113, 205, 238, 255);
 
     @Override
     public Component getListCellRendererComponent(JList<? extends Reading> jlist, 
             Reading e, int i, boolean bln, boolean bln1) {
         JLabel label = new JLabel();
         WaterReading wr = (WaterReading) e;// приведение типов
+        // выделение ячейки фоном 
         if(wr.isHot()) {
             // если в ячейке находится объект горячей воды
-            label.setBackground(new Color(250, 150, 150));
+            label.setBackground(lightRedColor);
         } else {
             // если в ячейке находится объект холодной воды
-            label.setBackground(new Color(150, 150, 250));
+            label.setBackground(lightBlueColor);
         }
         if(bln) {
             // если элемент выделен, меняем его фон на принятый по умолчанию

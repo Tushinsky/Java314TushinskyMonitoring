@@ -9,6 +9,7 @@ import entities.WaterReading;
 import in.FormattedTextFieldFerifier;
 import in.Request;
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.Font;
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -39,6 +40,7 @@ public class NewChangeReadingPanel extends JPanel{
     private JFormattedTextField txtReadingDate = new JFormattedTextField();
     private final JButton okButton = new JButton("Добавить/Изменить");
     private final JCheckBox chkHotBox = new JCheckBox("горячая");
+    private Container parentContainer;
     
     /**
      * Создаёт панель с компонентами пользовательского интерфейса для добавления
@@ -92,9 +94,18 @@ public class NewChangeReadingPanel extends JPanel{
      * @param okAction действие для кнопки (одна из констант ImappingConstants)
      */
     public void setOkAction(String okAction) {
-        okButton.addActionListener(al -> {
-            this.getParent().setName(okAction);
-        });
+        try {
+            okButton.removeActionListener(okButton.getActionListeners()[0]);
+        } catch(ArrayIndexOutOfBoundsException ex) {
+            System.out.println("error:" + ex.getLocalizedMessage());
+        } finally {
+            okButton.addActionListener(al -> {
+                System.out.println("name=" + okAction);
+                System.out.println("parent:" + parentContainer.getClass().toString());
+                System.out.println("parent:" + parentContainer.getName());
+                parentContainer.setName(okAction);
+            });
+        }
     }
     
     /**
@@ -152,13 +163,13 @@ public class NewChangeReadingPanel extends JPanel{
                             .addComponent(txtReading)))
                     .addComponent(okButton, javax.swing.GroupLayout.DEFAULT_SIZE, 
                             javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(36, Short.MAX_VALUE))
+                .addContainerGap(18, Short.MAX_VALUE))
         );
         // по вертикали
         layout.setVerticalGroup(layout.createParallelGroup(javax.swing
                 .GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap(36, Short.MAX_VALUE)
+                .addContainerGap(18, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing
                         .GroupLayout.Alignment.BASELINE)
                     .addComponent(lblReadingDate)
@@ -174,11 +185,11 @@ public class NewChangeReadingPanel extends JPanel{
                             .GroupLayout.PREFERRED_SIZE, javax.swing
                                     .GroupLayout.DEFAULT_SIZE, 
                             javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
+                .addGap(10, 10, 10)
                 .addComponent(chkHotBox)
-                .addGap(18, 18, 18)
+                .addGap(10, 10, 10)
                 .addComponent(okButton)
-                .addContainerGap(38, Short.MAX_VALUE))
+                .addContainerGap(18, Short.MAX_VALUE))
         );
     }
     
@@ -207,11 +218,17 @@ public class NewChangeReadingPanel extends JPanel{
         txtReadingDate.setFont(font);
     }
 
+    
     public WaterReading getWaterReading(int id) {
         LocalDate ld = LocalDate.parse(txtReadingDate.getValue().toString());
         return new WaterReading(id, ld, Integer
                 .parseInt(txtReading.getValue().toString()), 
                 chkHotBox.isSelected());
+    }
+
+    
+    public void setParentContainer(Container parentContainer) {
+        this.parentContainer = parentContainer;
     }
     
     

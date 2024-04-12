@@ -40,10 +40,12 @@ public class DataBase implements IDao {
         // считываем таблицу зарегистрированных пользователей и заполняем массив
         Object[][] database = getDataTable(userFileName);// получаем массив
         // перебираем, получаем пользователей
+        int idNumber = 1;// начальный номер в очереди
         for(Object[] data : database) {
-            Users.add(new User(Integer.parseInt(data[0].toString()), 
+            Users.add(new User(idNumber, Integer.parseInt(data[0].toString()), 
                     Integer.parseInt(data[1].toString()), (String)data[2], 
                     (String)data[3], (String)data[4]));
+            idNumber++;// увеличиваем номер
         }
         Users.forEach(u -> u.setAcc(accountInit(u.getId())));
         return Users;
@@ -108,7 +110,7 @@ public class DataBase implements IDao {
             return false;
         }
         // если логин найден в базе данных, создаём пользователя
-        currentUser = new User(Integer.parseInt(data[0].toString()), 
+        currentUser = new User(1, Integer.parseInt(data[0].toString()), 
                 Integer.parseInt(data[1].toString()), data[2].toString(), 
                 data[3].toString(), data[4].toString());
         // получаем информацию по аккаунту
@@ -134,7 +136,7 @@ public class DataBase implements IDao {
         // перебираем, получаем данные по показаниям
         Account acc = accountInit(idUser);
         readingsInit(acc);// заполняем аккаунт данными
-        user = new User(idUser, Integer.parseInt(data[1].toString()), 
+        user = new User(1, idUser, Integer.parseInt(data[1].toString()), 
                 data[2].toString(), data[3].toString(), data[4].toString());
         user.setAcc(acc);
         System.out.println("user:" + user);
@@ -148,7 +150,7 @@ public class DataBase implements IDao {
         Object[] data = getIDRecord(userFileName, 3, login);
         if(data == null) return null;
         // создаём пользователя
-        User user = new User(Integer.parseInt(data[0].toString()), 
+        User user = new User(1, Integer.parseInt(data[0].toString()), 
                 Integer.parseInt(data[1].toString()), data[2].toString(), 
                 login, data[4].toString());
         return user;// возвращаем его
@@ -183,7 +185,7 @@ public class DataBase implements IDao {
         if(writeDataToFile(userFileName, userString) && 
                 writeDataToFile(accountFileName, accountString)) {
             // создаём нового пользователя
-            User u = new User(id, 2, username, login, password);
+            User u = new User(1, id, 2, username, login, password);
             u.setAcc(accountInit(u.getId()));
             Users.add(u);// добавляем его в список
             currentUser = u;
@@ -270,9 +272,10 @@ public class DataBase implements IDao {
         // считываем таблицу зарегистрированных пользователей и заполняем массив
         Object[][] dataTable = getDataTable(userFileName);// получаем массив
         // перебираем, получаем пользователей
+        int idNumber = 1;
         for(Object[] data : dataTable) {
             if(Integer.parseInt(data[1].toString()) == 2) {
-                User user = new User(Integer.parseInt(data[0].toString()), 
+                User user = new User(idNumber, Integer.parseInt(data[0].toString()), 
                     Integer.parseInt(data[1].toString()), (String)data[2], 
                     (String)data[3], (String)data[4]);// создаём пользователя
                 Account acc = accountInit(user.getId());// создаём аккаунт
@@ -281,6 +284,7 @@ public class DataBase implements IDao {
                 System.out.println("user:" + user.getUsername() + "; readings:" + 
                         user.getAcc().getReadings());
                 returnList.add(user);
+                idNumber++;// увеличиваем счётчик
             }
         }
         return returnList;
@@ -350,6 +354,7 @@ public class DataBase implements IDao {
             // сравниваем данные
             if(Objects.equals(db[col].toString(), template.toString())) {
                 data.add(db);// добавляем в список удаления
+                System.out.println("db: " + Arrays.toString(db));
             } else {
                 writeData.add(db);// добавляем в список для перезаписи файла
             }
@@ -453,9 +458,10 @@ public class DataBase implements IDao {
     public boolean removeReading(WaterReading waterReading) {
         // в качестве шаблона для поиска удаляемых записей используем код показаний
         Object template = waterReading.getId();
-        
+        System.out.println("reading: " + waterReading.toString());
         // получаем данные, возвращаемые в результате удаления
-        Object[][] data = removeDataFromFile(readingFileName, 0, template);
+        Object[][] data;
+        data = removeDataFromFile(readingFileName, 0, template);
         
         return (data != null);
     }
