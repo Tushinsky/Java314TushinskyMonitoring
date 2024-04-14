@@ -19,8 +19,8 @@ import javax.swing.ListCellRenderer;
  * @author Sergii.Tushinskyi
  */
 public class ReadingCellRenderer implements ListCellRenderer<Reading>{
-    private final Color lightRedColor = new Color(242, 125, 140, 255);
-    private final Color lightBlueColor = new Color(113, 205, 238, 255);
+    private final Color lightRedColor = new Color(242, 125, 140, 255);// цвет ячеек для горячей воды
+    private final Color lightBlueColor = new Color(113, 205, 238, 255);// цвет ячеек для холодной воды
 
     @Override
     public Component getListCellRendererComponent(JList<? extends Reading> jlist, 

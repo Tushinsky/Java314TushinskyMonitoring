@@ -3,14 +3,38 @@ package entities;
 import java.time.LocalDate;
 import java.util.Objects;
 
+/**
+ * Класс, расширяющий объект показаний Reading
+ * @author Sergey
+ */
 public class WaterReading extends Reading{
     private final String type = "water";
-    private final boolean isHot;
-
-    public WaterReading(int id, LocalDate date, int measuring, boolean isHot) {
-        super(id, date, measuring);
+    private final boolean isHot;// флаг горячей или холодной воды
+    
+    /**
+     * Создаёт объект уже существующих показаний в базе
+     * @param idNumber порядковый номер сущности в списке
+     * @param id идентификатор записи в базе
+     * @param date дата показаний
+     * @param measuring числовое представление показаний
+     * @param isHot флаг горячей или холодной воды
+     */
+    public WaterReading(int idNumber, int id, LocalDate date, int measuring, boolean isHot) {
+        super(idNumber, id, date, measuring);
         this.isHot = isHot;
     }
+    
+    /**
+     * Создаёт объект новых показаний
+     * @param date дата показаний
+     * @param measuring числовое предствление показаний
+     * @param isHot флаг горячей или холодной воды
+     */
+    public WaterReading(LocalDate date, int measuring, boolean isHot) {
+        super(date, measuring);
+        this.isHot = isHot;
+    }
+    
 
     public boolean isHot() {
         return isHot;

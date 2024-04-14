@@ -2,8 +2,10 @@ package db;
 
 import csv.CSVOperate;
 import entities.Account;
+import entities.IRoleConstants;
 import entities.User;
 import entities.WaterReading;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 
@@ -29,6 +31,7 @@ public class DataBase implements IDao {
     
     public DataBase() {
         csvOperate = new CSVOperate();
+        csvOperate.setCharSet("UTF-8");// задаём кодировку
 //        dbInit();
     }
 
@@ -77,6 +80,7 @@ public class DataBase implements IDao {
         }
         // получаем данные по аккаунту
         Object[][] database = getDataTable(readingFileName);
+        int idNumber = 1;// счётчик сущностей
         // перебираем в цикле
         for(Object[] db : database) {
             if(Objects.equals(db[1], String.valueOf(acc.getId()))) {
@@ -85,9 +89,10 @@ public class DataBase implements IDao {
                 LocalDate date = LocalDate.parse(db[4].toString());
                 int count = Integer.parseInt(db[2].toString());
                 boolean hot = !db[3].toString().equals("0");
-                WaterReading reading = new WaterReading(id, date, count, hot);
+                WaterReading reading = new WaterReading(idNumber, id, date, count, hot);
         //                    System.out.println("reading:" + reading);
                 acc.addReading(reading);
+                idNumber++;// увеличиваем счётчик
             }
         }
             
@@ -121,43 +126,6 @@ public class DataBase implements IDao {
     }
 
     @Override
-    public User findUserByAccountNumber(String accountNumber) {
-        Object[] data;
-        data = getIDRecord(accountFileName, 2, accountNumber);
-        int idAccount = Integer.parseInt(data[0].toString());
-        if(idAccount == 0) {
-            // если пользователь не найден
-            return null;
-        }
-        // читаем таблицу пользователей
-        User user;
-        data = getIDRecord(userFileName, 0, data[1].toString());// получаем массив
-        int idUser = Integer.parseInt(data[0].toString());
-        // перебираем, получаем данные по показаниям
-        Account acc = accountInit(idUser);
-        readingsInit(acc);// заполняем аккаунт данными
-        user = new User(1, idUser, Integer.parseInt(data[1].toString()), 
-                data[2].toString(), data[3].toString(), data[4].toString());
-        user.setAcc(acc);
-        System.out.println("user:" + user);
-        return user;// возвращаем пользователя
-
-    }
-
-    @Override
-    public User findUserByUsername(String login) {
-        // получаем данные из базы по логину
-        Object[] data = getIDRecord(userFileName, 3, login);
-        if(data == null) return null;
-        // создаём пользователя
-        User user = new User(1, Integer.parseInt(data[0].toString()), 
-                Integer.parseInt(data[1].toString()), data[2].toString(), 
-                login, data[4].toString());
-        return user;// возвращаем его
-        
-    }
-
-    @Override
     public int addNewUser(String username, String login, String password) {
         // проверяем существование пользователя с таким же логином
         ArrayList<User> Users = getDBInit();
@@ -169,6 +137,8 @@ public class DataBase implements IDao {
         если пользователей с такими данными не найдено в списке, тогда
         добавляем нового пользователя в файл пользователей и в список
         */
+        Users = getAllUsers();// список всех простых пользователей
+        
         // получаем идентификатор последнего пользователя в списке и увеличиваем на 1
         User user = Users.get(Users.size() - 1);// получаем последнего пользователя
         int id = user.getId() + 1;// код нового пользователя
@@ -230,7 +200,7 @@ public class DataBase implements IDao {
     }
 
     @Override
-    public int addNewReading(String accountNumber, WaterReading waterReading) {
+    public int addNewReading(String role, String accountNumber, WaterReading waterReading) {
         // ищем код по номеру аккаунта
         Object[] data = getIDRecord(accountFileName, 2, accountNumber);
         int idAccount = Integer.parseInt(data[0].toString());
@@ -238,11 +208,16 @@ public class DataBase implements IDao {
         Object[][] database;
         // читаем таблицу показаний
         database = getDataTable(readingFileName);// получаем массив
-        // проверяем новые показания на соответствие заданным условиям
-        if(testNewReading(database, idAccount, waterReading) == false) {
-            return 0;// если не соответствуют, возвращаем false
+        /*
+        проверяем права доступа и новые показания на соответствие заданным условиям:
+        если операцию проводит обычный пользователь, проводим проверку,
+        если оперецию проводит администратор, проверку опускаем
+        */
+        if(role.equals(IRoleConstants.USER)) {
+            if(testNewReading(database, idAccount, waterReading) == false) {
+                return 0;// если не соответствуют, возвращаем код 0
+            }
         }
-        
         // из последнего элемента массива получаем код последней записи в таблице
         int idReading = Integer.parseInt(database[database.length - 1][0].toString());
         idReading++;// увеличиваем код записи
@@ -262,10 +237,6 @@ public class DataBase implements IDao {
         return 0;
     }
 
-    /**
-     * Возвращает массив всех зарегистрированных пользователей, кроме администраторов
-     * @return массив всех зарегистрированных пользователей
-     */
     @Override
     public ArrayList<User> getAllUsers() {
         ArrayList<User> returnList = new ArrayList<>();
@@ -290,6 +261,11 @@ public class DataBase implements IDao {
         return returnList;
     }
     
+    /**
+     * Считывает и возвращает данные из выбранного файла
+     * @param filename имя файла для чтения
+     * @return двухмерный массив объектов типа Object
+     */
     private Object[][] getDataTable(String filename) {
         csvOperate.setFileName(filename);
         csvOperate.setHeader(true);// в первой строке находятся заголовки столбцов
@@ -303,6 +279,12 @@ public class DataBase implements IDao {
         return currentUser;
     }
     
+    /**
+     * Возвращает результат записи данных в указанный файл
+     * @param filename имя файла для записи
+     * @param string строка, содержащая данные для записи
+     * @return true в случае успеха, иначе false
+     */
     private boolean writeDataToFile(String filename, String string) {
         try (
                 FileWriter writer = new FileWriter(filename, true);// объект для записи в файл
@@ -321,6 +303,13 @@ public class DataBase implements IDao {
         return false;
     }
     
+    /**
+     * Возвращает массив данных, содержащий код записи из указанного файла
+     * @param filename имя файла для поиска
+     * @param col номер столбца для поиска
+     * @param template шаблон поиска
+     * @return одномерный массив типа Object, если найден, иначе null
+     */
     private Object[] getIDRecord(String filename, int col, String template) {
         Object[][] database;
         database = getDataTable(filename);// получаем массив
@@ -367,8 +356,9 @@ public class DataBase implements IDao {
                 database[i] = data.get(i);
             }
             // перезаписываем файл
-            reWriteFile(filename, writeData);
-            return database;
+            if(reWriteFile(filename, writeData)) {
+                return database;
+            }
         }
         return null;
         
@@ -379,7 +369,7 @@ public class DataBase implements IDao {
      * @param fileName имя файла для перезаписи
      * @param writeData массив данных для записи
      */
-    private void reWriteFile(String fileName, ArrayList<Object[]> writeData) {
+    private boolean reWriteFile(String fileName, ArrayList<Object[]> writeData) {
         if(!writeData.isEmpty()) {
             
             // формируем данные для записи в файл
@@ -389,8 +379,14 @@ public class DataBase implements IDao {
             }
             csvOperate.setFileName(fileName);
             csvOperate.setData(database);
-            csvOperate.writeData();
+            try {
+                csvOperate.writeData();
+                return true;
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(DataBase.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
+        return false;
 
     }
     
@@ -468,6 +464,23 @@ public class DataBase implements IDao {
 
     @Override
     public boolean changeReading(WaterReading waterReading) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Object[][] database = getDataTable(readingFileName);// получаем массив данных из файла
+        ArrayList<Object[]> writeData = new ArrayList<>();// список данных для записи
+        Object template = waterReading.getId();// шаблон, по которому ищем запись
+        Object isHot = waterReading.isHot() == true ? 1 : 0;
+        for(Object[] db : database) {
+            // сравниваем данные
+            if(Objects.equals(db[0].toString(), template.toString())) {
+                Object[] data = {waterReading.getId(), db[1], 
+                    waterReading.getMeasuring(), isHot, waterReading.getDate(), 
+                    db[db.length - 1]};
+                writeData.add(data);// добавляем в список удаления
+                System.out.println("db: " + Arrays.toString(db));
+            } else {
+                writeData.add(db);// добавляем в список для перезаписи файла
+            }
+        }
+        
+        return reWriteFile(readingFileName, writeData);
     }
 }

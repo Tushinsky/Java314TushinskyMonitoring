@@ -17,19 +17,37 @@ public class Request {
     private final String[][] body = new String[5][2];
     private final ArrayList<Object> listBody = new ArrayList<>();
 
+    /**
+     * Конструктор нового запроса к базе данных
+     * @param mapping идентификатор запроса (одна из констант ImappingConstants)
+     * @param isAuth флаг выполнения запроса
+     */
     public Request(String mapping, boolean isAuth) {
         this.mapping = mapping;
         this.isAuth = isAuth;
     }
 
+    /**
+     * Возвращает идентификатор запроса к базе данных
+     * @return строка - идентификатор запроса
+     */
     public String getMapping() {
         return mapping;
     }
 
+    /**
+     * Возвращает флаг выполнения запроса
+     * @return флаг выполнения запроса (true/false)
+     */
     public boolean isAuth() {
         return isAuth;
     }
 
+    /**
+     * Возвращает тело запроса
+     * @return двухмерный массив String, содержащий идентификаторы и значения
+     * тела запроса
+     */
     public String[][] getBody() {
         return body;
     }

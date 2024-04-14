@@ -3,6 +3,10 @@ package entities;
 
 import java.util.ArrayList;
 
+/**
+ * Аккаунт пользователя
+ * @author Sergey
+ */
 public class Account {
     private final int id;// идентификационный код
     private final String accountNumber; //лицевой счет
@@ -13,6 +17,10 @@ public class Account {
         this.accountNumber = accountNumber;
     }
 
+    /**
+     * Возвращает список показаний по данному аккаунту
+     * @return список показаний
+     */
     public ArrayList getReadings() {
         return readings;
     }
@@ -25,14 +33,26 @@ public class Account {
                 '}';
     }
 
+    /**
+     * Возвращает номер аккаунта
+     * @return строка, содержащая номер аккаунта
+     */
     public String getAccountNumber() {
         return accountNumber;
     }
 
+    /**
+     * Возвращает идентификатор аккаунта из базы данных
+     * @return целое число - идентификатор аккаунта
+     */
     public int getId() {
         return id;
     }
     
+    /**
+     * Добавляет новые показания в список
+     * @param reading новые показания
+     */
     public void addReading(Reading reading) {
         readings.add(reading);
     }

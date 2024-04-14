@@ -13,14 +13,15 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 /**
- *
+ * Точка входа в приложение - запускает на выполнение
  * @author Sergii.Tushinskyi
  */
 public class Monitoring {
 
     /**
      * @param args the command line arguments
-     * @throws javax.swing.UnsupportedLookAndFeelException
+     * @throws javax.swing.UnsupportedLookAndFeelException исключительная
+     * ситуация, которая может произойти при выполнении метода
      */
     public static void main(String[] args) throws UnsupportedLookAndFeelException {
         try {

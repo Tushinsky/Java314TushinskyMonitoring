@@ -6,6 +6,7 @@
 package frame;
 
 import api.Response;
+import entities.IRoleConstants;
 import entities.Reading;
 import entities.User;
 import entities.WaterReading;
@@ -32,24 +33,26 @@ import static mapping.ImappingConstants.CHANGE_READING;
 import static mapping.ImappingConstants.NEW_READING;
 
 /**
- *
+ * Класс, предоствляющий компоненты интерфейса для редактирования данных
+ * зарегистрированных пользователей
  * @author Sergey
  */
 public class AdminPagePanel extends PagePanel{
     private final ReadingListComponent readingList = new ReadingListComponent();// список показаний
-    private String accountNumber;
-    private String userName;
-    private final JList<String> userList = new JList<>();// элемент-список зарегистрированных пользователей
-    private final ArrayList<User> userArray;// массив пользователей
-    private final NewChangeReadingPanel newChangeReadingPanel = new NewChangeReadingPanel();
+    private String accountNumber;// аккаунт выбранного пользователя
+    // элемент-список зарегистрированных пользователей
+    private final JList<User> userList = new JList<>();
+    // панель для добавления / изменения показаний выбранного пользователя
+    private final NewChangeReadingPanel pnlNewChangeReadingPanel = new NewChangeReadingPanel();
+    
     /**
      * Создаёт панель администратора
      * @param response результат запроса к базе данных, содержащий входные данные
      */
     public AdminPagePanel(Response response) {
         super(REMOVE_READING, LOG_OUT, REMOVE_ACCOUNT);
-        userArray = new ArrayList<>();
-        initComponents(response);// инициализация компонентов пользовательского интерфейса
+        // инициализация компонентов пользовательского интерфейса
+        initComponents(response);
     }
     
     @Override
@@ -78,7 +81,7 @@ public class AdminPagePanel extends PagePanel{
                 removeReading(response);
                 break;
             case NEW_READING:
-                addReading(response);
+                addNewReading(response);
                 break;
             case CHANGE_READING:
                 changeReading(response);
@@ -92,7 +95,8 @@ public class AdminPagePanel extends PagePanel{
      * @param response результат запроса к базе данных, содержащий входные данные
      */
     private void initComponents(Response response) {
-        userName = response.getBody()[0][1];
+        
+        String userName = response.getBody()[0][1];
         // создаём элементы пользовательского интерфейса
         super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
                 "align=\"center\" cols=\"1\" width=\"100%\" " +
@@ -104,7 +108,7 @@ public class AdminPagePanel extends PagePanel{
                 "<tr><td align=\"left\">Администратор <b><u>" +
                 userName + "</u></b>. Сегодня <b><u>" + LocalDate.now() + 
                 "</u></b></td></tr></table>");
-        fillUserArrayList(response);// заполняем список пользователей
+        fillUserList(response);// заполняем список пользователей
         super.addComponent(getAdminBox());
         super.setRemoveCaption("Удалить аккаунт");
         super.setOkCaption("Удалить показания");
@@ -114,15 +118,17 @@ public class AdminPagePanel extends PagePanel{
 
     /**
      * Заполняет список пользователей, полученный из ответа базы данных
-     * @param response результат запроса к базе данных, содержащий входные данные
+     * @param response ответ базе данных, содержащий входные данные
      */
-    private void fillUserArrayList(Response response) {
+    private void fillUserList(Response response) {
+        DefaultListModel<User> model = new DefaultListModel<>();
         int index = 0;
         User user;
         while((user = response.getFromBody(index))!= null) {
-            userArray.add(user);
+            model.addElement(user);
             index++;
         }
+        userList.setModel(model);
     }
 
     /**
@@ -138,17 +144,17 @@ public class AdminPagePanel extends PagePanel{
         // создаём контейнер для списка показаний
         Box readingBox = getReadingBox();
 
-        // 
-        newChangeReadingPanel.setParentContainer(this);
-        newChangeReadingPanel.setOkAction(NEW_READING);
+        // задаём некоторые свойсва панели добавления/изменения показаний
+        pnlNewChangeReadingPanel.setParentContainer(this);
+        pnlNewChangeReadingPanel.setOkAction(NEW_READING);
 
         // размещаем все созданные элементы
         adminBox.add(Box.createHorizontalStrut(5));
         adminBox.add(userBox);
-        adminBox.add(Box.createHorizontalStrut(5));
+        adminBox.add(Box.createHorizontalStrut(10));
         adminBox.add(readingBox);
-        adminBox.add(Box.createHorizontalStrut(25));
-        adminBox.add(newChangeReadingPanel);
+        adminBox.add(Box.createHorizontalStrut(15));
+        adminBox.add(pnlNewChangeReadingPanel);
         adminBox.add(Box.createHorizontalGlue());
 
         return adminBox;
@@ -162,7 +168,7 @@ public class AdminPagePanel extends PagePanel{
     private Box getReadingBox() {
         /*
         к списку показаний добавляем обработку двойного щелчка по выбранному
-        элементу списка
+        элементу списка и обработку нажатия клавиши ввода на выбранном элементе
         */
         readingList.addMouseListener(new MouseAdapter() {
             @Override
@@ -195,7 +201,7 @@ public class AdminPagePanel extends PagePanel{
         horBox.add(Box.createHorizontalGlue());
         box.add(horBox);
         box.add(Box.createVerticalStrut(5));
-        box.add(new JScrollPane(readingList));
+        box.add(new JScrollPane(readingList));// список размещаем в панели прокрутки
         box.add(Box.createVerticalStrut(10));
         return box;
     }
@@ -221,13 +227,13 @@ public class AdminPagePanel extends PagePanel{
      * @return BOX - созданный контейнер
      */
     private Box getUserBox() {
-        userList.setModel(getListModel());
+        userList.setCellRenderer(new UserCellRenderer());// отрисовщик элементов
         userList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);// выделение одной строки
+        // добавляем слушатель для выделенного элемента списка
         userList.addListSelectionListener((ListSelectionEvent e) -> {
             try {
             // получаем пользователя по индексу выделенного элемента списка
-            int index = userList.getSelectedIndex();
-            User u = userArray.get(userList.getSelectedIndex());
+            User u = userList.getSelectedValue();
             accountNumber = u.getAcc().getAccountNumber();
             // заполняем список показаний
             readingList.setModel(readingListModel(u.getAcc().getReadings()));// список показаний
@@ -235,8 +241,10 @@ public class AdminPagePanel extends PagePanel{
                 System.out.println("error: " + ex.getMessage());
             }
         });
+        // задаём ширину и высоту ячеек списка
         userList.setFixedCellHeight(20);
-        userList.setFixedCellWidth(150);
+        userList.setFixedCellWidth(130);
+        
         JLabel lblUsers = new JLabel("Пользователи");
         // создаём контейнер для размещения списка пользователей
         Box box = Box.createVerticalBox();
@@ -246,18 +254,6 @@ public class AdminPagePanel extends PagePanel{
         box.add(new JScrollPane(userList));
         box.add(Box.createVerticalStrut(10));
         return box;
-    }
-    
-    /**
-     * Создаёт и возвращает модель списка, принятую по умолчанию
-     * @return созданную модель списка
-     */
-    private DefaultListModel<String> getListModel() {
-        DefaultListModel<String> model = new DefaultListModel<>();
-        userArray.forEach(user -> {
-            model.addElement(user.getUsername());
-        });
-        return model;
     }
 
     /**
@@ -271,7 +267,7 @@ public class AdminPagePanel extends PagePanel{
             return null;// если отмена
         }
         // получаем пользователя по выбранному индексу списка
-        User user = userArray.get(userList.getSelectedIndex());
+        User user = userList.getSelectedValue();
         // создаём запрос на удаление аккаунта
         Request request = new Request(REMOVE_ACCOUNT, false);
         request.getBody()[0][0] = ImappingConstants.ACCOUNT;
@@ -310,16 +306,12 @@ public class AdminPagePanel extends PagePanel{
             return null;// если отмена
         }
         // создаём запрос на добавление показаний
-        return newChangeReadingPanel.getNewReadingRequest(accountNumber);
+        Request request = pnlNewChangeReadingPanel.getNewReadingRequest();
+        request.getBody()[0][1] = accountNumber;
+        request.getBody()[1][0] = ImappingConstants.ROLE;
+        request.getBody()[1][1] = IRoleConstants.ADMIN;
+        return request;
         
-    }
-
-    /**
-     * Обновление данных из полученного ответа, заполнение списка
-     */
-    private void updateResponseData(ArrayList<Reading> responseData) {
-        readingList.setModel(readingListModel(responseData));
-
     }
     
     /**
@@ -337,8 +329,9 @@ public class AdminPagePanel extends PagePanel{
             JOptionPane.showMessageDialog(this.getParent(),
                     "Удаление аккаунта успешно!", "Success", 
                     JOptionPane.INFORMATION_MESSAGE);
-            userArray.remove(userList.getSelectedIndex());// удаляем пользователя из списка
-            userList.setModel(getListModel());
+            int index = userList.getSelectedIndex();
+            DefaultListModel model = (DefaultListModel) userList.getModel();
+            model.removeElementAt(index);
             userList.setSelectedIndex(0);
         }
     }
@@ -349,16 +342,14 @@ public class AdminPagePanel extends PagePanel{
      */
     private void removeReading(Response response) {
         if(response.isAuth()) {
-            // получаем список показаний
-            int index = userList.getSelectedIndex();
-            ArrayList<Reading> readings = userArray.get(index).getAcc()
+            // получаем список показаний выбранного пользователя
+            User user = userList.getSelectedValue();
+            ArrayList<Reading> readings = user.getAcc()
                     .getReadings();
-            System.out.println("readings before [" + readings +"]");
-            readings.remove(readingList.getSelectedIndex());// удаляем показание из списка
-            System.out.println("readings after [" + readings +"]");
+            // удаляем показание из модели списка
+            readings.remove(readingList.getSelectedIndex());
             DefaultListModel model = (DefaultListModel) readingList.getModel();
             model.removeElementAt(readingList.getSelectedIndex());
-//            updateResponseData(readings);
             JOptionPane.showMessageDialog(null,
                     "Удаление показаний успешно!",
                     "Success", JOptionPane.INFORMATION_MESSAGE);
@@ -371,20 +362,24 @@ public class AdminPagePanel extends PagePanel{
      * Информирует пользователя об операции добавления новых показаний
      * @param response ответ базы данных о результатах операции добавления
      */
-    private void addReading(Response response) {
+    private void addNewReading(Response response) {
         // если ответ положительный, и новые показания приняты, добавляем их в список показаний
         if (response.isAuth()) {
-            // создаём объект показаний
-            int id = Integer.parseInt(response.getBody()[0][1]);
-            WaterReading wr = newChangeReadingPanel.getWaterReading(id);
-            WaterReading reading = new WaterReading(id, wr.getDate(), 
-                    wr.getMeasuring(), wr.isHot());
-            // получаем список показаний
-            int index = userList.getSelectedIndex();
-            ArrayList<Reading> readings = userArray.get(index).getAcc()
+            // получаем список показаний выбранного пользователя
+            User user = userList.getModel().getElementAt(userList.getSelectedIndex());
+            ArrayList<Reading> readings = user.getAcc()
                     .getReadings();
+            // создаём объект показаний
+            int id = Integer.parseInt(response.getBody()[0][1]);// идентификатор записи
+            WaterReading wr = pnlNewChangeReadingPanel.getWaterReading();
+            int idNumber = readings.size();// количество элементов в списке
+            idNumber++;
+            // создаём объект новых показаний
+            WaterReading reading = new WaterReading(idNumber, id, wr.getDate(), 
+                    wr.getMeasuring(), wr.isHot());
             readings.add(reading);// добавляем показание в список
-            updateResponseData(readings);
+            DefaultListModel model = (DefaultListModel) readingList.getModel();
+            model.addElement(reading);// добавляем в модель списка
         } else {
             JOptionPane.showMessageDialog(null,
                     "Внесение показаний допускается только одни раз в текущем месяце",
@@ -397,7 +392,24 @@ public class AdminPagePanel extends PagePanel{
      * @param response ответ базы данных о результатах операции изменения
      */
     private void changeReading(Response response) {
-        
+        // проверяем результат изменения показаний в базе данных
+        if(response.isAuth()) {
+            // получаем список показаний выбранного пользователя
+            User user = userList.getModel().getElementAt(userList.getSelectedIndex());
+            ArrayList<Reading> readings = user.getAcc()
+                    .getReadings();
+            // создаём объект показаний после изменения
+            WaterReading wr = pnlNewChangeReadingPanel.getWaterReading();
+            int index = readingList.getSelectedIndex();
+            readings.set(index, wr);// изменяем
+            // обновляем список показаний
+            readingList.setModel(readingListModel(readings));
+            pnlNewChangeReadingPanel.resetData();// сброс данных
+        } else {
+            JOptionPane.showMessageDialog(null,
+                    "Что-то не сложилось, при записи данных произошла ошибка!",
+                    "Внимание", JOptionPane.WARNING_MESSAGE);
+        }
     }
 
     /**
@@ -410,14 +422,20 @@ public class AdminPagePanel extends PagePanel{
                 "Внимание", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.CANCEL_OPTION) {
             return null;// если отмена
         }
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        // заполняем тело запроса на изменение показаний пользователя
+        Request request = pnlNewChangeReadingPanel.getChangeReadingRequest();
+        request.getBody()[0][1] = accountNumber;
+        return request;
     }
     
+    /**
+     * Вводит выбранные показания в режим редактирования
+     */
     private void editReading() {
         WaterReading wr = 
                 (WaterReading) readingList.getSelectedValue();// получаем показание
         // задаём значения
-        newChangeReadingPanel.setWaterReading(wr);
-        newChangeReadingPanel.setOkAction(CHANGE_READING);
+        pnlNewChangeReadingPanel.setWaterReading(wr);
+        pnlNewChangeReadingPanel.setOkAction(CHANGE_READING);
     }
 }

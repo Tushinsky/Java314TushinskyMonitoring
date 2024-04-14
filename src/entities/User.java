@@ -2,6 +2,10 @@ package entities;
 
 import java.util.Objects;
 
+/**
+ * Класс, представляющий пользователя, зарегистрированного в базе данных
+ * @author Sergey
+ */
 public class User {
     private final int id;
     private final String login;
