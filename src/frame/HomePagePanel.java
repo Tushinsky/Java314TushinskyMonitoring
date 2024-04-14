@@ -5,30 +5,18 @@ import api.Response;
 import entities.Reading;
 import entities.User;
 import entities.WaterReading;
-import in.FormattedTextFieldFerifier;
-import java.awt.Font;
-import java.text.NumberFormat;
-import java.text.ParseException;
 import mapping.ImappingConstants;
 
 import javax.swing.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.text.MaskFormatter;
 
 import static mapping.ImappingConstants.*;
 
 public class HomePagePanel extends PagePanel {
     private final ReadingListComponent readingList = new ReadingListComponent();// список показаний
-    private JFormattedTextField txtReading;// поле для ввода показаний
-    private String accountNumber;// номер аккаунта
-    private String userName;// имя пользователя
-    private JCheckBox chkHotBox;// отмечает показания по горячей или холодной воде
-    private JFormattedTextField txtReadingDate;// поле для ввода даты показаний
     private final User user;
-    private final NewChangeReadingPanel newChangeReadingPanel = new NewChangeReadingPanel();
+    private final NewChangeReadingPanel pnlNewChangeReadingPanel = new NewChangeReadingPanel();
     /**
      * Creates a new <code>JPanel</code> with a double buffer
      * and a flow layout.
@@ -44,7 +32,7 @@ public class HomePagePanel extends PagePanel {
 
     @Override
     public Request getRequest() {
-        return addNewReading();
+        return addNewReadingRequest();
         
     }
 
@@ -67,15 +55,8 @@ public class HomePagePanel extends PagePanel {
      * Инициализация компонентов пользовательского интерфейса
      */
     private void initComponents() {
-        try {
-            initTextField();
-        } catch (ParseException ex) {
-            Logger.getLogger(HomePagePanel.class.getName()).log(Level.SEVERE, null, ex);
-        }
-//        this.response = response;
-        chkHotBox = new JCheckBox("горячая");
-        userName = user.getUsername();// получаем имя пользователя
-        accountNumber = user.getAcc().getAccountNumber();// получаем номер аккаунта
+        String userName = user.getUsername();// получаем имя пользователя
+        String accountNumber = user.getAcc().getAccountNumber();// получаем номер аккаунта
         super.setCaption("<table border=\"0\" cellspacing=\"0\" cellpadding=\"3\" " + 
                 "width=\"100%\" style=\"font-size:small;\" bgcolor=\"#AAFF00\">" +
                 "<tr><td align=\"justify\">" + 
@@ -90,71 +71,20 @@ public class HomePagePanel extends PagePanel {
         super.addComponent(getReadingBox());
         // задаём название для кнопки ввода
         super.setOkCaption("Добавить показания");
-        newChangeReadingPanel.setOkCaption(null);
-        updateResponseData();
+        pnlNewChangeReadingPanel.setOkCaption(null);
+        // получаем данные по показаниям
+        ArrayList<Reading> readings = user.getAcc()
+                .getReadings();
+        // заполняем список
+        readingList.setModel(readingListModel(readings));
     }
     
-    /**
-     * Инициализирует поля ввода и задаёт их свойства
-     * @throws ParseException 
-     */
-    private void initTextField() throws ParseException {
-        // поле для ввода показаний
-        txtReading = new JFormattedTextField(NumberFormat.getIntegerInstance());
-        txtReading.setValue(0);
-        // задаём верификатор для проверки корректности ввода показаний
-        txtReading.setInputVerifier(new FormattedTextFieldFerifier());
-        
-        // поле для ввода даты - зададим маску ввода
-        MaskFormatter dateFormatter = new MaskFormatter("####-##-##");
-//        dateFormatter.setPlaceholderCharacter('1');// символ-заполнитель маски
-        dateFormatter.setValidCharacters("0123456789");// разрешённые символы для ввода
-        txtReadingDate = new JFormattedTextField(dateFormatter);
-        txtReadingDate.setValue(LocalDate.now());// задаём значение - текущая дата
-        
-        /*
-        ------------------Установим шрифт для полей----------------------
-        */
-        // получаем текущий шрифт поля ввода показаний и увеличиваем его размер
-        Font font = txtReading.getFont();
-        font = new Font(font.getFontName(), Font.BOLD, 14);
-        // и передаём его полям ввода
-        txtReading.setFont(font);
-        txtReadingDate.setFont(font);
-    }
-    
-    /**
-     * Создаёт и возвращает контейнер, содержащий данные текущего пользователя
-     */
-    private Box getReadingBox() {
-        Box userBox = createReadingBox();
-
-//        JLabel lblReading = new JLabel("Показание");
-//        JLabel lblDate = new JLabel("Дата");
-//        Box readingBox = Box.createHorizontalBox();
-//        readingBox.add(lblReading);
-//        readingBox.add(Box.createHorizontalStrut(5));
-//        readingBox.add(txtReading);
-//        readingBox.add(Box.createHorizontalStrut(10));
-//        readingBox.add(lblDate);
-//        readingBox.add(Box.createHorizontalStrut(5));
-//        readingBox.add(txtReadingDate);
-//        readingBox.add(Box.createHorizontalStrut(10));
-//        
-//        readingBox.add(chkHotBox);
-//        readingBox.add(Box.createHorizontalStrut(5));
-//
-//        userBox.add(readingBox);
-//        userBox.add(Box.createVerticalStrut(10));
-        return userBox;
-    }
-
     /**
      * Создаёт и возвращает контейнер, содержащий список с показаниями
      * текущего пользователя
      * @return BOX - контейнер, содержащий список с показаниями
      */
-    private Box createReadingBox() {
+    private Box getReadingBox() {
         Box box = Box.createHorizontalBox();
         // контейнер для размещения списка показаний
         Box vertBox = Box.createVerticalBox();
@@ -166,7 +96,7 @@ public class HomePagePanel extends PagePanel {
         box.add(vertBox);
         box.add(Box.createHorizontalStrut(15));
         // контейнер для размещения списка показаний
-        box.add(newChangeReadingPanel);
+        box.add(pnlNewChangeReadingPanel);
         box.add(Box.createHorizontalGlue());
         return box;
     }
@@ -178,55 +108,49 @@ public class HomePagePanel extends PagePanel {
      */
     private DefaultListModel<Reading> readingListModel(ArrayList<Reading> data) {
         DefaultListModel<Reading> model = new DefaultListModel<>();
-//        System.out.println("data= " + data);
         if(data != null) {
-            // фильтруем данные по флагу
             data.forEach((Reading r) -> model.addElement(r));// в модель ложим дату и показания
             
         }
-        return model;// результат фильтра
+        return model;// результат
     }
 
     /**
      * Создаёт и заполняет тело запроса на добавление новых показаний пользователя
      * @return request - тело запроса, содержащее данные
      */
-    private Request addNewReading() {
+    private Request addNewReadingRequest() {
         // запрос на подтверждение
         if(JOptionPane.showConfirmDialog(this, "Добавить новые показания?", 
                 "Внимание", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.CANCEL_OPTION) {
             return null;// если отмена
         }
         // создаём запрос на добавление показаний
-        return newChangeReadingPanel.getNewReadingRequest(accountNumber);
-        
+        // создаём запрос на добавление показаний
+        Request request = pnlNewChangeReadingPanel.getNewReadingRequest();
+        request.getBody()[0][1] = user.getAcc().getAccountNumber();
+        request.getBody()[1][0] = ImappingConstants.ROLE;
+        request.getBody()[1][1] = user.getRole();
+        return request;
     }
 
     /**
      * Информирует пользователя об операции добавления новых показаний
-     * @param response ответ базы данных о результатах операции добавления
+     * @param id идентификатор новой записи в базе данных
      */
     private void addReading(int id) {
         // создаём объект показаний
-        WaterReading reading = newChangeReadingPanel.getWaterReading(id);
-        // получаем список показаний
-        ArrayList<Reading> readings = user.getAcc()
-                .getReadings();
-        readings.add(reading);// добавляем показание в список
-        updateResponseData();
-
-    }
-    
-    /**
-     * Обновление данных, полученных из ответа к базе данных
-     */
-    private void updateResponseData() {
-        // получаем данные по показаниям
-        ArrayList<Reading> readings = user.getAcc()
-                .getReadings();
-
-        // заполняем список
-        readingList.setModel(readingListModel(readings));
+        WaterReading reading = pnlNewChangeReadingPanel.getWaterReading();
+        // получаем модель списка
+        DefaultListModel model = (DefaultListModel) readingList.getModel();
+        // получаем номер последней записи
+        int idNumber = model.size();
+        idNumber++;// увеличиваем
+        // создаём новую запись для добавления
+        WaterReading newWaterReading = new WaterReading(idNumber, id, 
+                reading.getDate(), reading.getMeasuring(), reading.isHot());
+        model.addElement(newWaterReading);// добавляем показание в модель
+        
     }
     
 

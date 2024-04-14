@@ -12,12 +12,21 @@ public class CSVOperate {
     private Object[] columnName;// наименование столбцов
     private boolean header;// флаг наличия заголовков в первой строке
     private BufferedReader reader;
+    private String charSet;// набор символов
 
+    /**
+     * Задаёт набор символов указанного файла (кодировку)
+     * @param charSet строка, содержащая описание набора символов кодировки
+     */
+    public void setCharSet(String charSet) {
+        this.charSet = charSet;
+    }
     /**
      * Конструктор класса по умолчанию. Задаёт в качестве разделителя полей ";"
      */
     public CSVOperate(){
         separator = ";";// принимаем разделитель по умолчанию ";"
+        charSet = "Windows-1251";// набор символов по умолчанию
     }
 
     /**
@@ -75,13 +84,12 @@ public class CSVOperate {
 
     /**
      * Запись данных в файл
+     * @throws java.io.FileNotFoundException исключительная ситуация, которая
+     * подлежит обработке во внешнем коде
      */
-    public void writeData(){
-        try {
-            writeFile();
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(CSVOperate.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    public void writeData() throws FileNotFoundException{
+        writeFile();
+        
     }
 
     /**
@@ -105,7 +113,10 @@ public class CSVOperate {
      */
     private void readFile() throws FileNotFoundException{
         try {
-            reader = new BufferedReader(new FileReader(fileName));
+            FileInputStream fis = new FileInputStream(new File(fileName));
+            InputStreamReader isr = new InputStreamReader(fis,charSet);
+                
+            reader = new BufferedReader(isr);
 
             // проверяем наличие в первой строке заголовков столбцов
             if(!header){

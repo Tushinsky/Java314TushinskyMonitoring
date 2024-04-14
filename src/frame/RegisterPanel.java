@@ -15,14 +15,14 @@ import static mapping.ImappingConstants.LOG_OUT;
 import static mapping.ImappingConstants.REGISTER;
 
 /**
- *
+ * Класс, реализующий панель регистрации нового пользователя в базе данных
  * @author Sergey
  */
 public class RegisterPanel extends PagePanel {
-    private JTextField txtLogin;
-    private JPasswordField passwordField;
-    private Request request;
-    private JTextField txtUserName;
+    private JTextField txtLogin;// поле ввода логина
+    private JPasswordField passwordField;// поле ввода пароля
+    private Request request;// запрос на регистрацию
+    private JTextField txtUserName;// поле ввода имени пользователя
     private final JLabel lblUserName = new JLabel("Имя пользователя");
     
     public RegisterPanel() {
@@ -67,13 +67,18 @@ public class RegisterPanel extends PagePanel {
         
     }
 
+    /**
+     * Возвращает контейнер для размещения компонентов пользовательского интерфейса
+     * @return Box - контейнер для компонентов
+     */
     private Box getRegisterBox() {
         
         JLabel lblLogin = new JLabel("Логин пользователя");
         JLabel lblPassword = new JLabel("Пароль");
-        Box box = Box.createVerticalBox();
-        box.add(Box.createVerticalStrut(10));
+        Box box = Box.createVerticalBox();// контейнер с вертикальным размещением
+        box.add(Box.createVerticalStrut(10));// вертикальный промежуток
 
+        // горизонтальный контейнер для размещения метки и поля ввода имени пользователя
         Box box1 = Box.createHorizontalBox();
         box1.add(Box.createHorizontalStrut(10));
         box1.add(lblUserName);
@@ -81,19 +86,20 @@ public class RegisterPanel extends PagePanel {
                 lblUserName.getPreferredSize().getWidth()) + 10));
         box1.add(txtUserName);
         box1.add(Box.createHorizontalStrut(10));
-        
-        box.add(box1);
-        box.add(Box.createVerticalStrut(10));
+        box.add(box1);// добавляем на главный контейнер
+        box.add(Box.createVerticalStrut(10));// добавляем промежуток
 
+        // горизонтальный контейнер для метки и поля ввода логина
         Box box2 = Box.createHorizontalBox();
         box2.add(Box.createHorizontalStrut(10));
         box2.add(lblLogin);
         box2.add(Box.createHorizontalStrut(10));
         box2.add(txtLogin);
         box2.add(Box.createHorizontalStrut(10));
-        box.add(box2);
+        box.add(box2);// добавляем контейнер на главный
         box.add(Box.createVerticalStrut(10));
 
+        // горизонтальный контейнер для размещения метки и поля ввода пароля
         Box box3 = Box.createHorizontalBox();
         box3.add(Box.createHorizontalStrut(10));
         box3.add(lblPassword);
@@ -101,9 +107,9 @@ public class RegisterPanel extends PagePanel {
                 lblPassword.getPreferredSize().getWidth()) + 10));
         box3.add(passwordField);
         box3.add(Box.createHorizontalStrut(10));
-        
-        box.add(box3);
+        box.add(box3);// добавляем на главный контейнер
         box.add(Box.createVerticalStrut(40));
-        return box;
+        
+        return box;// возвращаем полученный контейнер
     }
 }

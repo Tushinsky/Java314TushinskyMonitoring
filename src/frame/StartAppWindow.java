@@ -23,6 +23,10 @@ import javax.swing.border.BevelBorder;
 
 import static mapping.ImappingConstants.*;
 
+/**
+ * Класс, реализующий главное окно приложения
+ * @author Sergey
+ */
 public class StartAppWindow extends JFrame {
     private JPanel mainPanel;// главная панель, на которой будут располагаться все компоненты
     private CardLayout cardLayout;// менеджер карточной компоновки для главной панели
@@ -47,6 +51,7 @@ public class StartAppWindow extends JFrame {
      */
     public StartAppWindow() throws HeadlessException {
         super.setTitle("Сервис передачи показаний счётчиков воды");
+        // добавляем слушатели на открытие и закрытие окна
         super.addWindowListener(new WindowAdapter() {
             /**
              * Invoked when a window is in the process of being closed.

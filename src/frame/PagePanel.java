@@ -227,10 +227,18 @@ public class PagePanel extends JPanel {
         removeButton.setText(caption);
     }
     
+    /**
+     * Задаёт доступность кнопки OK
+     * @param enabled флаг доступности кнопки
+     */
     public void setOkEnabled(boolean enabled) {
         okButton.setEnabled(enabled);
     }
     
+    /**
+     * Задаёт доступность кнопки Remove
+     * @param enabled флаг доступности кнопки 
+     */
     public void setRemoveEnabled(boolean enabled) {
         removeButton.setEnabled(enabled);
     }

@@ -47,6 +47,11 @@ public class API implements Iapi{
         }
     }
 
+    /**
+     * Возвращает ответ для входящего пользователя
+     * @param request запрос на вход
+     * @return ответ, содержащий данные, запрашиваемые пользователем
+     */
     private Response login(Request request) {
         System.out.println(request);
         // получаем из тела запроса логин и пароль пользователя, который подключается
@@ -61,6 +66,11 @@ public class API implements Iapi{
         } else return new Response(false);
     }
 
+    /**
+     * Возвращает ответ для добавления нового пользователя
+     * @param request запрос на добавление
+     * @return ответ, содержащий данные, запрашиваемые пользователем
+     */
     private Response newUser(Request request) {
         System.out.println(request);
         String username = request.getValueByKey(ImappingConstants.USER_NAME);
@@ -76,9 +86,13 @@ public class API implements Iapi{
 
     }
 
+    /**
+     * Возвращает ответ на удаление аккаунта выбранног пользователя
+     * @param request запрос на удаление
+     * @return ответ, содержащий данные, запрашиваемые пользователем
+     */
     private Response removeAccount(Request request) {
         Account account = (Account) request.getFromBody(0);
-//        User user = dao.findUserByAccountNumber(account);// ищем пользователя по аккаунту
         boolean success = dao.removeAccount(account);// удаляем его аккаунт
         if(success) {
             Response response = new Response(success);
@@ -89,12 +103,18 @@ public class API implements Iapi{
         return new Response(false);
     }
 
+    /**
+     * Возвращает ответ добавление новых показаний пользователем
+     * @param request запрос на добавление
+     * @return ответ, содержащий данные, запрашиваемые пользователем
+     */
     private Response addNewReading(Request request) {
         System.out.println(request);
         String account = request.getValueByKey(ImappingConstants.ACCOUNT);
+        String role = request.getValueByKey(ImappingConstants.ROLE);
         // вытаскиваем новые показания из тела запроса
         WaterReading wr = (WaterReading) request.getFromBody(0);
-        int id = dao.addNewReading(account, wr);// добавляем их
+        int id = dao.addNewReading(role, account, wr);// добавляем их
         boolean success = (id != 0);// добавляем их
         Response response = new Response(success);
         if(success) {
@@ -107,6 +127,11 @@ public class API implements Iapi{
         
     }
 
+    /**
+     * Возвращает ответ на получение данных по всем пользователям
+     * @param request запрос на всех пользователей
+     * @return ответ, содержащий данные, запрашиваемые пользователем
+     */
     private void getAllUsers(Response response) {
         /*
         получаем список всех зарегистрированнх пользователей, фильтруем их
@@ -115,7 +140,11 @@ public class API implements Iapi{
         dao.getAllUsers().forEach((user) -> response.addToBody(user));
     }
     
-    
+    /**
+     * Возвращает ответ изменение показаний пользователя
+     * @param request запрос на изменение показаний
+     * @return ответ, содержащий данные, запрашиваемые пользователем
+     */
     private Response changeReadings(Request request) {
         // создаём объект показаний и передаём в базу данных
         WaterReading wr = (WaterReading) request.getFromBody(0);
@@ -128,6 +157,11 @@ public class API implements Iapi{
         
     }
 
+    /**
+     * Заполняет и возвращает ответ с данными для входящего пользователя
+     * @param user пользовалеь, запрашивающий данные
+     * @return ответ, содержащий данные, запрашиваемые пользователем
+     */
     private Response dataResponse(User user) {
         Response response = new Response(true);
         response.getBody()[0][0] = ImappingConstants.USER_NAME;
@@ -148,6 +182,11 @@ public class API implements Iapi{
         return response;
     }
 
+    /**
+     * Возвращает ответ на удаление показаний пользователя
+     * @param request запрос на удаление показаний
+     * @return ответ, содержащий данные, запрашиваемые пользователем
+     */
     private Response removeReading(Request request) {
         // создаём объект показаний и передаём в базу данных
         WaterReading wr = (WaterReading) request.getFromBody(0);

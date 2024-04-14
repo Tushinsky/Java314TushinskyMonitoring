@@ -20,20 +20,6 @@ public interface IDao {
     boolean authorize(String login, String password);
     
     /**
-     * Ищет пользователя по номеру аккаунта
-     * @param accountNumber номер аккаунта для поиска
-     * @return user - пользователь, если найден
-     */
-    User findUserByAccountNumber(String accountNumber);
-    
-    /**
-     * Ищет пользователя по имени (логину)
-     * @param login имя (логин) пользователя
-     * @return user - пользователь, если найден
-     */
-    User findUserByUsername(String login);
-
-    /**
      * Добавляет нового пользователя
      * @param userName имя пользователя
      * @param login логин пользователя
@@ -57,11 +43,12 @@ public interface IDao {
     
     /**
      * Добавляет новые показания по заданному аккаунту
+     * @param role права доступа для проведения опереции
      * @param accountNumber номер аккаунта для добавления
      * @param waterReading показания для добавления
-     * @return целое - код добавленной записи
+     * @return целое - код добавленной записи, если удачно, иначе 0
      */
-    int addNewReading(String accountNumber, WaterReading waterReading);
+    int addNewReading(String role, String accountNumber, WaterReading waterReading);
     
     /**
      * Возвращает текущего пользователя, который подключился
