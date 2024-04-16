@@ -25,7 +25,7 @@ public class HomePagePanel extends PagePanel {
     public HomePagePanel(Response response) {
         super(NEW_READING, LOG_OUT, "");
         // получаем пользователя из тела ответа
-        user = response.getFromBody(0);
+        user = (User) response.getFromBody(0);
         initComponents();// инициализация компонентов
 
     }

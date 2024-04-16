@@ -3,7 +3,7 @@ package frame;
 import in.Request;
 import api.API;
 import api.Response;
-import entities.IRoleConstants;
+import mapping.IRoleConstants;
 
 import javax.swing.*;
 import java.awt.*;
@@ -36,19 +36,6 @@ public class StartAppWindow extends JFrame {
     // имя файла свойств для записи изменений размеров формы
     private final String fileNameProperties = "properties/startapp.properties";
 
-    /**
-     * Constructs a new frame that is initially invisible.
-     * <p>
-     * This constructor sets the component's locale property to the value
-     * returned by <code>JComponent.getDefaultLocale</code>.
-     *
-     * @throws HeadlessException if GraphicsEnvironment.isHeadless()
-     *                           returns true.
-     * @see GraphicsEnvironment#isHeadless
-     * @see Component#setSize
-     * @see Component#setVisible
-     * @see JComponent#getDefaultLocale
-     */
     public StartAppWindow() throws HeadlessException {
         super.setTitle("Сервис передачи показаний счётчиков воды");
         // добавляем слушатели на открытие и закрытие окна
@@ -88,8 +75,10 @@ public class StartAppWindow extends JFrame {
         });
         initComponents();// инициализируем компоненты интерфейса
         
-        showPanel(LOG_OUT);// начальная панель
+        showPanel(LOG_OUT);// начальная панель        
     }
+
+    
 
     /**
      * Инициализация компонентов пользовательского интерфейса

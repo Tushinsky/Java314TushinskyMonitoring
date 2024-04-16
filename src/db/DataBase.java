@@ -2,7 +2,7 @@ package db;
 
 import csv.CSVOperate;
 import entities.Account;
-import entities.IRoleConstants;
+import mapping.IRoleConstants;
 import entities.User;
 import entities.WaterReading;
 import java.io.FileNotFoundException;
@@ -137,13 +137,20 @@ public class DataBase implements IDao {
         если пользователей с такими данными не найдено в списке, тогда
         добавляем нового пользователя в файл пользователей и в список
         */
-        Users = getAllUsers();// список всех простых пользователей
+        User user;
+        user = Users.get(Users.size() - 1);// получаем последнего пользователя
+        int id = user.getId() + 1;// код нового пользователя увеличиваем на 1
         
-        // получаем идентификатор последнего пользователя в списке и увеличиваем на 1
-        User user = Users.get(Users.size() - 1);// получаем последнего пользователя
-        int id = user.getId() + 1;// код нового пользователя
-        int idAccount = user.getAcc().getId() + 1;// код нового аккаунта
-        int number = Integer.parseInt(user.getAcc().getAccountNumber()) + 1;// номер аккаунта увеличиваем на 1
+        // фильтруем список по правам и кодам пользователей, чтобы получить последнего
+        Users.stream().filter(u -> u.getRole().equals(IRoleConstants.USER))
+                .reduce(user, (u1, u2) -> u1.getId() > u2.getId() ? u1 : u2);
+        System.out.println("user:" + user.toString());
+        
+        // код нового аккаунта увеличиваем на 1
+        int idAccount = user.getAcc().getId() + 1;
+        
+        // номер аккаунта увеличиваем на 1
+        int number = Integer.parseInt(user.getAcc().getAccountNumber()) + 1;
         String accountNumber = String.valueOf(number);
 
         // строка для добавления в файл
@@ -155,10 +162,8 @@ public class DataBase implements IDao {
         if(writeDataToFile(userFileName, userString) && 
                 writeDataToFile(accountFileName, accountString)) {
             // создаём нового пользователя
-            User u = new User(1, id, 2, username, login, password);
-            u.setAcc(accountInit(u.getId()));
-            Users.add(u);// добавляем его в список
-            currentUser = u;
+            currentUser = new User(1, id, 2, username, login, password);
+            currentUser.setAcc(accountInit(currentUser.getId()));
             return id;
         }
         return 0;
@@ -240,7 +245,7 @@ public class DataBase implements IDao {
     @Override
     public ArrayList<User> getAllUsers() {
         ArrayList<User> returnList = new ArrayList<>();
-        // считываем таблицу зарегистрированных пользователей и заполняем массив
+        // считываем таблицу зарегистрированных пользователей
         Object[][] dataTable = getDataTable(userFileName);// получаем массив
         // перебираем, получаем пользователей
         int idNumber = 1;

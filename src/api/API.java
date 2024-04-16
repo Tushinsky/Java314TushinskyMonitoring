@@ -4,7 +4,7 @@ import in.Request;
 import db.DataBase;
 import db.IDao;
 import entities.Account;
-import entities.IRoleConstants;
+import mapping.IRoleConstants;
 import entities.User;
 import entities.WaterReading;
 import mapping.ImappingConstants;
@@ -72,15 +72,15 @@ public class API implements Iapi{
      * @return ответ, содержащий данные, запрашиваемые пользователем
      */
     private Response newUser(Request request) {
-        System.out.println(request);
+//        System.out.println(request);
         String username = request.getValueByKey(ImappingConstants.USER_NAME);
         String login = request.getValueByKey(ImappingConstants.LOG_IN);
         String password = request.getValueByKey(ImappingConstants.PASSWORD);
         int id = dao.addNewUser(username, login, password);
-        boolean success = (id != 0);
-        if (success) {
+        if (id != 0) {
+            // если вернулся код, не равный 0, возвращаем пользователя
             User currentUser = dao.getCurrentUser();
-            System.out.println("user:" + currentUser);
+//            System.out.println("user:" + currentUser);
             return dataResponse(currentUser);
         } else return new Response(false);
 

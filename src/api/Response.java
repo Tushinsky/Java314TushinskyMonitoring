@@ -1,6 +1,5 @@
 package api;
 
-import entities.User;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -11,7 +10,7 @@ import java.util.Arrays;
 public class Response {
     private final boolean isAuth;
     private final String[][] body = new String[5][2];
-    private final ArrayList<User> listBody = new ArrayList <>();
+    private final ArrayList<Object> listBody = new ArrayList <>();
     
     public Response(boolean isAuth) {
         this.isAuth = isAuth;
@@ -35,10 +34,10 @@ public class Response {
 
     /**
      * Добавляет в тело ответа пользователя, по которому запрашивались данные
-     * @param user пользователь, зарегистрированный в базе
+     * @param object пользователь, зарегистрированный в базе
      */
-    public void addToBody(User user) {
-        listBody.add(user);
+    public void addToBody(Object object) {
+        listBody.add(object);
     }
     
     /**
@@ -47,14 +46,28 @@ public class Response {
      * @return пользователь с определённым индексом или null, если такого
      * пользователя нет
      */
-    public User getFromBody(int index) {
+    public Object getFromBody(int index) {
         if(index == listBody.size()) {
             return null;
         }
         return listBody.get(index);
     }
     
-    
+    /**
+     * Метод поиска значения по ключу в теле запроса
+     *
+     * @param key идентификатор (имя ключа), по которому выполняется поиска
+     * @return строка, содержащая значение ключа, или пусто, если не найдено
+     */
+    public String getValueByKey(String key) {
+        for (String[] strings : body) {
+            if (strings[0].equals(key)) {
+                return strings[1];
+            }
+        }
+        return "";
+    }
+
     @Override
     public String toString() {
         return "Response{" +
