@@ -1,5 +1,6 @@
 package entities;
 
+import mapping.IRoleConstants;
 import java.util.Objects;
 
 /**

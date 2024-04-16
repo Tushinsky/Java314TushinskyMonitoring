@@ -2,6 +2,7 @@ package entities;
 
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 /**
  * Аккаунт пользователя
@@ -55,5 +56,35 @@ public class Account {
      */
     public void addReading(Reading reading) {
         readings.add(reading);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 37 * hash + this.id;
+        hash = 37 * hash + Objects.hashCode(this.accountNumber);
+        hash = 37 * hash + Objects.hashCode(this.readings);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Account other = (Account) obj;
+        if (this.id != other.id) {
+            return false;
+        }
+        if (!Objects.equals(this.accountNumber, other.accountNumber)) {
+            return false;
+        }
+        return Objects.equals(this.readings, other.readings);
     }
 }

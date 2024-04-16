@@ -6,7 +6,7 @@
 package frame;
 
 import api.Response;
-import entities.IRoleConstants;
+import mapping.IRoleConstants;
 import entities.Reading;
 import entities.User;
 import entities.WaterReading;
@@ -124,7 +124,7 @@ public class AdminPagePanel extends PagePanel{
         DefaultListModel<User> model = new DefaultListModel<>();
         int index = 0;
         User user;
-        while((user = response.getFromBody(index))!= null) {
+        while((user = (User) response.getFromBody(index))!= null) {
             model.addElement(user);
             index++;
         }
