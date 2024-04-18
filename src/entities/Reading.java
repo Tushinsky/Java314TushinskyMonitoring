@@ -7,11 +7,9 @@ import java.util.Objects;
  * Класс, реализующий объект показаний
  * @author Sergey
  */
-public abstract class Reading {
+public abstract class Reading extends Entity {
     private final LocalDate date;// дата на которую передаются показания
     private final int measuring;// показание
-    private final int id;// идентификатор записи в базе данных
-    private final int idNumber;// порядковый номер сущности в списке (очереди)
     
     /**
      * Создаёт объект уже существующих показаний в базе
@@ -21,8 +19,7 @@ public abstract class Reading {
      * @param measuring числовое представление показаний
      */
     protected Reading(int idNumber, int id, LocalDate date, int measuring) {
-        this.idNumber = idNumber;
-        this.id = id;
+        super(id, idNumber);
         this.date = date;
         this.measuring = measuring;
     }
@@ -33,8 +30,7 @@ public abstract class Reading {
      * @param measuring числовое предствление показаний
      */
     protected Reading(LocalDate date, int measuring) {
-        id = 0;
-        idNumber = 0;
+        super(0, 0);
         this.date = date;
         this.measuring = measuring;
     }
@@ -55,24 +51,9 @@ public abstract class Reading {
         return measuring;
     }
 
-    /**
-     * Возвращает идентификатор показаний из базы данных
-     * @return целое число - идентификатор показаний
-     */
-    public int getId() {
-        return id;
-    }
-
-    /**
-     * Возвращает порядковый номер сущности в списке
-     * @return целое - порядковый номер
-     */
-    public int getIdNumber() {
-        return idNumber;
-    }
-
     @Override
     public String toString() {
+        int idNumber = super.getIdNumber();
         String string = " | " + date.toString() + " | " + measuring;
         String returnString;
         if(idNumber < 10) {
@@ -90,7 +71,7 @@ public abstract class Reading {
         int hash = 7;
         hash = 61 * hash + Objects.hashCode(this.date);
         hash = 61 * hash + this.measuring;
-        hash = 61 * hash + this.id;
+        hash = 61 * hash + super.getId();
         return hash;
     }
 
@@ -109,7 +90,7 @@ public abstract class Reading {
         if (this.measuring != other.measuring) {
             return false;
         }
-        if (this.id != other.id) {
+        if (this.getId() != other.getId()) {
             return false;
         }
         return Objects.equals(this.date, other.date);

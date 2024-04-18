@@ -8,13 +8,12 @@ import java.util.Objects;
  * Аккаунт пользователя
  * @author Sergey
  */
-public class Account {
-    private final int id;// идентификационный код
+public class Account extends Entity {
     private final String accountNumber; //лицевой счет
     private final ArrayList<Reading> readings = new ArrayList<>();
 
     public Account(int id, String accountNumber) {
-        this.id = id;
+        super(id, 1);
         this.accountNumber = accountNumber;
     }
 
@@ -43,14 +42,6 @@ public class Account {
     }
 
     /**
-     * Возвращает идентификатор аккаунта из базы данных
-     * @return целое число - идентификатор аккаунта
-     */
-    public int getId() {
-        return id;
-    }
-    
-    /**
      * Добавляет новые показания в список
      * @param reading новые показания
      */
@@ -61,7 +52,7 @@ public class Account {
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 37 * hash + this.id;
+        hash = 37 * hash + this.getId();
         hash = 37 * hash + Objects.hashCode(this.accountNumber);
         hash = 37 * hash + Objects.hashCode(this.readings);
         return hash;
@@ -79,7 +70,7 @@ public class Account {
             return false;
         }
         final Account other = (Account) obj;
-        if (this.id != other.id) {
+        if (this.getId() != other.getId()) {
             return false;
         }
         if (!Objects.equals(this.accountNumber, other.accountNumber)) {
