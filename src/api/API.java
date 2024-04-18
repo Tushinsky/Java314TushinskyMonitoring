@@ -28,20 +28,20 @@ public class API implements Iapi{
         String mapping = request.getMapping();
         switch (mapping) {
             case ImappingConstants.LOG_IN:
-                return login(request);// вход на сервер
+                return loginResponse(request);// вход на сервер
 
             case ImappingConstants.REGISTER:
-                return newUser(request);// регистрация нового пользователя
+                return newUserResponse(request);// регистрация нового пользователя
 
             case ImappingConstants.REMOVE_ACCOUNT:
-                return removeAccount(request);// удаление аккаунта текущего пользователя
+                return removeAccountResponse(request);// удаление аккаунта текущего пользователя
 
             case ImappingConstants.NEW_READING:
-                return addNewReading(request);// добавление новых показаний
+                return addNewReadingResponse(request);// добавление новых показаний
             case ImappingConstants.CHANGE_READING:
-                return changeReadings(request);
+                return changeReadingsResponse(request);
             case ImappingConstants.REMOVE_READING:
-                return removeReading(request);
+                return removeReadingResponse(request);
             default:
                 return new Response(request.isAuth());
         }
@@ -52,7 +52,7 @@ public class API implements Iapi{
      * @param request запрос на вход
      * @return ответ, содержащий данные, запрашиваемые пользователем
      */
-    private Response login(Request request) {
+    private Response loginResponse(Request request) {
         System.out.println(request);
         // получаем из тела запроса логин и пароль пользователя, который подключается
         String login = request.getValueByKey(ImappingConstants.LOG_IN);
@@ -71,7 +71,7 @@ public class API implements Iapi{
      * @param request запрос на добавление
      * @return ответ, содержащий данные, запрашиваемые пользователем
      */
-    private Response newUser(Request request) {
+    private Response newUserResponse(Request request) {
 //        System.out.println(request);
         String username = request.getValueByKey(ImappingConstants.USER_NAME);
         String login = request.getValueByKey(ImappingConstants.LOG_IN);
@@ -91,16 +91,13 @@ public class API implements Iapi{
      * @param request запрос на удаление
      * @return ответ, содержащий данные, запрашиваемые пользователем
      */
-    private Response removeAccount(Request request) {
+    private Response removeAccountResponse(Request request) {
         Account account = (Account) request.getFromBody(0);
-        boolean success = dao.removeAccount(account);// удаляем его аккаунт
-        if(success) {
-            Response response = new Response(success);
-            response.getBody()[0][0] = ImappingConstants.REMOVE_ACCOUNT;
-            response.getBody()[0][1] = "";// получаем данные по показаниям
-            return response;
-        }
-        return new Response(false);
+        Response response = new Response(dao.removeAccount(account));
+        response.getBody()[0][0] = ImappingConstants.REMOVE_ACCOUNT;
+        response.getBody()[0][1] = "";// получаем данные по показаниям
+        return response;
+
     }
 
     /**
@@ -108,20 +105,16 @@ public class API implements Iapi{
      * @param request запрос на добавление
      * @return ответ, содержащий данные, запрашиваемые пользователем
      */
-    private Response addNewReading(Request request) {
+    private Response addNewReadingResponse(Request request) {
         System.out.println(request);
         String account = request.getValueByKey(ImappingConstants.ACCOUNT);
         String role = request.getValueByKey(ImappingConstants.ROLE);
         // вытаскиваем новые показания из тела запроса
         WaterReading wr = (WaterReading) request.getFromBody(0);
         int id = dao.addNewReading(role, account, wr);// добавляем их
-        boolean success = (id != 0);// добавляем их
-        Response response = new Response(success);
-        if(success) {
-            // ищем пользователя по аккаунту
-            response.getBody()[0][0] = ImappingConstants.NEW_READING;
-            response.getBody()[0][1] = String.valueOf(id);// получаем данные по показаниям
-        }
+        Response response = new Response(id != 0);
+        response.getBody()[0][0] = ImappingConstants.NEW_READING;
+        response.getBody()[0][1] = String.valueOf(id);
         return response;
         
         
@@ -145,7 +138,7 @@ public class API implements Iapi{
      * @param request запрос на изменение показаний
      * @return ответ, содержащий данные, запрашиваемые пользователем
      */
-    private Response changeReadings(Request request) {
+    private Response changeReadingsResponse(Request request) {
         // создаём объект показаний и передаём в базу данных
         WaterReading wr = (WaterReading) request.getFromBody(0);
         boolean success = dao.changeReading(wr);
@@ -187,7 +180,7 @@ public class API implements Iapi{
      * @param request запрос на удаление показаний
      * @return ответ, содержащий данные, запрашиваемые пользователем
      */
-    private Response removeReading(Request request) {
+    private Response removeReadingResponse(Request request) {
         // создаём объект показаний и передаём в базу данных
         WaterReading wr = (WaterReading) request.getFromBody(0);
         boolean success = dao.removeReading(wr);

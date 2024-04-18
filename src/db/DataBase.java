@@ -32,7 +32,6 @@ public class DataBase implements IDao {
     public DataBase() {
         csvOperate = new CSVOperate();
         csvOperate.setCharSet("UTF-8");// задаём кодировку
-//        dbInit();
     }
 
     /**
@@ -108,13 +107,17 @@ public class DataBase implements IDao {
 
     @Override
     public boolean authorize(String login, String password) {
-        // считываем таблицу зарегистрированных пользователей и заполняем массив
+        // считываем таблицу зарегистрированных пользователей
         Object[] data = getIDRecord(userFileName, 3, login);// получаем массив
         // проверяем
         if(data == null) {
             return false;
         }
-        // если логин найден в базе данных, создаём пользователя
+        // сравниваем пароли
+        if(!password.equals(data[4].toString())) {
+            return false;
+        }
+        // если логин и пароль совпадают, создаём пользователя
         currentUser = new User(1, Integer.parseInt(data[0].toString()), 
                 Integer.parseInt(data[1].toString()), data[2].toString(), 
                 data[3].toString(), data[4].toString());
@@ -184,24 +187,26 @@ public class DataBase implements IDao {
         удаление всех данных этого пользователя: показания, номер аккаунта,
         запись из таблицы пользователей
         */
-        Object[][] removeData;
-        if((removeData = removeDataFromFile(userFileName, 0, idUser)) != null) {
-            /*
-            сначала удаляем данные из таблицы показаний и проверяем:
-            если всё нормально удаляем дальше
-            */
-            System.out.println("removeUser: " + Arrays.toString(removeData));
-            if((removeData = removeDataFromFile(accountFileName, 0, idAccount)) != null) {
-                System.out.println("removeAccount: " + Arrays.toString(removeData));
-                if((removeData = removeDataFromFile(readingFileName, 1, idAccount)) != null) {
-                    System.out.println("removeReading: " + Arrays.toString(removeData));
-                    return true;
-                }
-            } else {
-                return false;
+        Object[][] removeData;// массив, содержащий удалённые данные
+        if((removeData = removeDataFromFile(userFileName, 0, idUser)) == null) {
+            // если при удалении данных из таблицы пользователей произошла ошибка
+            return false;
+        }
+        /*
+        сначала удаляем данные из таблицы показаний и проверяем:
+        если всё нормально удаляем дальше
+        */
+        System.out.println("removeUser: " + Arrays.toString(removeData));
+        if((removeData = removeDataFromFile(accountFileName, 0, idAccount)) != null) {
+            // если данные из таблицы аккаута были удалены, проводим удаление
+            // из таблицы показаний
+            System.out.println("removeAccount: " + Arrays.toString(removeData));
+            if((removeData = removeDataFromFile(readingFileName, 1, idAccount)) != null) {
+                System.out.println("removeReading: " + Arrays.toString(removeData));
+                return true;
             }
         }
-        return false;
+        return false;// возврат значения по умолчанию, если произошли ошибки
     }
 
     @Override
@@ -229,7 +234,7 @@ public class DataBase implements IDao {
         
         // формируем строку для добавления в таблицу
         String separator = System.getProperty("line.separator");
-        String isHot = waterReading.isHot() == true ? "1" : "0";
+        String isHot = waterReading.isHot() == true ? "1" : "0";// горячая или холодная
         String str = String.valueOf(idReading) + ";" +
                 String.valueOf(idAccount) + ";" +
                 String.valueOf(waterReading.getMeasuring()) + ";" + isHot + ";" +
@@ -237,17 +242,18 @@ public class DataBase implements IDao {
                 LocalDate.now().toString() + separator;
         System.out.println("str=" + str);
         if(writeDataToFile(readingFileName, str)) {
+            // если данные записаны, возвращаем код добавленной записи
             return idReading;
         }
-        return 0;
+        return 0;// в случае ошибки возвращаем 0
     }
 
     @Override
     public ArrayList<User> getAllUsers() {
-        ArrayList<User> returnList = new ArrayList<>();
+        ArrayList<User> returnList = new ArrayList<>();// список для возврата
         // считываем таблицу зарегистрированных пользователей
         Object[][] dataTable = getDataTable(userFileName);// получаем массив
-        // перебираем, получаем пользователей
+        // перебираем, получаем простых пользователей
         int idNumber = 1;
         for(Object[] data : dataTable) {
             if(Integer.parseInt(data[1].toString()) == 2) {

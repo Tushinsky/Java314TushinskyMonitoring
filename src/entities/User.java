@@ -7,15 +7,13 @@ import java.util.Objects;
  * Класс, представляющий пользователя, зарегистрированного в базе данных
  * @author Sergey
  */
-public class User {
-    private final int id;
-    private final String login;
-    private final String username;
-    private final String password;
-    private final String role;
-    private Account acc;
-    private final int idNumber;
-
+public class User extends Entity {
+    private final String login;// логин
+    private final String username;// имя
+    private final String password;// пароль
+    private final String role;// права доступа
+    private Account acc;// аккаунт
+    
     /**
      * Создаёт новый объект пользователя
      * @param idNumber номер пользователя в очереди
@@ -26,8 +24,7 @@ public class User {
      * @param password пароль для входа
      */
     public User(int idNumber, int id, int idrole, String username, String login, String password) {
-        this.idNumber = idNumber;
-        this.id = id;
+        super(id, idNumber);
         this.username = username;
         this.login = login;
         this.password = password;
@@ -75,14 +72,6 @@ public class User {
     }
 
     /**
-     * Возвращает индентификатор пользователя в базе данных
-     * @return идентификатор пользователя
-     */
-    public int getId() {
-        return id;
-    }
-
-    /**
      * Возвращает логин пользователя для доступа в базу данных
      * @return логин пользователя
      */
@@ -90,18 +79,10 @@ public class User {
         return login;
     }
 
-    /**
-     * Возвращает номер пользователя в очереди
-     * @return номер пользователя
-     */
-    public int getIdNumber() {
-        return idNumber;
-    }
-
     @Override
     public String toString() {
-        return "User{number=" + idNumber + 
-                ", id=" + id + 
+        return "User{number=" + super.getIdNumber() + 
+                ", id=" + super.getId() + 
                 ", login=" + login + 
                 ", username=" + username + 
                 ", password=" + password + 
@@ -121,7 +102,7 @@ public class User {
             return false;
         }
         final User other = (User) obj;
-        if (this.id != other.id) {
+        if (this.getId() != other.getId()) {
             return false;
         }
         if (!Objects.equals(this.login, other.login)) {
@@ -136,7 +117,7 @@ public class User {
     @Override
     public int hashCode() {
         int hash = 3;
-        hash = 53 * hash + this.id;
+        hash = 53 * hash + this.getId();
         hash = 53 * hash + Objects.hashCode(this.login);
         hash = 53 * hash + Objects.hashCode(this.username);
         hash = 53 * hash + Objects.hashCode(this.password);
