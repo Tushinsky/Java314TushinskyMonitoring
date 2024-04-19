@@ -1,7 +1,8 @@
 package frame;
 
-import in.Request;
-import api.Response;
+import uicomponent.ReadingListComponent;
+import query.Request;
+import query.Response;
 import entities.Reading;
 import entities.User;
 import entities.WaterReading;
@@ -125,7 +126,6 @@ public class HomePagePanel extends PagePanel {
                 "Внимание", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.CANCEL_OPTION) {
             return null;// если отмена
         }
-        // создаём запрос на добавление показаний
         // создаём запрос на добавление показаний
         Request request = pnlNewChangeReadingPanel.getNewReadingRequest();
         request.getBody()[0][1] = user.getAcc().getAccountNumber();

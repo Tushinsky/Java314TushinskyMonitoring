@@ -5,7 +5,7 @@
  */
 package frame;
 
-import in.Request;
+import query.Request;
 import javax.swing.Box;
 import javax.swing.JLabel;
 import javax.swing.JPasswordField;

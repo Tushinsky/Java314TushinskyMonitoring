@@ -1,8 +1,8 @@
 
 package frame;
 
-import api.Response;
-import in.Request;
+import query.Response;
+import query.Request;
 import javax.swing.*;
 import java.awt.*;
 import javax.swing.border.EtchedBorder;

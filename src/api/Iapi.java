@@ -1,6 +1,7 @@
 package api;
 
-import in.Request;
+import query.Response;
+import query.Request;
 
 /**
  * Публичный контракт- наш сервер должен получать запрос (Request) и отправлять ответ (Response)

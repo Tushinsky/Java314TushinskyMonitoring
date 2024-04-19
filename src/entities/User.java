@@ -10,6 +10,10 @@ import java.util.Objects;
 public class User extends Entity {
     private final String login;// логин
     private final String username;// имя
+
+    public String getUsername() {
+        return username;
+    }
     private final String password;// пароль
     private final String role;// права доступа
     private Account acc;// аккаунт
@@ -19,24 +23,16 @@ public class User extends Entity {
      * @param idNumber номер пользователя в очереди
      * @param id код пользователя
      * @param idrole код доступа (роль)
-     * @param username имя пользователя
+     * @param username имя пользовавтевля
      * @param login логин для входа (идентификации)
      * @param password пароль для входа
      */
     public User(int idNumber, int id, int idrole, String username, String login, String password) {
         super(id, idNumber);
-        this.username = username;
         this.login = login;
         this.password = password;
         this.role = idrole == 1 ? IRoleConstants.ADMIN : IRoleConstants.USER;
-    }
-
-    /**
-     * Возвращает имя пользователя
-     * @return имя пользователя
-     */
-    public String getUsername() {
-        return username;
+        this.username = username;
     }
 
     /**

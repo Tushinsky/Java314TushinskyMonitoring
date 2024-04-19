@@ -6,8 +6,8 @@
 package frame;
 
 import entities.WaterReading;
-import in.FormattedTextFieldFerifier;
-import in.Request;
+import uicomponent.FormattedTextFieldFerifier;
+import query.Request;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Font;
