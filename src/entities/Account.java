@@ -11,12 +11,26 @@ import java.util.Objects;
 public class Account extends Entity {
     private final String accountNumber; //лицевой счет
     private final ArrayList<Reading> readings = new ArrayList<>();
-
+    
     public Account(int id, String accountNumber) {
         super(id, 1);
         this.accountNumber = accountNumber;
     }
 
+    public Account(int id, int idNumber, String accountNumber) {
+        super(id, idNumber);
+        this.accountNumber = accountNumber;
+    }
+
+    /**
+     * Возвращает номер аккаунта
+     * @return номер аккаунта
+     */
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    
     /**
      * Возвращает список показаний по данному аккаунту
      * @return список показаний
@@ -34,14 +48,6 @@ public class Account extends Entity {
     }
 
     /**
-     * Возвращает номер аккаунта
-     * @return строка, содержащая номер аккаунта
-     */
-    public String getAccountNumber() {
-        return accountNumber;
-    }
-
-    /**
      * Добавляет новые показания в список
      * @param reading новые показания
      */
@@ -53,7 +59,7 @@ public class Account extends Entity {
     public int hashCode() {
         int hash = 7;
         hash = 37 * hash + this.getId();
-        hash = 37 * hash + Objects.hashCode(this.accountNumber);
+        hash = 37 * hash + Objects.hashCode(accountNumber);
         hash = 37 * hash + Objects.hashCode(this.readings);
         return hash;
     }
@@ -73,7 +79,7 @@ public class Account extends Entity {
         if (this.getId() != other.getId()) {
             return false;
         }
-        if (!Objects.equals(this.accountNumber, other.accountNumber)) {
+        if (!Objects.equals(accountNumber, other.getAccountNumber())) {
             return false;
         }
         return Objects.equals(this.readings, other.readings);

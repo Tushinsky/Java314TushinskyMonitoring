@@ -1,6 +1,7 @@
 package api;
 
-import in.Request;
+import query.Response;
+import query.Request;
 import db.DataBase;
 import db.IDao;
 import entities.Account;
@@ -60,9 +61,9 @@ public class API implements Iapi{
         // проверяем, что такой пользователь есть в нашей базе
         boolean success = dao.authorize(login, password);
         if (success) {
+            // если успешно, заполняем тело ответа
             User currentUser = dao.getCurrentUser();
-            System.out.println("currentuser:" + currentUser);
-            return dataResponse(currentUser);
+            return getDataResponse(currentUser);
         } else return new Response(false);
     }
 
@@ -80,8 +81,7 @@ public class API implements Iapi{
         if (id != 0) {
             // если вернулся код, не равный 0, возвращаем пользователя
             User currentUser = dao.getCurrentUser();
-//            System.out.println("user:" + currentUser);
-            return dataResponse(currentUser);
+            return getDataResponse(currentUser);
         } else return new Response(false);
 
     }
@@ -94,6 +94,7 @@ public class API implements Iapi{
     private Response removeAccountResponse(Request request) {
         Account account = (Account) request.getFromBody(0);
         Response response = new Response(dao.removeAccount(account));
+        // тело не заполняется, возвращается только результат удаления
         response.getBody()[0][0] = ImappingConstants.REMOVE_ACCOUNT;
         response.getBody()[0][1] = "";// получаем данные по показаниям
         return response;
@@ -112,6 +113,7 @@ public class API implements Iapi{
         // вытаскиваем новые показания из тела запроса
         WaterReading wr = (WaterReading) request.getFromBody(0);
         int id = dao.addNewReading(role, account, wr);// добавляем их
+        // возвращаем результат добавления новых показаний
         Response response = new Response(id != 0);
         response.getBody()[0][0] = ImappingConstants.NEW_READING;
         response.getBody()[0][1] = String.valueOf(id);
@@ -127,8 +129,8 @@ public class API implements Iapi{
      */
     private void getAllUsers(Response response) {
         /*
-        получаем список всех зарегистрированнх пользователей, фильтруем их
-        по правам доступа
+        получаем список всех зарегистрированнх пользователей, добавляем их
+        в тело ответа
         */
         dao.getAllUsers().forEach((user) -> response.addToBody(user));
     }
@@ -155,7 +157,7 @@ public class API implements Iapi{
      * @param user пользовалеь, запрашивающий данные
      * @return ответ, содержащий данные, запрашиваемые пользователем
      */
-    private Response dataResponse(User user) {
+    private Response getDataResponse(User user) {
         Response response = new Response(true);
         response.getBody()[0][0] = ImappingConstants.USER_NAME;
         response.getBody()[0][1] = user.getUsername();

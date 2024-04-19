@@ -1,8 +1,8 @@
 package frame;
 
-import in.Request;
+import query.Request;
 import api.API;
-import api.Response;
+import query.Response;
 import mapping.IRoleConstants;
 
 import javax.swing.*;
@@ -66,7 +66,7 @@ public class StartAppWindow extends JFrame {
             public void componentResized(ComponentEvent ce) {
                 try {
                     super.componentResized(ce);
-                    writeFrameSize();
+                    writeFrameSize();// запись новых размеров формы
                 } catch (IOException ex) {
                     Logger.getLogger(StartAppWindow.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -203,9 +203,6 @@ public class StartAppWindow extends JFrame {
                 case LOG_OUT:
                     
                     showPanel(LOG_OUT);
-                    break;
-                default:
-                    break;
             }
             cardLayout.removeLayoutComponent(registerPanel);// удаляем панель из менеджера
             registerPanel.setName(null);// сбрасываем свойство в null

@@ -5,13 +5,15 @@
  */
 package frame;
 
-import api.Response;
+import uicomponent.ReadingListComponent;
+import uicomponent.UserCellRenderer;
+import query.Response;
 import mapping.IRoleConstants;
 import entities.Reading;
 import entities.User;
 import entities.WaterReading;
 import mapping.ImappingConstants;
-import in.Request;
+import query.Request;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -39,9 +41,11 @@ import static mapping.ImappingConstants.NEW_READING;
  */
 public class AdminPagePanel extends PagePanel{
     private final ReadingListComponent readingList = new ReadingListComponent();// список показаний
-    private String accountNumber;// аккаунт выбранного пользователя
+    private String accountNumber;// номер аккаунта выбранного пользователя
+    
     // элемент-список зарегистрированных пользователей
     private final JList<User> userList = new JList<>();
+    
     // панель для добавления / изменения показаний выбранного пользователя
     private final NewChangeReadingPanel pnlNewChangeReadingPanel = new NewChangeReadingPanel();
     
@@ -109,7 +113,7 @@ public class AdminPagePanel extends PagePanel{
                 userName + "</u></b>. Сегодня <b><u>" + LocalDate.now() + 
                 "</u></b></td></tr></table>");
         fillUserList(response);// заполняем список пользователей
-        super.addComponent(getAdminBox());
+        super.addComponent(getAdminBox());// добавляем компоненты администратора
         super.setRemoveCaption("Удалить аккаунт");
         super.setOkCaption("Удалить показания");
 
@@ -121,18 +125,20 @@ public class AdminPagePanel extends PagePanel{
      * @param response ответ базе данных, содержащий входные данные
      */
     private void fillUserList(Response response) {
+        // модель списка содержит данные пользователей
         DefaultListModel<User> model = new DefaultListModel<>();
         int index = 0;
         User user;
         while((user = (User) response.getFromBody(index))!= null) {
+            // заполняем модель списка данными
             model.addElement(user);
             index++;
         }
-        userList.setModel(model);
+        userList.setModel(model);// задаём модель списку
     }
 
     /**
-     * Создаёт элементы пользовательского интерфайса для администратора.
+     * Создаёт элементы пользовательского интерфейса для администратора.
      * Заполняет их данными
      */
     private Box getAdminBox() {
@@ -331,7 +337,7 @@ public class AdminPagePanel extends PagePanel{
                     JOptionPane.INFORMATION_MESSAGE);
             int index = userList.getSelectedIndex();
             DefaultListModel model = (DefaultListModel) userList.getModel();
-            model.removeElementAt(index);
+            model.removeElementAt(index);// удаляем пользователя из списка
             userList.setSelectedIndex(0);
         }
     }
