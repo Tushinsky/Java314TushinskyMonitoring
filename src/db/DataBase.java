@@ -140,8 +140,10 @@ public class DataBase implements IDao {
         если пользователей с такими данными не найдено в списке, тогда
         добавляем нового пользователя в файл пользователей и в список
         */
-        User user;
-        user = Users.get(Users.size() - 1);// получаем последнего пользователя
+        Users = getAllUsers();// список всех простых пользователей
+        
+        // получаем идентификатор последнего пользователя в списке и увеличиваем на 1
+        User user = Users.get(Users.size() - 1);// получаем последнего пользователя
         int id = user.getId() + 1;// код нового пользователя увеличиваем на 1
         
         // фильтруем список по правам и кодам пользователей, чтобы получить последнего
@@ -153,7 +155,7 @@ public class DataBase implements IDao {
         int idAccount = user.getAcc().getId() + 1;
         
         // номер аккаунта увеличиваем на 1
-        int number = Integer.parseInt(user.getAcc().getAccountNumber()) + 1;
+        int number = Integer.parseInt(user.getAcc().getAccountNumber()) + 1;// номер аккаунта увеличиваем на 1
         String accountNumber = String.valueOf(number);
 
         // строка для добавления в файл
@@ -434,6 +436,9 @@ public class DataBase implements IDao {
                 .filter(dat -> Objects.deepEquals(Integer.
                         parseInt(String.valueOf(dat[3])), hot)).toArray();
         // берём последний элемент и сравниваем дату внесения данных
+        if(array.length == 0) {
+            return true;
+        }
         Object[] dat = (Object[]) array[array.length - 1];
         // дата внесения показаний содержится в последнем элементе
         LocalDate date = LocalDate.parse(dat[dat.length - 1].toString());
