@@ -46,7 +46,7 @@ public class HomePagePanel extends PagePanel {
             addReading(id);// добавляем показание в аккаунт пользователя
         } else {
             JOptionPane.showMessageDialog(null,
-                    "Внесение показаний допускается только одни раз в текущем месяце",
+                    "Внесение показаний допускается только один раз в текущем месяце",
                     "Warning", JOptionPane.WARNING_MESSAGE);
         }
 
