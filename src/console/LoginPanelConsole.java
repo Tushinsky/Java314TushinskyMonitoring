@@ -38,15 +38,16 @@ public class LoginPanelConsole {
     }
     
     public void waitForChoice() {
-        System.out.println("Введите логин:");
-        String enter;
-        enter = scanner.nextLine();
-        if(enter.equals("0")) {
+        System.out.println("Введите логин и пароль, разделяя их точкой с запятой:");
+        String[] enter;
+        enter = scanner.nextLine().split(";");
+        
+        if(enter.length <= 1 || enter.length > 2) {
             mapping = ImappingConstants.LOG_OUT;// выход
         } else {
-            login = enter;
-            System.out.println("Введите пароль:");
-            password = scanner.nextLine();
+            
+            login = enter[0];
+            password = enter[1];
             mapping = ImappingConstants.LOG_IN;
         }
     }

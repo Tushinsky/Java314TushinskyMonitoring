@@ -5,13 +5,11 @@
  */
 package console;
 
+import entities.Account;
 import entities.Reading;
 import entities.User;
 import entities.WaterReading;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Scanner;
 import mapping.ImappingConstants;
@@ -27,16 +25,15 @@ public class HomePagePanelConsole {
     private final User user;
     private String mapping;
     private final Scanner scanner = new Scanner(System.in);
-    private LocalDate readingDate;
-    private int measuring;
-    private boolean isHot;
     private String name;
-    private transient final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
-
+    private final NewChangeReadingPanelConsole newChangeReadingPanelConsole;
+    private final Account account;
     
     public HomePagePanelConsole(Response response) {
         // получаем пользователя из тела ответа
         user = (User) response.getFromBody(0);
+        account = user.getAcc();
+        newChangeReadingPanelConsole = new NewChangeReadingPanelConsole();
         initComponents();// инициализация инфрмации
 //        waitForChoice();
     }
@@ -81,25 +78,6 @@ public class HomePagePanelConsole {
     public void setName(String name) {
         this.name = name;
     }
-
-    
-    /**
-     * Add PropertyChangeListener.
-     *
-     * @param listener
-     */
-    public void addPropertyChangeListener(PropertyChangeListener listener) {
-        propertyChangeSupport.addPropertyChangeListener("name", listener);
-    }
-
-    /**
-     * Remove PropertyChangeListener.
-     *
-     * @param listener
-     */
-    public void removePropertyChangeListener(PropertyChangeListener listener) {
-        propertyChangeSupport.removePropertyChangeListener(listener);
-    }
     
     public void waitForChoice() {
         System.out.println("Нажмите ANY для добавления новых показаний.\n" +
@@ -109,69 +87,14 @@ public class HomePagePanelConsole {
         if(choice == 0) {
             name = ImappingConstants.LOG_OUT;
         } else {
-            // вводим дату
-            name = getLocalDate();
-            if(name.equals(ImappingConstants.LOG_OUT)) {
-                return;
-            }
-            // вводим показания
-            System.out.println("Введите показание:");
-            if((measuring = scanner.nextInt()) == 0) {
-                return;
-            }
-            // тип показаний
-            name = getHotColdWater();
+            name = NEW_READING;
             
         }
-    }
-    
-    private String getLocalDate() {
-        System.out.println("Введите дату в формате \"гггг-мм-дд\":");
-        String date = scanner.nextLine();
-        if(date.equals("0")) {
-            return ImappingConstants.LOG_OUT;
-        } else {
-            // проверяем корректность ввода даты
-            try {
-                readingDate = LocalDate.parse(date);
-                return ImappingConstants.NEW_READING;
-            } catch (DateTimeParseException ex) {
-                System.out.println("Неверный ввод даты!");
-                readingDate = LocalDate.now();
-                System.out.println("Дата установлена - " + readingDate.toString());
-                return ImappingConstants.NEW_READING;
-            }
-        }
-    }
-    
-    private String getHotColdWater() {
-        System.out.println("Введите 1 для горячей воды или 2 для холодной:");
-        int hot = scanner.nextInt();
-        if(hot == 0) {
-            return ImappingConstants.LOG_OUT;
-        } else {
-            // проверяем корректность ввода
-            switch (hot) {
-                case 1:
-                    isHot = true;
-                    return ImappingConstants.NEW_READING;
-                    
-                case 2:
-                    isHot = false;
-                    return ImappingConstants.NEW_READING;
-                    
-                default:
-                    System.out.println("Неверный ввод данных! Установлен признак по умолчанию для холодной воды");
-                    return ImappingConstants.LOG_OUT;
-            }
-            
-        }
-        
     }
     
     private void initComponents() {
         String userName = user.getUsername();// получаем имя пользователя
-        String accountNumber = user.getAcc().getAccountNumber();// получаем номер аккаунта
+        String accountNumber = account.getAccountNumber();// получаем номер аккаунта
         String title = "Добро пожаловать на страницу персонального аккаунта.\n" +
                 "Здесь вы можете передать новые показания, посмотреть историю " +
                 "показаний.\nПредупреждение: внесение показаний допускается " +
@@ -180,8 +103,7 @@ public class HomePagePanelConsole {
                 "\nСегодня: " + LocalDate.now();
         System.out.println(title);
         // получаем данные по показаниям
-        ArrayList<Reading> readings = user.getAcc()
-                .getReadings();
+        ArrayList<Reading> readings = account.getReadings();
         // выводим показания
         printReadingList(readings);
         name = null;
@@ -189,8 +111,8 @@ public class HomePagePanelConsole {
 
     private void printReadingList(ArrayList<Reading> readings) {
         if(readings != null) {
-            System.out.println("|-История показаний-|");
-            System.out.println("|-№ п/п-|----Дата----|-Показание-|-Горячая-|");
+            System.out.println("|-------История показаний--------|");
+            System.out.println("|№ п/п|--Дата--|Показание|Горячая|");
             readings.stream().map((r) -> (WaterReading) r).forEachOrdered((wr) -> {
                 System.out.println("|-" + wr.getIdNumber() +
                         " | " + wr.getDate() + " | " + wr.getMeasuring() +
@@ -201,20 +123,20 @@ public class HomePagePanelConsole {
     
     private Request addNewReadingRequest() {
         // создаём запрос на добавление показаний
-        WaterReading wr = new WaterReading(readingDate, measuring, isHot);
-        Request request = new Request(NEW_READING, false);
-        request.getBody()[0][0] = ImappingConstants.ACCOUNT;
-        request.getBody()[0][1] = user.getAcc().getAccountNumber();
-        request.getBody()[1][0] = ImappingConstants.ROLE;
-        request.getBody()[1][1] = user.getRole();
-        request.addToBody(wr);
+        Request request;
+        request = newChangeReadingPanelConsole.getNewReadingRequest();
+        if(request != null) {
+            request.getBody()[0][1] = account.getAccountNumber();
+            request.getBody()[1][0] = ImappingConstants.ROLE;
+            request.getBody()[1][1] = user.getRole();
+        }
         return request;
     }
 
     private void addReading(int id) {
         // создаём объект показаний
-        WaterReading reading = new WaterReading(readingDate, measuring, isHot);
-        ArrayList<Reading> readings = user.getAcc().getReadings();
+        WaterReading reading = newChangeReadingPanelConsole.getWaterReading();
+        ArrayList<Reading> readings = account.getReadings();
         // получаем номер последней записи
         int idNumber = readings.size();
         idNumber++;// увеличиваем

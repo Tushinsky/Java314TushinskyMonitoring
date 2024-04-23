@@ -82,8 +82,27 @@ public class StartAppConsole {
         }
     }
     
-    private void createAdminPanel(Response response) {
-        
+    private void createAdminPanel(Response responseInit) {
+        AdminPagePanelConsole adminPanel = new AdminPagePanelConsole(responseInit);
+        boolean exit = true;
+        while(exit) {
+            adminPanel.waitForChoice();
+            switch(adminPanel.getName()) {
+                case ImappingConstants.LOG_OUT:
+                    display();
+                    exit = false;
+                    break;
+                case ImappingConstants.CHANGE_READING:
+                case ImappingConstants.NEW_READING:
+                case ImappingConstants.REMOVE_ACCOUNT:
+                case ImappingConstants.REMOVE_READING:
+                    Request request = adminPanel.getRequest();
+                    if(request != null) {
+                        Response response = api.response(request);
+                        adminPanel.setResponse(response);
+                    }
+            }
+        }
     }
     
     private void createHomePanel(Response responseInit) {
