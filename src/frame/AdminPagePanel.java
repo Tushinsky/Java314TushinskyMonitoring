@@ -388,7 +388,7 @@ public class AdminPagePanel extends PagePanel{
             model.addElement(reading);// добавляем в модель списка
         } else {
             JOptionPane.showMessageDialog(null,
-                    "Внесение показаний допускается только одни раз в текущем месяце",
+                    "Что-то не сложилось!",
                     "Warning", JOptionPane.WARNING_MESSAGE);
         }
     }

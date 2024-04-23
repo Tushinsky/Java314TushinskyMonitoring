@@ -41,17 +41,15 @@ public class RegisterPanelConsole {
     }
     
     public void waitForChoice() {
-        System.out.println("Введите имя:");
-        String enter;
-        enter = scanner.nextLine();
-        if(enter.equals("0")) {
+        System.out.println("Введите имя, логин и пароль, разделяя их точкой с запятой:");
+        String[] enter;
+        enter = scanner.nextLine().split(";");
+        if(enter.length <= 1 || enter.length > 3) {
             mapping = ImappingConstants.LOG_OUT;// выход
         } else {
-            userName = enter;
-            System.out.println("Введите логин:");
-            login = scanner.nextLine();
-            System.out.println("Введите пароль:");
-            password = scanner.nextLine();
+            userName = enter[0];
+            login = enter[1];
+            password = enter[2];
             mapping = ImappingConstants.REGISTER;
         }
         request = new Request(REGISTER, false);// запрос на сервер для входа
