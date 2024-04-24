@@ -16,17 +16,16 @@ import query.Response;
  * @author Sergey
  */
 public class StartAppConsole {
-    private final StartPanelConsole startPanel;
-    private final API api = new API();// класс для связи с базой данных
+    private final API api;// класс для связи с базой данных
     
     public StartAppConsole() {
-        startPanel = new StartPanelConsole();
+        api = new API();
         
     }
     
     public void display() {
+        StartPanelConsole startPanel = new StartPanelConsole();
         startPanel.waitForChoice();
-        System.out.println("mapping=" + startPanel.getMapping());
         switch(startPanel.getMapping()) {
             case ImappingConstants.LOG_IN:
                 createLoginPanel();
@@ -137,7 +136,8 @@ public class StartAppConsole {
         boolean retValue = response.isAuth();// получаем результат ответа
         if (retValue) {
             // если запрос на вход подтверждён, переходим на домашнюю страницу
-            if(response.getBody()[1][1].equals(IRoleConstants.USER)) {
+            String role = response.getValueByKey(ImappingConstants.ROLE);
+            if(role.equals(IRoleConstants.USER)) {
                 // если вошёл обычный пользователь создаём панель домашней страницы
                 createHomePanel(response);
 //                homePagePanel.setResponse(response);

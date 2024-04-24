@@ -19,7 +19,7 @@ public class RegisterPanelConsole {
     private String login;
     private String password;
     private String userName;
-    private final Scanner scanner = new Scanner(System.in);
+    private final Scanner scanner = new Scanner(System.in, "Windows-1251");
     private String mapping;
 
     public String getMapping() {

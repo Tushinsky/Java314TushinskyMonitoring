@@ -26,7 +26,7 @@ import query.Response;
  * @author Sergey
  */
 public class AdminPagePanelConsole {
-    private final Scanner scanner = new Scanner(System.in);
+    private final Scanner scanner = new Scanner(System.in, "Windows-1251");
     private String mapping;
     private String name;
     private final ArrayList<User> userList;
@@ -111,16 +111,16 @@ public class AdminPagePanelConsole {
                 "удалить или изменить показания выбранного пользователя.\n" +
                 "Администратор " + userName + ". Сегодня " + LocalDate.now();
         System.out.println(title);
-        printUserList(response);
+        
+        fillUserList(response);// заполняем список пользователей
+        printUserList();
     }
     
-    private void printUserList(Response response) {
+    private void fillUserList(Response response) {
         int index = 0;
         User user;
-        System.out.println("|№ п/п|Имя пользователя|");
+        System.out.println("| № |Имя пользователя|");
         while((user = (User) response.getFromBody(index))!= null) {
-            // Печатаем данные из списка
-            System.out.println("|--" + user.getIdNumber() + "--|" + user.getUsername() + "|");
             userList.add(user);
             index++;
             
@@ -129,23 +129,31 @@ public class AdminPagePanelConsole {
         
     }
     
+    private void printUserList() {
+        System.out.println("| # |Имя пользователя|");
+        userList.forEach(user -> {
+            // Печатаем данные из списка
+            System.out.println("| " + user.getIdNumber() + "|" + user.getUsername() + "|");
+        });
+    }
+    
     private void printReadingList() {
         User u = userList.get(userNumber);
         Account acc = u.getAcc();
         accountNumber = acc.getAccountNumber();
         System.out.println("Пользователь " + u.getUsername() + ", account " + 
-                accountNumber + "\n|-№-|Показания|");
+                accountNumber + "\n" + "| # |   Дата   |Показания|Гор/хол|");
         
         readingList = acc.getReadings();
         readingList.stream().map((r) -> (WaterReading) r).forEachOrdered((wr) -> {
                 System.out.println("| " + wr.getIdNumber() +
-                        " | " + wr.getDate() + " | " + wr.getMeasuring() +
-                        " | " + wr.isHot() + " |");
+                        " |" + wr.getDate() + "| " + wr.getMeasuring() +
+                        " |" + wr.isHot() + "|");
             });
     }
     
     private void choiceOperation() {
-        System.out.println("1 - удалить аккаунт;\n2 - добавить показания;" +
+        System.out.println("Введите:\n1 - удалить аккаунт;\n2 - добавить показания;" +
                 "\n3 - удалить показания;\n4 - изменить показания." +
                 "\n0 - для возврата на стартовую страницу.\nВведите:");
         int number = scanner.nextInt();
@@ -178,6 +186,7 @@ public class AdminPagePanelConsole {
     private Request getRemoveAccountRequest() {
         // получаем пользователя по выбранному индексу списка
         User user = userList.get(userNumber);
+        System.out.println("account: " + user.getAcc().toString());
         // создаём запрос на удаление аккаунта
         Request request = new Request(REMOVE_ACCOUNT, false);
         request.getBody()[0][0] = ImappingConstants.ACCOUNT;
@@ -187,9 +196,17 @@ public class AdminPagePanelConsole {
     }
 
     private Request getRemoveReadingsRequest() {
+        // выбор показаний
+        System.out.println("Введите номер показания для удаления:");
+        readingNumber = scanner.nextInt();
+        // проверяем диапазон
+        if(readingNumber < 1 || readingNumber > readingList.size()) {
+            System.out.println("Ошибка!");
+            getRemoveReadingsRequest();
+        }
         // создаём запрос на добавление показаний
         Request request = new Request(REMOVE_READING, false);
-        WaterReading wr = (WaterReading) readingList.get(readingNumber);
+        WaterReading wr = (WaterReading) readingList.get(readingNumber - 1);
         request.getBody()[0][0] = ImappingConstants.ACCOUNT;
         request.getBody()[0][1] = accountNumber;
         request.addToBody(wr);
@@ -224,11 +241,23 @@ public class AdminPagePanelConsole {
     }
 
     private void removeAccount(Response response) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if(!response.isAuth()) {
+            System.out.println("Ошибка! Что-то не сложилось!");
+        } else {
+            userList.remove(userNumber);
+            
+        }
+        printUserList();
     }
 
     private void removeReading(Response response) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if(response.isAuth()) {
+            // запрос на удаление подтверждён
+            readingList.remove(readingNumber - 1);
+            printReadingList();
+        } else {
+            System.out.println("Ошибка! Что-то не сложилось!");
+        }
     }
 
     private void addNewReading(Response response) {
@@ -252,7 +281,14 @@ public class AdminPagePanelConsole {
     }
 
     private void changeReading(Response response) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if(response.isAuth()) {
+            // создаём объект показаний после изменения
+            WaterReading wr = newChangeReadingPanelConsole.getWaterReading();
+            readingList.set(readingNumber - 1, wr);// изменяем
+            // обновляем список показаний
+            printReadingList();
+            choiceOperation();
+        }
     }
     
     

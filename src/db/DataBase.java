@@ -178,7 +178,8 @@ public class DataBase implements IDao {
     @Override
     public boolean removeAccount(Account account) {
         Object[] data;// массив данных
-        data = getIDRecord(accountFileName, 2, String.valueOf(account.getId()));
+        data = getIDRecord(accountFileName, 0, String.valueOf(account.getId()));
+        System.out.println("data:" + Arrays.toString(data));
         /*
         Получаем код аккаунта и код пользователя для удаления данных из таблиц
         Users, Account, Readings
@@ -205,8 +206,9 @@ public class DataBase implements IDao {
             System.out.println("removeAccount: " + Arrays.toString(removeData));
             if((removeData = removeDataFromFile(readingFileName, 1, idAccount)) != null) {
                 System.out.println("removeReading: " + Arrays.toString(removeData));
-                return true;
+                
             }
+            return true;
         }
         return false;// возврат значения по умолчанию, если произошли ошибки
     }
