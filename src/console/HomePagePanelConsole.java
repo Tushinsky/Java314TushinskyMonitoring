@@ -24,7 +24,7 @@ import query.Response;
 public class HomePagePanelConsole {
     private final User user;
     private String mapping;
-    private final Scanner scanner = new Scanner(System.in);
+    private final Scanner scanner = new Scanner(System.in, "Windows-1251");
     private String name;
     private final NewChangeReadingPanelConsole newChangeReadingPanelConsole;
     private final Account account;

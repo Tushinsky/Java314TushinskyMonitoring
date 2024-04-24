@@ -16,7 +16,7 @@ public class StartPanelConsole {
 
     private String mapping;
     private String[] listMapping;
-    private final Scanner scanner = new Scanner(System.in);
+    private final Scanner scanner = new Scanner(System.in, "Windows-1251");
         
     public StartPanelConsole() {
         initComponents();
@@ -28,7 +28,7 @@ public class StartPanelConsole {
     
     private void initComponents() {
         String title = "Вы находитесь на домашней странице сервиса передачи\n" + 
-                "показаний счетчиков ЖКХ. Здесь вы можете: \n1 - войти в личный" +
+                "показаний счетчиков ЖКХ. Здесь вы можете:\n1 - войти в личный" +
                 " кабинет для передачи показаний за текущий месяц.\n" +
                 "2 - зарегистрироваться для получения доступа к личному кабинету.\n" +
                 "0 - завершить работу";

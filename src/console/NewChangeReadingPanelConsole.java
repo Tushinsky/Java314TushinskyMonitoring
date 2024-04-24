@@ -25,7 +25,7 @@ public class NewChangeReadingPanelConsole {
     private final Scanner scanner;
     
     public NewChangeReadingPanelConsole() {
-        scanner = new Scanner(System.in);
+        scanner = new Scanner(System.in, "UTF-8");
 //        initComponents();
     }
 
@@ -65,7 +65,7 @@ public class NewChangeReadingPanelConsole {
      */
     public Request getChangeReadingRequest() {
         System.out.println("Внесите изменения: ");
-        System.out.print(reading.getDate() + ";" + reading.getMeasuring() +
+        System.out.println(reading.getDate() + ";" + reading.getMeasuring() +
                 ";" + (reading.isHot() == true ? 1 : 0));
         String strReading = scanner.nextLine();
         // преобразуем в массив, размер должен быть равен 3

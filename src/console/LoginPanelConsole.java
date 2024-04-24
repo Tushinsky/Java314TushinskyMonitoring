@@ -18,7 +18,7 @@ public class LoginPanelConsole {
     private int count = 1;// счётчик попыток ввода
     private String login;
     private String password;
-    private final Scanner scanner = new Scanner(System.in);
+    private final Scanner scanner = new Scanner(System.in, "Windows-1251");
     private String mapping;
 
     public String getMapping() {
