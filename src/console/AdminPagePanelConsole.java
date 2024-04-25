@@ -168,22 +168,22 @@ public class AdminPagePanelConsole {
         String title = 
                 "|" + String.copyValueOf(nameChar) + "-" + String.copyValueOf(numberChar) + "|";
         System.out.println(title);
-        System.out.println("|" + numSpace((lenghtNumber - 1) / 2) + 
-                "N" + numSpace((lenghtNumber - 1) / 2) + "|" + 
-                         numSpace((lenghtName - 16) / 2) + "Имя пользователя" +
-                                 numSpace((lenghtName - 16) / 2) + "|");
+        System.out.println("|" + getNumSpace((lenghtNumber - 1) / 2) + 
+                "N" + getNumSpace((lenghtNumber - 1) / 2) + "|" + 
+                         getNumSpace((lenghtName - 16) / 2) + "Имя пользователя" +
+                                 getNumSpace((lenghtName - 16) / 2) + "|");
         System.out.println(title);
         for(User user : userList) {
             int len1 = String.valueOf(user.getIdNumber()).length();
             int len2 = String.valueOf(user.getUsername()).length();
-            System.out.println("|" + numSpace(lenghtNumber - len1) +
+            System.out.println("|" + getNumSpace(lenghtNumber - len1) +
                     user.getIdNumber() + "|" + user.getUsername() +
-                    numSpace(lenghtName - len2) + "|");
+                    getNumSpace(lenghtName - len2) + "|");
         }
         System.out.println(title);
     }
     
-    private String numSpace(int count) {
+    private String getNumSpace(int count) {
         if(count == 0) {
             return "";
         }
