@@ -11,7 +11,7 @@ package entities;
  */
 public class Entity {
     private final int id;// идентификатор записи в базе данных
-    private final int idNumber;// порядковый номер сущности в списке (очереди)
+    private int idNumber;// порядковый номер сущности в списке (очереди)
     private final String name;
     
     public Entity(int id, int idNumber) {
@@ -35,6 +35,10 @@ public class Entity {
      */
     public int getIdNumber() {
         return idNumber;
+    }
+
+    public void setIdNumber(int idNumber) {
+        this.idNumber = idNumber;
     }
     
 }
