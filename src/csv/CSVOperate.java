@@ -26,7 +26,7 @@ public class CSVOperate {
      */
     public CSVOperate(){
         separator = ";";// принимаем разделитель по умолчанию ";"
-        charSet = "Windows-1251";// набор символов по умолчанию
+        charSet = "";// набор символов по умолчанию
     }
 
     /**
@@ -37,6 +37,7 @@ public class CSVOperate {
     public CSVOperate(String filename, String separator){
         this.fileName = filename;
         this.separator = separator;
+        charSet = "";// набор символов по умолчанию
     }
 
     /**
@@ -113,6 +114,9 @@ public class CSVOperate {
      */
     private void readFile() throws FileNotFoundException{
         try {
+            if(charSet.equals("")) {
+                charSet = getFileCharsetName();
+            }
             FileInputStream fis = new FileInputStream(new File(fileName));
             InputStreamReader isr = new InputStreamReader(fis,charSet);
                 
@@ -208,4 +212,21 @@ public class CSVOperate {
         }
     }
 
+    private String getFileCharsetName() throws IOException{
+        String charsetName = "Windows-1251";
+        try (InputStream is = new FileInputStream(new File(fileName))) {
+            byte[] head = new byte[3];
+            is.read(head);// читаем первые три байта
+            if(head[0] == -1 && head[1] == -2) {
+                charsetName = "Unicode";
+            } else if(head[0] == -2 && head[1] == -1) {
+                charsetName = "UTF-16";
+            } else if(head[0] == -27 && head[1] == -101 && head[2] == -98) {
+                charsetName = "UTF-8";
+            } else if(head[0] == -17 && head[1] == -69 && head[2] == -65) {
+                charsetName = "UTF-8";
+            }
+        }
+        return charsetName;
+    }
 }

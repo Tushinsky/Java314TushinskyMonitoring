@@ -106,9 +106,12 @@ public class AdminPagePanelConsole {
     
     private void initComponents(Response response) {
         String userName = response.getBody()[0][1];
-        String title = "Вы вошли на страницу с правами администратора.\n" + 
-                "Здесь можно удалить аккаунт выбранного пользователя, добавить,\n" + 
-                "удалить или изменить показания выбранного пользователя.\n" +
+        String title = 
+                "|--------------------------------------------------------------|\n" + 
+                "|        Вы вошли на страницу с правами администратора.        |\n" + 
+                "|Здесь можно удалить аккаунт выбранного пользователя, добавить,|\n" + 
+                "|   удалить или изменить показания выбранного пользователя.    |\n" +
+                "|--------------------------------------------------------------|\n" + 
                 "Администратор " + userName + ". Сегодня " + LocalDate.now();
         System.out.println(title);
         
@@ -119,7 +122,6 @@ public class AdminPagePanelConsole {
     private void fillUserList(Response response) {
         int index = 0;
         User user;
-        System.out.println("| № |Имя пользователя|");
         while((user = (User) response.getFromBody(index))!= null) {
             userList.add(user);
             index++;
@@ -130,11 +132,66 @@ public class AdminPagePanelConsole {
     }
     
     private void printUserList() {
-        System.out.println("| # |Имя пользователя|");
-        userList.forEach(user -> {
-            // Печатаем данные из списка
-            System.out.println("| " + user.getIdNumber() + "|" + user.getUsername() + "|");
-        });
+        // самое длинное имя
+        int lenghtName = userList.stream()
+                .mapToInt(user -> user.getUsername().length()).max().getAsInt();
+        // самый длинный номер
+        int lenghtNumber = userList.stream()
+                .mapToInt(user -> 
+                        String.valueOf(user.getIdNumber()).length()).max().getAsInt();
+        System.out.println("lenght: " + lenghtName + "; " + lenghtNumber);
+        if(lenghtNumber <= 3) {
+            lenghtNumber = 3;
+        } else {
+            if((lenghtNumber % 2) == 0) {
+                // если количество цифр четное, то увеличим его на 1 для выравнивания
+                lenghtNumber++;
+            }
+        }
+        if(lenghtName <= 16) {
+            lenghtName = 16;// длина "Имя пользователя"
+        } else {
+            if((lenghtName % 2) != 0) {
+                // если количество цифр нечетное, то увеличим его на 1 для выравнивания
+                lenghtName++;
+            }
+        }
+        char[] nameChar = new char[lenghtName];
+        char[] numberChar = new char[lenghtNumber];
+        for(int i = 0; i < lenghtName; i++) {
+            nameChar[i] = '-';
+        }
+        for(int i = 0; i < lenghtNumber; i++) {
+            numberChar[i] = '-';
+        }
+        
+        String title = 
+                "|" + String.copyValueOf(nameChar) + "-" + String.copyValueOf(numberChar) + "|";
+        System.out.println(title);
+        System.out.println("|" + numSpace((lenghtNumber - 1) / 2) + 
+                "N" + numSpace((lenghtNumber - 1) / 2) + "|" + 
+                         numSpace((lenghtName - 16) / 2) + "Имя пользователя" +
+                                 numSpace((lenghtName - 16) / 2) + "|");
+        System.out.println(title);
+        for(User user : userList) {
+            int len1 = String.valueOf(user.getIdNumber()).length();
+            int len2 = String.valueOf(user.getUsername()).length();
+            System.out.println("|" + numSpace(lenghtNumber - len1) +
+                    user.getIdNumber() + "|" + user.getUsername() +
+                    numSpace(lenghtName - len2) + "|");
+        }
+        System.out.println(title);
+    }
+    
+    private String numSpace(int count) {
+        if(count == 0) {
+            return "";
+        }
+        char[] space = new char[count];
+        for(int i = 0; i < count; i++) {
+            space[i] = ' ';
+        }
+        return String.copyValueOf(space);
     }
     
     private void printReadingList() {
@@ -198,15 +255,16 @@ public class AdminPagePanelConsole {
     private Request getRemoveReadingsRequest() {
         // выбор показаний
         System.out.println("Введите номер показания для удаления:");
-        readingNumber = scanner.nextInt();
+        int number = scanner.nextInt();
         // проверяем диапазон
-        if(readingNumber < 1 || readingNumber > readingList.size()) {
+        if(number < 1 || number > readingList.size()) {
             System.out.println("Ошибка!");
             getRemoveReadingsRequest();
         }
+        readingNumber = number - 1;
         // создаём запрос на добавление показаний
         Request request = new Request(REMOVE_READING, false);
-        WaterReading wr = (WaterReading) readingList.get(readingNumber - 1);
+        WaterReading wr = (WaterReading) readingList.get(readingNumber);
         request.getBody()[0][0] = ImappingConstants.ACCOUNT;
         request.getBody()[0][1] = accountNumber;
         request.addToBody(wr);
@@ -226,15 +284,16 @@ public class AdminPagePanelConsole {
 
     private Request getChangeReadingRequest() {
         System.out.println("Введите номер показаний для изменения:");
-        readingNumber = scanner.nextInt();
+        int number = scanner.nextInt();
         // проверка корректности ввода
-        if(readingNumber <=0 || readingNumber > readingList.size()) {
+        if(number <=0 || number > readingList.size()) {
             System.out.println("Ошибка! Сделайте свой выбор.");
             getChangeReadingRequest();
         }
+        readingNumber = number - 1;
         // если всё прошло нормально
         newChangeReadingPanelConsole.setWaterReading((WaterReading) 
-                readingList.get(readingNumber - 1));
+                readingList.get(readingNumber));
         Request request = newChangeReadingPanelConsole.getChangeReadingRequest();
         request.getBody()[0][1] = accountNumber;
         return request;
@@ -245,46 +304,48 @@ public class AdminPagePanelConsole {
             System.out.println("Ошибка! Что-то не сложилось!");
         } else {
             userList.remove(userNumber);
-            
+            // после удаления перенумеруем список пользователей
+            for(int i = 0; i < userList.size(); i++) {
+                userList.get(i).setIdNumber(i + 1);
+            }
         }
         printUserList();
     }
 
     private void removeReading(Response response) {
-        if(response.isAuth()) {
-            // запрос на удаление подтверждён
-            readingList.remove(readingNumber - 1);
-            printReadingList();
-        } else {
+        if(!response.isAuth()) {
             System.out.println("Ошибка! Что-то не сложилось!");
         }
+        // запрос на удаление подтверждён
+        readingList.remove(readingNumber);
+        printReadingList();
     }
 
     private void addNewReading(Response response) {
-        if(response.isAuth()) {
-            // получаем список показаний выбранного пользователя
-            ArrayList<Reading> readings = userList.get(userNumber).getAcc()
-                    .getReadings();
-            // создаём объект показаний
-            int id = Integer.parseInt(response.getBody()[0][1]);// идентификатор записи
-            WaterReading wr = newChangeReadingPanelConsole.getWaterReading();
-            int idNumber = readings.size();// количество элементов в списке
-            idNumber++;
-            // создаём объект новых показаний
-            WaterReading reading = new WaterReading(idNumber, id, wr.getDate(), 
-                    wr.getMeasuring(), wr.isHot());
-            readings.add(reading);// добавляем показание в список
-            printReadingList();
-        } else {
+        if(!response.isAuth()) {
             System.out.println("Ошибка! Что-то не сложилось!");
         }
+        // получаем список показаний выбранного пользователя
+        ArrayList<Reading> readings = userList.get(userNumber).getAcc()
+                .getReadings();
+        // создаём объект показаний
+        int id = Integer.parseInt(response.getBody()[0][1]);// идентификатор записи
+        WaterReading wr = newChangeReadingPanelConsole.getWaterReading();
+        int idNumber = readings.size();// количество элементов в списке
+        idNumber++;
+        // создаём объект новых показаний
+        WaterReading reading = new WaterReading(idNumber, id, wr.getDate(), 
+                wr.getMeasuring(), wr.isHot());
+        readings.add(reading);// добавляем показание в список
+        printReadingList();
+
     }
 
     private void changeReading(Response response) {
         if(response.isAuth()) {
             // создаём объект показаний после изменения
             WaterReading wr = newChangeReadingPanelConsole.getWaterReading();
-            readingList.set(readingNumber - 1, wr);// изменяем
+            readingList.set(readingNumber, wr);// изменяем
             // обновляем список показаний
             printReadingList();
             choiceOperation();

@@ -140,8 +140,6 @@ public class DataBase implements IDao {
         если пользователей с такими данными не найдено в списке, тогда
         добавляем нового пользователя в файл пользователей и в список
         */
-        Users = getAllUsers();// список всех простых пользователей
-        
         // получаем идентификатор последнего пользователя в списке и увеличиваем на 1
         User user = Users.get(Users.size() - 1);// получаем последнего пользователя
         int id = user.getId() + 1;// код нового пользователя увеличиваем на 1
@@ -204,10 +202,7 @@ public class DataBase implements IDao {
             // если данные из таблицы аккаута были удалены, проводим удаление
             // из таблицы показаний
             System.out.println("removeAccount: " + Arrays.toString(removeData));
-            if((removeData = removeDataFromFile(readingFileName, 1, idAccount)) != null) {
-                System.out.println("removeReading: " + Arrays.toString(removeData));
-                
-            }
+            removeDataFromFile(readingFileName, 1, idAccount);
             return true;
         }
         return false;// возврат значения по умолчанию, если произошли ошибки
